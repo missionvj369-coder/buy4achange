@@ -3,9 +3,12 @@ import {
   Package, ShoppingCart, Plus, Edit, Trash2, Printer, ShieldCheck,
   Heart, Database, RefreshCw, Lock, LogOut, ArrowLeft, ExternalLink,
   ChevronRight, Calendar, CheckCircle2, AlertCircle, CreditCard, Key,
-  Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw
+  Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw,
+  BookOpen, Code2, Eye, FileCode
 } from 'lucide-react';
-import { Product, Order, Cause, AdminMetrics, PaymentTransaction } from '../types.ts';
+import { Product, Order, Cause, AdminMetrics, PaymentTransaction, UnlockedDigitalItem } from '../types.ts';
+import { EPRODUCT_SUBCATEGORIES } from './EProductsSection.tsx';
+import { DigitalReaderModal } from './DigitalReaderModal.tsx';
 
 interface AdminPortalProps {
   causes: Cause[];
@@ -60,6 +63,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [copiedWebhook, setCopiedWebhook] = useState(false);
 
   // Product CRUD modal state
+  const [adminProducts, setAdminProducts] = useState<Product[]>(products);
+  const [productTypeFilter, setProductTypeFilter] = useState<'all' | 'physical' | 'digital'>('all');
+  const [previewDigitalItem, setPreviewDigitalItem] = useState<UnlockedDigitalItem | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [savingProduct, setSavingProduct] = useState(false);
@@ -75,12 +81,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     price: '',
     compare_at_price: '',
     category: 'Living Culture',
+    subcategory: 'eBooks',
+    product_type: 'physical' as 'physical' | 'digital',
+    digital_html_content: '',
+    digital_access_note: 'Instant interactive HTML access unlocked immediately after purchase',
     image_url: '',
     stock: '50',
     cause_id: causes[0]?.id || 'cause-everyday-essentials',
     cause_allocation_pct: '15',
     cause_impact_text: '',
-    badge: 'Artisan Made',
+    badge: '',
   });
 
   // Shipping Label Printout Modal state
@@ -230,12 +240,33 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
+  const fetchAdminProducts = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/products', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setAdminProducts(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    setAdminProducts((prev) => (prev.length === 0 ? products : prev));
+  }, [products]);
+
   useEffect(() => {
     if (token) {
       fetchMetrics();
       fetchOrders(orderDateFilter);
       fetchTransactions();
       fetchGatewayConfig();
+      fetchAdminProducts();
     }
   }, [token, orderDateFilter]);
 
@@ -330,6 +361,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       });
       if (res.ok) {
         onRefreshData();
+        fetchAdminProducts();
         fetchMetrics();
       }
     } catch (e) {
@@ -344,7 +376,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     e.preventDefault();
     if (!token) return;
     if (!productForm.image_url) {
-      setProductError('Please upload a product photo before saving.');
+      setProductError('Please upload a product cover photo before saving.');
+      return;
+    }
+    if (productForm.product_type === 'digital' && !productForm.digital_html_content.trim()) {
+      setProductError('Please paste or upload the HTML code for this eProduct / eBook.');
       return;
     }
     setSavingProduct(true);
@@ -378,10 +414,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setProductNotice(
         editingProduct
           ? `"${productForm.name}" updated live on the storefront.`
+          : productForm.product_type === 'digital'
+          ? `E-Product "${productForm.name}" published live to E-Products & eBooks (HTML locked until purchase).`
           : `"${productForm.name}" published live on the storefront.`
       );
-      setTimeout(() => setProductNotice(null), 4000);
+      setTimeout(() => setProductNotice(null), 4500);
       onRefreshData();
+      fetchAdminProducts();
       fetchMetrics();
     } catch (err: any) {
       setProductError(err.message || 'Could not save product. Please try again.');
@@ -401,6 +440,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       });
       if (res.ok) {
         onRefreshData();
+        fetchAdminProducts();
         fetchMetrics();
       }
     } catch (e) {
@@ -408,7 +448,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
-  const openAddProductModal = () => {
+  const openAddProductModal = (defaultType: 'physical' | 'digital' = 'physical') => {
     setEditingProduct(null);
     setProductError(null);
     setPhotoSizeKb(null);
@@ -418,13 +458,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       description: '',
       price: '',
       compare_at_price: '',
-      category: 'Living Culture',
+      category: defaultType === 'digital' ? 'E-Products & eBooks' : 'Living Culture',
+      subcategory: defaultType === 'digital' ? 'eBooks' : '',
+      product_type: defaultType,
+      digital_html_content: '',
+      digital_access_note: 'Instant interactive HTML access unlocked immediately after purchase',
       image_url: '',
-      stock: '50',
+      stock: defaultType === 'digital' ? '9999' : '50',
       cause_id: causes[0]?.id || 'cause-everyday-essentials',
-      cause_allocation_pct: '15',
+      cause_allocation_pct: '20',
       cause_impact_text: 'Directly funds UGT India grassroots mission',
-      badge: '',
+      badge: defaultType === 'digital' ? 'Instant Digital Unlock' : '',
     });
     setShowProductModal(true);
   };
@@ -440,6 +484,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       price: prod.price.toString(),
       compare_at_price: prod.compare_at_price?.toString() || '',
       category: prod.category,
+      subcategory: prod.subcategory || (prod.product_type === 'digital' ? 'eBooks' : ''),
+      product_type: prod.product_type === 'digital' ? 'digital' : 'physical',
+      digital_html_content: prod.digital_html_content || '',
+      digital_access_note:
+        prod.digital_access_note || 'Instant interactive HTML access unlocked immediately after purchase',
       image_url: prod.image_url,
       stock: prod.stock.toString(),
       cause_id: prod.cause_id || causes[0]?.id || 'cause-everyday-essentials',
@@ -448,6 +497,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       badge: prod.badge || '',
     });
     setShowProductModal(true);
+  };
+
+  const handleHtmlFileUpload = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProductForm((prev) => ({
+        ...prev,
+        digital_html_content: String(reader.result || ''),
+      }));
+    };
+    reader.readAsText(file);
+  };
+
+  const insertSampleEbookHtml = () => {
+    const title = productForm.name || 'UGT India Conscious Living eBook';
+    const sample = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <style>
+    body { margin: 0; font-family: Georgia, serif; background: #070b14; color: #e2e8f0; line-height: 1.8; }
+    .container { max-width: 780px; margin: 0 auto; padding: 48px 24px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; background: rgba(16,185,129,0.15); color: #6ee7b7; font-family: sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 0.12em; text-transform: uppercase; }
+    h1 { font-size: 2.4rem; color: #ffffff; margin: 16px 0 8px; line-height: 1.2; }
+    h2 { color: #34d399; margin-top: 36px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
+    .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; margin: 24px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge">Buy4AChange · Exclusive Unlocked Edition</span>
+    <h1>${title}</h1>
+    <p>Thank you for supporting UGT India's national missions. This interactive HTML edition is unlocked exclusively for verified buyers.</p>
+    <div class="card">
+      <h2>Chapter 1: Purpose-Driven Action</h2>
+      <p>Replace this sample content with your full HTML eBook, interactive course, calculator, or digital toolkit.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+    setProductForm((prev) => ({ ...prev, digital_html_content: sample }));
   };
 
   // --- VIEW 1: ADMIN LOGIN SCREEN ---
@@ -868,12 +961,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-base font-bold text-white">Product Catalog Management</h3>
+                <h3 className="text-base font-bold text-white">Products &amp; E-Products Management</h3>
                 <p className="text-xs text-slate-400">
-                  Every product saved here publishes immediately to the live storefront ({products.length} active)
+                  Manage physical catalog items and interactive HTML eProducts / eBooks ({adminProducts.length} active)
                 </p>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={onNavigateStore}
                   className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center space-x-1.5 transition-all"
@@ -882,13 +975,51 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span>View Live Store</span>
                 </button>
                 <button
-                  onClick={openAddProductModal}
+                  onClick={() => openAddProductModal('digital')}
+                  className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-sm flex items-center space-x-1.5 transition-all active:scale-95"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Add E-Product / eBook</span>
+                </button>
+                <button
+                  onClick={() => openAddProductModal('physical')}
                   className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-sm flex items-center space-x-1.5 transition-all active:scale-95"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
                   <span>Add Product</span>
                 </button>
               </div>
+            </div>
+
+            {/* Product Type Filter Strip */}
+            <div className="flex items-center space-x-2">
+              {(
+                [
+                  { id: 'all', label: `All (${adminProducts.length})` },
+                  {
+                    id: 'physical',
+                    label: `Physical (${adminProducts.filter((p) => p.product_type !== 'digital').length})`,
+                  },
+                  {
+                    id: 'digital',
+                    label: `E-Products & eBooks (${adminProducts.filter((p) => p.product_type === 'digital').length})`,
+                  },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setProductTypeFilter(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    productTypeFilter === tab.id
+                      ? tab.id === 'digital'
+                        ? 'bg-cyan-500 text-slate-950'
+                        : 'bg-emerald-500 text-slate-950'
+                      : 'bg-slate-900 text-slate-300 border border-slate-800 hover:bg-slate-800'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             {productNotice && (
@@ -899,64 +1030,105 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {products.map((p) => (
-                <div
-                  key={p.id}
-                  className="bg-[#0f1728] border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3"
-                >
-                  <div className="flex space-x-3">
-                    {p.image_url ? (
-                      <img
-                        src={p.image_url}
-                        alt={p.name}
-                        className="w-16 h-16 rounded-xl object-cover bg-slate-900 shrink-0 border border-slate-800"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 shrink-0">
-                        <ImageIcon className="w-6 h-6" />
+              {adminProducts
+                .filter((p) =>
+                  productTypeFilter === 'all'
+                    ? true
+                    : productTypeFilter === 'digital'
+                    ? p.product_type === 'digital'
+                    : p.product_type !== 'digital'
+                )
+                .map((p) => {
+                  const isDigital = p.product_type === 'digital';
+                  return (
+                    <div
+                      key={p.id}
+                      className={`bg-[#0f1728] border rounded-2xl p-4 flex flex-col justify-between space-y-3 ${
+                        isDigital ? 'border-cyan-500/30' : 'border-slate-800'
+                      }`}
+                    >
+                      <div className="flex space-x-3">
+                        {p.image_url ? (
+                          <img
+                            src={p.image_url}
+                            alt={p.name}
+                            className="w-16 h-16 rounded-xl object-cover bg-slate-900 shrink-0 border border-slate-800"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-500 shrink-0">
+                            {isDigital ? <BookOpen className="w-6 h-6" /> : <ImageIcon className="w-6 h-6 text-slate-600" />}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-2">
+                            <span
+                              className={`text-[10px] font-semibold uppercase truncate ${
+                                isDigital ? 'text-cyan-400' : 'text-emerald-400'
+                              }`}
+                            >
+                              {isDigital ? `E-Product · ${p.subcategory || 'eBooks'}` : p.category}
+                            </span>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                                isDigital
+                                  ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                                  : p.stock > 0
+                                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                              }`}
+                            >
+                              {isDigital ? 'HTML Locked' : p.stock > 0 ? `Live · ${p.stock}` : 'Sold Out'}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-white text-xs line-clamp-1 mt-0.5">{p.name}</h4>
+                          <div className="text-sm font-extrabold text-amber-300 mt-0.5">
+                            ₹{p.price.toLocaleString()}
+                          </div>
+                          <div className="text-[11px] text-emerald-300 line-clamp-1">
+                            {p.cause_allocation_pct}% to {p.cause_title || 'UGT Mission'}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="text-[10px] font-semibold text-emerald-400 uppercase truncate">
-                          {p.category}
-                        </span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                          p.stock > 0
-                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
-                        }`}>
-                          {p.stock > 0 ? `Live · ${p.stock}` : 'Sold Out'}
-                        </span>
-                      </div>
-                      <h4 className="font-bold text-white text-xs line-clamp-1 mt-0.5">{p.name}</h4>
-                      <div className="text-sm font-extrabold text-amber-300 mt-0.5">
-                        ₹{p.price.toLocaleString()}
-                      </div>
-                      <div className="text-[11px] text-emerald-300 line-clamp-1">
-                        {p.cause_allocation_pct}% to {p.cause_title || 'UGT Mission'}
+
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end space-x-2">
+                        {isDigital && p.digital_html_content && (
+                          <button
+                            onClick={() =>
+                              setPreviewDigitalItem({
+                                product_id: p.id,
+                                product_name: p.name,
+                                subcategory: p.subcategory,
+                                category: p.category,
+                                image_url: p.image_url,
+                                digital_html_content: p.digital_html_content || '',
+                                order_number: 'ADMIN-PREVIEW',
+                                customer_email: 'admin@ugtindia.space',
+                              })
+                            }
+                            className="p-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/70 text-cyan-300 transition-all text-xs flex items-center space-x-1 border border-cyan-800/40"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Preview</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openEditProductModal(p)}
+                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs flex items-center space-x-1"
+                        >
+                          <Edit className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(p.id)}
+                          className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 transition-all text-xs flex items-center space-x-1 border border-rose-800/40"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end space-x-2">
-                    <button
-                      onClick={() => openEditProductModal(p)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs flex items-center space-x-1"
-                    >
-                      <Edit className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProduct(p.id)}
-                      className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 transition-all text-xs flex items-center space-x-1 border border-rose-800/40"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           </div>
         )}
@@ -1451,13 +1623,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       </main>
 
-      {/* MODAL: ADD / EDIT PRODUCT */}
+      {/* MODAL: ADD / EDIT PRODUCT OR E-PRODUCT */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-xl bg-[#0f1728] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl my-6">
+          <div className="relative w-full max-w-2xl bg-[#0f1728] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl my-6">
             <div className="p-4 border-b border-slate-800 bg-[#131d31] flex justify-between items-center">
-              <h3 className="text-sm font-bold text-white">
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              <h3 className="text-sm font-bold text-white flex items-center space-x-2">
+                {productForm.product_type === 'digital' ? (
+                  <BookOpen className="w-4 h-4 text-cyan-400" />
+                ) : (
+                  <Package className="w-4 h-4 text-emerald-400" />
+                )}
+                <span>
+                  {editingProduct
+                    ? productForm.product_type === 'digital'
+                      ? 'Edit E-Product / eBook'
+                      : 'Edit Product'
+                    : productForm.product_type === 'digital'
+                    ? 'Add New E-Product / eBook (HTML)'
+                    : 'Add New Product'}
+                </span>
               </h3>
               <button
                 onClick={() => setShowProductModal(false)}
@@ -1467,35 +1652,118 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="p-5 space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSaveProduct} className="p-5 space-y-3.5 text-xs max-h-[82vh] overflow-y-auto">
+              {/* Product Type Switcher: Physical vs Digital E-Product / eBook */}
+              <div className="grid grid-cols-2 gap-2.5 p-1 rounded-2xl bg-slate-950 border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setProductForm((prev) => ({
+                      ...prev,
+                      product_type: 'physical',
+                      category: prev.category === 'E-Products & eBooks' ? 'Living Culture' : prev.category,
+                      stock: prev.stock === '9999' ? '50' : prev.stock,
+                    }))
+                  }
+                  className={`py-2 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${
+                    productForm.product_type === 'physical'
+                      ? 'bg-emerald-500 text-slate-950'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  <span>Physical Product</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setProductForm((prev) => ({
+                      ...prev,
+                      product_type: 'digital',
+                      category: 'E-Products & eBooks',
+                      subcategory: prev.subcategory || 'eBooks',
+                      stock: '9999',
+                    }))
+                  }
+                  className={`py-2 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${
+                    productForm.product_type === 'digital'
+                      ? 'bg-cyan-400 text-slate-950'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>E-Product / eBook (HTML)</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Product Title</label>
+                  <label className="block text-slate-400 mb-1">
+                    {productForm.product_type === 'digital' ? 'eBook / E-Product Title' : 'Product Title'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={productForm.name}
                     onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                    placeholder={
+                      productForm.product_type === 'digital'
+                        ? 'e.g. Complete AI Mastery Interactive eBook'
+                        : 'e.g. Handwoven Cotton Kurta'
+                    }
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"
                   />
                 </div>
-                <div>
-                  <label className="block text-slate-400 mb-1">Category</label>
-                  <select
-                    value={productForm.category}
-                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"
-                  >
-                    <option value="Living Culture">Living Culture</option>
-                    <option value="Everyday Essentials">Everyday Essentials</option>
-                    <option value="Women Entrepreneurship">Women Entrepreneurship</option>
-                    <option value="AI Free Training">AI Free Training</option>
-                    <option value="Water Security">Water Security</option>
-                    <option value="Protect the Earth">Protect the Earth</option>
-                    <option value="Hill and City">Hill and City</option>
-                    <option value="Sports Ecosystem">Sports Ecosystem</option>
-                  </select>
-                </div>
+                {productForm.product_type === 'digital' ? (
+                  <div>
+                    <label className="block text-cyan-300 font-semibold mb-1">E-Product Subcategory</label>
+                    <select
+                      value={
+                        EPRODUCT_SUBCATEGORIES.includes(productForm.subcategory)
+                          ? productForm.subcategory
+                          : '__custom__'
+                      }
+                      onChange={(e) => {
+                        if (e.target.value !== '__custom__') {
+                          setProductForm({ ...productForm, subcategory: e.target.value });
+                        }
+                      }}
+                      className="w-full bg-slate-900 border border-cyan-500/40 rounded-xl px-3 py-2 text-white"
+                    >
+                      {EPRODUCT_SUBCATEGORIES.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                      <option value="__custom__">Custom Subcategory...</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={productForm.subcategory}
+                      onChange={(e) => setProductForm({ ...productForm, subcategory: e.target.value })}
+                      placeholder="Or type custom subcategory (e.g. Audio Guides)"
+                      className="mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] text-cyan-200"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-slate-400 mb-1">Category</label>
+                    <select
+                      value={productForm.category}
+                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"
+                    >
+                      <option value="Living Culture">Living Culture</option>
+                      <option value="Everyday Essentials">Everyday Essentials</option>
+                      <option value="Women Entrepreneurship">Women Entrepreneurship</option>
+                      <option value="AI Free Training">AI Free Training</option>
+                      <option value="Water Security">Water Security</option>
+                      <option value="Protect the Earth">Protect the Earth</option>
+                      <option value="Hill and City">Hill and City</option>
+                      <option value="Sports Ecosystem">Sports Ecosystem</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -1623,6 +1891,89 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"
                 />
               </div>
+
+              {/* DIGITAL HTML CODE EDITOR (Only for E-Products & eBooks — Locked on Server Until Purchase) */}
+              {productForm.product_type === 'digital' && (
+                <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/40 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="text-xs font-bold text-cyan-300 flex items-center space-x-1.5">
+                        <Code2 className="w-4 h-4" />
+                        <span>Interactive HTML Code (eBook / eProduct Content)</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Strictly locked on server — delivered and executed for the buyer ONLY after verified payment.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <label className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] cursor-pointer inline-flex items-center space-x-1 transition">
+                        <FileCode className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Upload .html</span>
+                        <input
+                          type="file"
+                          accept=".html,.htm,text/html"
+                          className="hidden"
+                          onChange={(e) => handleHtmlFileUpload(e.target.files?.[0] || null)}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={insertSampleEbookHtml}
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] transition"
+                      >
+                        Sample Template
+                      </button>
+                      {productForm.digital_html_content.trim() && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewDigitalItem({
+                              product_id: editingProduct?.id || 'preview',
+                              product_name: productForm.name || 'Live Preview',
+                              subcategory: productForm.subcategory,
+                              category: productForm.category,
+                              image_url: productForm.image_url,
+                              digital_html_content: productForm.digital_html_content,
+                              order_number: 'ADMIN-PREVIEW',
+                              customer_email: 'admin@ugtindia.space',
+                            })
+                          }
+                          className="px-2.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[11px] inline-flex items-center space-x-1 transition"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Preview HTML</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <textarea
+                    rows={8}
+                    required={productForm.product_type === 'digital'}
+                    value={productForm.digital_html_content}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, digital_html_content: e.target.value })
+                    }
+                    placeholder="<!DOCTYPE html>&#10;<html>&#10;  <body>&#10;    <h1>Your interactive eBook or HTML eProduct code here...</h1>&#10;  </body>&#10;</html>"
+                    className="w-full bg-slate-950 border border-cyan-500/30 rounded-xl px-3 py-2.5 font-mono text-[11px] text-cyan-100 focus:border-cyan-400 focus:outline-none leading-relaxed"
+                  />
+
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Buyer Access Note (shown before purchase)
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.digital_access_note}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, digital_access_note: e.target.value })
+                      }
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 space-y-2">
                 <div className="text-[11px] font-bold text-emerald-300">Default Mission & Impact Allocation</div>
@@ -1803,6 +2154,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         </div>
       )}
+
+      {/* ADMIN LIVE HTML PREVIEW MODAL */}
+      <DigitalReaderModal
+        item={previewDigitalItem}
+        onClose={() => setPreviewDigitalItem(null)}
+        isPreview={true}
+      />
 
     </div>
   );

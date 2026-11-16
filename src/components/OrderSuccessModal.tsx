@@ -1,14 +1,22 @@
 import React, { useEffect } from 'react';
-import { CheckCircle2, Heart, Printer, ArrowRight, ShieldCheck, Sparkles, MapPin, Package } from 'lucide-react';
+import {
+  CheckCircle2, Heart, Printer, ArrowRight, ShieldCheck, Sparkles, MapPin, Package,
+  Unlock, BookOpen, Download
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Order } from '../types.ts';
+import { Order, UnlockedDigitalItem } from '../types.ts';
 
 interface OrderSuccessModalProps {
   order: Order | null;
   onClose: () => void;
+  onLaunchDigital?: (item: UnlockedDigitalItem) => void;
 }
 
-export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onClose }) => {
+export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
+  order,
+  onClose,
+  onLaunchDigital,
+}) => {
   if (!order) return null;
 
   useEffect(() => {
@@ -84,6 +92,71 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
               </div>
             </div>
           </div>
+
+          {/* UNLOCKED DIGITAL E-PRODUCTS & EBOOKS */}
+          {order.digital_items && order.digital_items.length > 0 && (
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-950/80 via-slate-900 to-emerald-950/60 border border-cyan-400/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-cyan-300 font-bold text-xs uppercase tracking-wider">
+                  <Unlock className="w-4 h-4 text-emerald-400" />
+                  <span>Unlocked eProducts &amp; eBooks Ready!</span>
+                </div>
+                <span className="text-[10px] font-mono text-cyan-200 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-700/60">
+                  Saved to My Library
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {order.digital_items.map((digi) => (
+                  <div
+                    key={digi.product_id}
+                    className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <BookOpen className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-white truncate">{digi.product_name}</div>
+                        <div className="text-[10px] text-cyan-300">
+                          {digi.subcategory || 'Digital HTML Access'} · Instant Interactive Reader
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const blob = new Blob([digi.digital_html_content], { type: 'text/html;charset=utf-8' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `${digi.product_name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold flex items-center space-x-1"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>HTML</span>
+                      </button>
+                      {onLaunchDigital && (
+                        <button
+                          type="button"
+                          onClick={() => onLaunchDigital(digi)}
+                          className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 text-[11px] font-extrabold flex items-center space-x-1 transition"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Open &amp; Launch</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Delivery & Logistics Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

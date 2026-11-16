@@ -14,6 +14,8 @@ export interface Cause {
   created_at?: string;
 }
 
+export type ProductType = 'physical' | 'digital';
+
 export interface Product {
   id: string;
   name: string;
@@ -22,6 +24,11 @@ export interface Product {
   price: number;
   compare_at_price?: number;
   category: string;
+  subcategory?: string;
+  product_type?: ProductType;
+  digital_html_content?: string;
+  digital_access_note?: string;
+  has_digital_content?: boolean | number;
   image_url: string;
   stock: number;
   is_featured: number;
@@ -34,6 +41,19 @@ export interface Product {
   created_at?: string;
   cause_title?: string;
   cause_category?: string;
+}
+
+export interface UnlockedDigitalItem {
+  product_id: string;
+  product_name: string;
+  subcategory?: string;
+  category?: string;
+  image_url?: string;
+  digital_html_content: string;
+  digital_access_note?: string;
+  order_number: string;
+  customer_email: string;
+  purchased_at?: string;
 }
 
 export interface CartItem {
@@ -83,6 +103,7 @@ export interface Order {
   created_at: string;
   items?: OrderItem[];
   cause_title?: string;
+  digital_items?: UnlockedDigitalItem[];
 }
 
 export interface PaymentTransaction {

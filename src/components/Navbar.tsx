@@ -1,9 +1,12 @@
 import React from 'react';
-import { ShoppingBag, Heart, Search, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Heart, Search, ShieldCheck, BookOpen } from 'lucide-react';
 
 interface NavbarProps {
   cartCount: number;
+  libraryCount?: number;
   onOpenCart: () => void;
+  onOpenLibrary?: () => void;
+  onScrollToEProducts?: () => void;
   searchTerm: string;
   onSearchChange: (val: string) => void;
   onNavigateHome: () => void;
@@ -11,7 +14,10 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   cartCount,
+  libraryCount = 0,
   onOpenCart,
+  onOpenLibrary,
+  onScrollToEProducts,
   searchTerm,
   onSearchChange,
   onNavigateHome,
@@ -108,8 +114,34 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Right: Cart Button */}
-          <div className="flex items-center space-x-3">
+          {/* Right: E-Products, My Library & Cart Buttons */}
+          <div className="flex items-center space-x-2">
+            {onScrollToEProducts && (
+              <button
+                onClick={onScrollToEProducts}
+                className="hidden sm:flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/30 text-cyan-300 font-semibold text-xs transition-all"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>E-Products</span>
+              </button>
+            )}
+
+            {onOpenLibrary && (
+              <button
+                onClick={onOpenLibrary}
+                className="relative flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/40 text-slate-200 font-semibold text-xs transition-all"
+                title="Open your purchased eBooks & eProducts"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">My Library</span>
+                {libraryCount > 0 && (
+                  <span className="flex items-center justify-center bg-cyan-400 text-slate-950 text-[10px] font-black h-4 min-w-4 px-1 rounded-full">
+                    {libraryCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             <button
               onClick={onOpenCart}
               className="relative flex items-center space-x-2.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs shadow-sm transition-all active:scale-95"

@@ -12,10 +12,26 @@ const schemaPath = path.join(__dirname, 'schema.sql');
 
 export const db = new DatabaseSync(dbPath);
 
-// Initialize tables
+// Initialize tables & safely migrate new columns
 export function initDatabase() {
   const schema = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schema);
+
+  // Ensure digital product columns exist on older SQLite databases
+  const cols = (db.prepare('PRAGMA table_info(products)').all() as any[]).map((c) => c.name);
+  if (!cols.includes('product_type')) {
+    db.exec("ALTER TABLE products ADD COLUMN product_type TEXT DEFAULT 'physical'");
+  }
+  if (!cols.includes('subcategory')) {
+    db.exec("ALTER TABLE products ADD COLUMN subcategory TEXT DEFAULT ''");
+  }
+  if (!cols.includes('digital_html_content')) {
+    db.exec("ALTER TABLE products ADD COLUMN digital_html_content TEXT DEFAULT ''");
+  }
+  if (!cols.includes('digital_access_note')) {
+    db.exec("ALTER TABLE products ADD COLUMN digital_access_note TEXT DEFAULT ''");
+  }
+
   console.log('✓ Database schema verified and active at:', dbPath);
 }
 
@@ -53,6 +69,11 @@ export interface Product {
   price: number;
   compare_at_price?: number;
   category: string;
+  subcategory?: string;
+  product_type?: 'physical' | 'digital';
+  digital_html_content?: string;
+  digital_access_note?: string;
+  has_digital_content?: number | boolean;
   image_url: string;
   stock: number;
   is_featured: number;
@@ -190,9 +211,21 @@ export function resetAllCausesToZero(): Cause[] {
 }
 
 // --- Product Operations ---
+// Public product listing: NEVER exposes digital_html_content (locked until purchase!)
+const PUBLIC_PRODUCT_COLS = `
+  p.id, p.name, p.slug, p.description, p.price, p.compare_at_price,
+  p.category, COALESCE(p.subcategory, '') as subcategory,
+  COALESCE(p.product_type, 'physical') as product_type,
+  COALESCE(p.digital_access_note, '') as digital_access_note,
+  CASE WHEN COALESCE(p.digital_html_content, '') != '' THEN 1 ELSE 0 END as has_digital_content,
+  p.image_url, p.stock, p.is_featured, p.cause_id, p.cause_allocation_pct,
+  p.cause_impact_text, p.rating, p.reviews_count, p.badge, p.created_at,
+  c.title as cause_title, c.category as cause_category
+`;
+
 export function getAllProducts(category?: string, search?: string): Product[] {
   let query = `
-    SELECT p.*, c.title as cause_title, c.category as cause_category 
+    SELECT ${PUBLIC_PRODUCT_COLS}
     FROM products p
     LEFT JOIN causes c ON p.cause_id = c.id
     WHERE 1=1
@@ -205,9 +238,9 @@ export function getAllProducts(category?: string, search?: string): Product[] {
   }
 
   if (search && search.trim() !== '') {
-    query += ` AND (p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ?)`;
+    query += ` AND (p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ? OR p.subcategory LIKE ?)`;
     const term = `%${search.trim()}%`;
-    params.push(term, term, term);
+    params.push(term, term, term, term);
   }
 
   query += ` ORDER BY p.created_at DESC, p.rowid DESC`;
@@ -216,9 +249,23 @@ export function getAllProducts(category?: string, search?: string): Product[] {
   return stmt.all(...params) as unknown as Product[];
 }
 
-export function getProductById(id: string): Product | undefined {
+// Admin product listing: includes full digital_html_content for editing
+export function getAllProductsAdmin(): Product[] {
   const stmt = db.prepare(`
-    SELECT p.*, c.title as cause_title, c.category as cause_category 
+    SELECT p.*, c.title as cause_title, c.category as cause_category
+    FROM products p
+    LEFT JOIN causes c ON p.cause_id = c.id
+    ORDER BY p.created_at DESC, p.rowid DESC
+  `);
+  return stmt.all() as unknown as Product[];
+}
+
+export function getProductById(id: string, includeDigitalHtml = false): Product | undefined {
+  const cols = includeDigitalHtml
+    ? 'p.*, c.title as cause_title, c.category as cause_category'
+    : PUBLIC_PRODUCT_COLS;
+  const stmt = db.prepare(`
+    SELECT ${cols}
     FROM products p
     LEFT JOIN causes c ON p.cause_id = c.id
     WHERE p.id = ?
@@ -229,10 +276,11 @@ export function getProductById(id: string): Product | undefined {
 export function createProduct(prod: Omit<Product, 'created_at'>): Product {
   const stmt = db.prepare(`
     INSERT INTO products (
-      id, name, slug, description, price, compare_at_price, category, 
-      image_url, stock, is_featured, cause_id, cause_allocation_pct, 
+      id, name, slug, description, price, compare_at_price, category,
+      subcategory, product_type, digital_html_content, digital_access_note,
+      image_url, stock, is_featured, cause_id, cause_allocation_pct,
       cause_impact_text, rating, reviews_count, badge
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   stmt.run(
     prod.id,
@@ -242,28 +290,33 @@ export function createProduct(prod: Omit<Product, 'created_at'>): Product {
     prod.price,
     prod.compare_at_price || null,
     prod.category,
+    prod.subcategory || '',
+    prod.product_type || 'physical',
+    prod.digital_html_content || '',
+    prod.digital_access_note || '',
     prod.image_url || '',
     prod.stock ?? 50,
     prod.is_featured ?? 0,
     prod.cause_id || 'cause-everyday-essentials',
     prod.cause_allocation_pct ?? 15,
     prod.cause_impact_text || '',
-    prod.rating ?? 5.0,
-    prod.reviews_count ?? 1,
+    prod.rating ?? 0,
+    prod.reviews_count ?? 0,
     prod.badge || ''
   );
-  return getProductById(prod.id)!;
+  return getProductById(prod.id, true)!;
 }
 
 export function updateProduct(id: string, prod: Partial<Product>): Product | undefined {
-  const current = getProductById(id);
+  const current = getProductById(id, true);
   if (!current) return undefined;
 
   const updated = { ...current, ...prod };
   const stmt = db.prepare(`
     UPDATE products SET
       name = ?, slug = ?, description = ?, price = ?, compare_at_price = ?,
-      category = ?, image_url = ?, stock = ?, is_featured = ?, cause_id = ?,
+      category = ?, subcategory = ?, product_type = ?, digital_html_content = ?, digital_access_note = ?,
+      image_url = ?, stock = ?, is_featured = ?, cause_id = ?,
       cause_allocation_pct = ?, cause_impact_text = ?, badge = ?
     WHERE id = ?
   `);
@@ -274,6 +327,10 @@ export function updateProduct(id: string, prod: Partial<Product>): Product | und
     updated.price,
     updated.compare_at_price || null,
     updated.category,
+    updated.subcategory || '',
+    updated.product_type || 'physical',
+    updated.digital_html_content ?? '',
+    updated.digital_access_note ?? '',
     updated.image_url,
     updated.stock,
     updated.is_featured,
@@ -283,7 +340,36 @@ export function updateProduct(id: string, prod: Partial<Product>): Product | und
     updated.badge || '',
     id
   );
-  return getProductById(id);
+  return getProductById(id, true);
+}
+
+// Unlock purchased digital products/eBooks ONLY when order is verified PAID
+export function getUnlockedDigitalItemsByOrder(orderNumber: string, email?: string) {
+  let query = `
+    SELECT
+      p.id as product_id,
+      p.name as product_name,
+      COALESCE(p.subcategory, '') as subcategory,
+      p.category,
+      p.image_url,
+      p.digital_html_content,
+      COALESCE(p.digital_access_note, '') as digital_access_note,
+      o.order_number,
+      o.customer_email,
+      o.created_at as purchased_at
+    FROM orders o
+    INNER JOIN order_items oi ON oi.order_id = o.id
+    INNER JOIN products p ON p.id = oi.product_id
+    WHERE o.payment_status = 'paid'
+      AND UPPER(o.order_number) = UPPER(?)
+      AND COALESCE(p.product_type, 'physical') = 'digital'
+  `;
+  const params: any[] = [orderNumber.trim()];
+  if (email && email.trim()) {
+    query += ` AND LOWER(o.customer_email) = LOWER(?)`;
+    params.push(email.trim());
+  }
+  return db.prepare(query).all(...params);
 }
 
 export function deleteProduct(id: string): boolean {

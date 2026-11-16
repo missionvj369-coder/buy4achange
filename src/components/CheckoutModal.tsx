@@ -34,8 +34,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     guardianId: 'UGT-IND-BLR-5603',
   });
 
+  const isDigitalOnly = items.length > 0 && items.every((it) => it.product.product_type === 'digital');
+  const hasDigitalItems = items.some((it) => it.product.product_type === 'digital');
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const shippingFee = subtotal >= 1000 ? 0 : 70;
+  const shippingFee = isDigitalOnly || subtotal >= 1000 ? 0 : 70;
   const total = subtotal + shippingFee;
 
   const totalDonationAmount = items.reduce((sum, it) => {
@@ -79,13 +81,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.customerName || !formData.shippingAddress || !formData.pincode) {
+    if (!formData.customerName || !formData.customerEmail) {
+      alert('Please fill in your name and email address');
+      return;
+    }
+    if (!isDigitalOnly && (!formData.shippingAddress || !formData.pincode)) {
       alert('Please fill in required shipping details');
       return;
     }
 
     onStartPayment({
       ...formData,
+      shippingAddress: isDigitalOnly ? 'Instant Digital Delivery' : formData.shippingAddress,
+      city: isDigitalOnly ? 'Digital Vault' : formData.city,
+      state: isDigitalOnly ? 'Online' : formData.state,
+      pincode: isDigitalOnly ? '000000' : formData.pincode,
       subtotal,
       shippingFee,
       totalAmount: total,
@@ -95,6 +105,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       items: items.map((it) => ({
         productId: it.product.id,
         productName: it.product.name,
+        productType: it.product.product_type || 'physical',
         price: it.product.price,
         quantity: it.quantity,
         causeId: it.selectedCauseId || formData.selectedCauseId,
@@ -197,63 +208,80 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           </div>
 
-          {/* Shipping Address */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center space-x-2">
-                <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>Delivery Address</span>
-              </h3>
-              <span className="text-[10px] text-emerald-400 font-mono">
-                Hub: {formData.guardianId}
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Street Address, Flat / Villa No.</label>
-              <input
-                type="text"
-                required
-                value={formData.shippingAddress}
-                onChange={(e) => setFormData({ ...formData, shippingAddress: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">PIN Code (6 digits)</label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  value={formData.pincode}
-                  onChange={(e) => handlePincodeChange(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-emerald-300 focus:border-emerald-500 focus:outline-none font-bold"
-                />
+          {/* Digital Instant Delivery Notice OR Shipping Address */}
+          {isDigitalOnly ? (
+            <div className="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 space-y-1 text-xs">
+              <div className="font-bold text-cyan-300 flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                <span>Instant Digital Unlock (₹0 Shipping)</span>
               </div>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                No courier address needed. Your interactive HTML eBook / eProduct unlocks immediately on-screen and inside <strong>My Library</strong> using your Order Number and Email after payment.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {hasDigitalItems && (
+                <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-200">
+                  Your digital eProducts/eBooks in this order will unlock instantly after payment, while physical items ship to the address below.
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center space-x-2">
+                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Delivery Address</span>
+                </h3>
+                <span className="text-[10px] text-emerald-400 font-mono">
+                  Hub: {formData.guardianId}
+                </span>
+              </div>
+
               <div>
-                <label className="block text-[11px] text-slate-400 mb-1">City</label>
+                <label className="block text-[11px] text-slate-400 mb-1">Street Address, Flat / Villa No.</label>
                 <input
                   type="text"
                   required
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  value={formData.shippingAddress}
+                  onChange={(e) => setFormData({ ...formData, shippingAddress: e.target.value })}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">State</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">PIN Code (6 digits)</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={formData.pincode}
+                    onChange={(e) => handlePincodeChange(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-emerald-300 focus:border-emerald-500 focus:outline-none font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">City</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">State</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Order Summary */}
           <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1.5 text-xs">

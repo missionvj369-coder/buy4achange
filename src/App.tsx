@@ -9,9 +9,12 @@ import { CartDrawer } from './components/CartDrawer.tsx';
 import { CheckoutModal } from './components/CheckoutModal.tsx';
 import { PaymentGatewayModal } from './components/PaymentGatewayModal.tsx';
 import { OrderSuccessModal } from './components/OrderSuccessModal.tsx';
+import { EProductsSection } from './components/EProductsSection.tsx';
+import { DigitalLibraryModal } from './components/DigitalLibraryModal.tsx';
+import { DigitalReaderModal } from './components/DigitalReaderModal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { Footer } from './components/Footer.tsx';
-import { Cause, Product, CartItem, Order } from './types.ts';
+import { Cause, Product, CartItem, Order, UnlockedDigitalItem } from './types.ts';
 import { SlidersHorizontal, RefreshCw } from 'lucide-react';
 
 export function App() {
@@ -69,6 +72,40 @@ export function App() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [orderDraft, setOrderDraft] = useState<any | null>(null);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+
+  // Digital Library (Unlocked eBooks & eProducts — ONLY populated after verified paid orders!)
+  const [unlockedLibrary, setUnlockedLibrary] = useState<UnlockedDigitalItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('buy4achange_digital_library_v1');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [activeDigitalReader, setActiveDigitalReader] = useState<UnlockedDigitalItem | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('buy4achange_digital_library_v1', JSON.stringify(unlockedLibrary));
+    } catch {
+      // Ignore storage quota issues for very large HTML items
+    }
+  }, [unlockedLibrary]);
+
+  const mergeUnlockedItems = (incoming: UnlockedDigitalItem[]) => {
+    if (!incoming || incoming.length === 0) return;
+    setUnlockedLibrary((prev) => {
+      const map = new Map<string, UnlockedDigitalItem>();
+      for (const item of prev) {
+        map.set(`${item.order_number}:${item.product_id}`, item);
+      }
+      for (const item of incoming) {
+        map.set(`${item.order_number}:${item.product_id}`, item);
+      }
+      return Array.from(map.values());
+    });
+  };
 
   // Persist cart
   useEffect(() => {
@@ -179,6 +216,9 @@ export function App() {
       });
 
       const orderData = await res.json();
+      if (Array.isArray(orderData?.digital_items) && orderData.digital_items.length > 0) {
+        mergeUnlockedItems(orderData.digital_items);
+      }
       setCompletedOrder(orderData);
       setCartItems([]);
       fetchData();
@@ -187,8 +227,22 @@ export function App() {
     }
   };
 
-  // Filter products (every product can fund any of the 8 missions, so selecting a mission pre-selects it on all cards)
-  const filteredProducts = products.filter((p) => {
+  // Split Physical Catalog vs E-Products & eBooks
+  const physicalProducts = products.filter((p) => p.product_type !== 'digital');
+  const digitalProducts = products.filter((p) => {
+    if (p.product_type !== 'digital') return false;
+    if (searchTerm.trim() === '') return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q) ||
+      (p.subcategory || '').toLowerCase().includes(q)
+    );
+  });
+
+  // Filter physical products
+  const filteredProducts = physicalProducts.filter((p) => {
     const matchesCategory =
       selectedCategory === 'All' || p.category === selectedCategory;
     const matchesSearch =
@@ -202,7 +256,7 @@ export function App() {
   const activeMission = selectedCauseId ? causes.find((c) => c.id === selectedCauseId) : null;
 
   const dynamicCategories = Array.from(
-    new Set(products.map((p) => p.category).filter((c): c is string => Boolean(c && c.trim())))
+    new Set(physicalProducts.map((p) => p.category).filter((c): c is string => Boolean(c && c.trim())))
   );
   const categories = ['All', ...dynamicCategories];
 
@@ -234,7 +288,13 @@ export function App() {
       {/* Navigation (Customer Only, No Admin Button) */}
       <Navbar
         cartCount={totalCartCount}
+        libraryCount={unlockedLibrary.length}
         onOpenCart={() => setIsCartOpen(true)}
+        onOpenLibrary={() => setIsLibraryOpen(true)}
+        onScrollToEProducts={() => {
+          const el = document.getElementById('eproducts-section');
+          el?.scrollIntoView({ behavior: 'smooth' });
+        }}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onNavigateHome={() => {
@@ -356,6 +416,21 @@ export function App() {
 
           </div>
 
+          {/* Dedicated E-Products & eBooks Section (with Subcategories & Post-Purchase HTML Unlock) */}
+          <EProductsSection
+            eproducts={digitalProducts}
+            causes={causes}
+            preferredCauseId={selectedCauseId}
+            unlockedLibrary={unlockedLibrary}
+            onAddToCart={(p, cId) => handleAddToCart(p, cId, 1)}
+            onOpenDetails={(p, cId) => {
+              setSelectedProduct(p);
+              setModalInitialCauseId(cId);
+            }}
+            onLaunchUnlocked={(item) => setActiveDigitalReader(item)}
+            onOpenLibrary={() => setIsLibraryOpen(true)}
+          />
+
         </div>
       </main>
 
@@ -404,6 +479,28 @@ export function App() {
       <OrderSuccessModal
         order={completedOrder}
         onClose={() => setCompletedOrder(null)}
+        onLaunchDigital={(item) => {
+          setCompletedOrder(null);
+          setActiveDigitalReader(item);
+        }}
+      />
+
+      {/* Digital Library Vault (My Purchased eBooks & eProducts) */}
+      <DigitalLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        libraryItems={unlockedLibrary}
+        onAddUnlockedItems={mergeUnlockedItems}
+        onLaunchItem={(item) => {
+          setIsLibraryOpen(false);
+          setActiveDigitalReader(item);
+        }}
+      />
+
+      {/* Fullscreen Interactive HTML Viewer for Purchased eBooks & eProducts */}
+      <DigitalReaderModal
+        item={activeDigitalReader}
+        onClose={() => setActiveDigitalReader(null)}
       />
 
       {/* Footer */}

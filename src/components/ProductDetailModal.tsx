@@ -162,11 +162,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="grid grid-cols-2 gap-3 text-xs text-slate-300 pt-1">
               <div className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
                 <Truck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Free Shipping over ₹1,000</span>
+                <span>
+                  {product.product_type === 'digital'
+                    ? 'Instant HTML Unlock (₹0 Shipping)'
+                    : 'Free Shipping over ₹1,000'}
+                </span>
               </div>
               <div className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
                 <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>100% Cause Audit Guarantee</span>
+                <span>
+                  {product.product_type === 'digital'
+                    ? 'Unlocks Only After Purchase'
+                    : '100% Cause Audit Guarantee'}
+                </span>
               </div>
             </div>
 

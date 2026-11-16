@@ -322,13 +322,24 @@ export default {
         return json(cause);
       }
 
-      // Products
+      // Products (Public — NEVER returns digital_html_content; locked until purchase!)
+      const PUBLIC_PRODUCT_COLS = `
+        p.id, p.name, p.slug, p.description, p.price, p.compare_at_price,
+        p.category, COALESCE(p.subcategory, '') as subcategory,
+        COALESCE(p.product_type, 'physical') as product_type,
+        COALESCE(p.digital_access_note, '') as digital_access_note,
+        CASE WHEN COALESCE(p.digital_html_content, '') != '' THEN 1 ELSE 0 END as has_digital_content,
+        p.image_url, p.stock, p.is_featured, p.cause_id, p.cause_allocation_pct,
+        p.cause_impact_text, p.rating, p.reviews_count, p.badge, p.created_at,
+        c.title as cause_title, c.category as cause_category
+      `;
+
       if (pathname === '/api/products' && request.method === 'GET') {
         const category = searchParams.get('category');
         const search = searchParams.get('search');
 
         let query = `
-          SELECT p.*, c.title as cause_title, c.category as cause_category
+          SELECT ${PUBLIC_PRODUCT_COLS}
           FROM products p
           LEFT JOIN causes c ON p.cause_id = c.id
           WHERE 1=1
@@ -340,9 +351,9 @@ export default {
           params.push(category);
         }
         if (search && search.trim() !== '') {
-          query += ' AND (p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ?)';
+          query += ' AND (p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ? OR p.subcategory LIKE ?)';
           const term = `%${search.trim()}%`;
-          params.push(term, term, term);
+          params.push(term, term, term, term);
         }
         query += ' ORDER BY p.created_at DESC, p.rowid DESC';
 
@@ -355,7 +366,7 @@ export default {
       if (prodMatch && request.method === 'GET') {
         const id = decodeURIComponent(prodMatch[1]);
         const prod = await env.BUY4ACHANGE_DB.prepare(
-          'SELECT p.*, c.title as cause_title, c.category as cause_category FROM products p LEFT JOIN causes c ON p.cause_id = c.id WHERE p.id = ? OR p.slug = ?'
+          `SELECT ${PUBLIC_PRODUCT_COLS} FROM products p LEFT JOIN causes c ON p.cause_id = c.id WHERE p.id = ? OR p.slug = ?`
         )
           .bind(id, id)
           .first();
@@ -679,12 +690,15 @@ export default {
         if (!items.length) return json({ error: 'Order must contain at least one item' }, 400);
 
         const subtotal = items.reduce((sum: number, it: any) => sum + (parseFloat(it.price) || 0) * (parseInt(it.quantity) || 1), 0);
-        const shippingFee = subtotal >= 1000 ? 0 : 70;
+        const isDigitalOnly = items.every((it: any) => it.productType === 'digital');
+        const shippingFee = isDigitalOnly || subtotal >= 1000 ? 0 : 70;
         const totalAmount = subtotal + shippingFee;
 
         const orderId = `ord-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`;
         const orderNumber = `B4C-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
-        const trackingNumber = `UGT-EXP-${(body.city || 'IND').slice(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+        const trackingNumber = isDigitalOnly
+          ? `DIGI-INSTANT-${Math.floor(Math.random() * 9000 + 1000)}`
+          : `UGT-EXP-${(body.city || 'IND').slice(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
         const resolvedCauseId = body.causeId || items[0]?.causeId || 'cause-everyday-essentials';
         const donationAmount = parseFloat(body.causeDonationAmount) || Math.round(subtotal * 0.18);
         const paymentId = body.paymentId || `pay_b4c_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
@@ -777,7 +791,71 @@ export default {
 
         await env.BUY4ACHANGE_DB.batch(statements);
         const created = await getOrderWithItems(env, orderId);
-        return json(created, 201);
+
+        let digitalItems: any[] = [];
+        if ((body.paymentStatus || 'paid') === 'paid') {
+          const { results: digi } = await env.BUY4ACHANGE_DB.prepare(`
+            SELECT
+              p.id as product_id,
+              p.name as product_name,
+              COALESCE(p.subcategory, '') as subcategory,
+              p.category,
+              p.image_url,
+              p.digital_html_content,
+              COALESCE(p.digital_access_note, '') as digital_access_note,
+              o.order_number,
+              o.customer_email,
+              o.created_at as purchased_at
+            FROM orders o
+            INNER JOIN order_items oi ON oi.order_id = o.id
+            INNER JOIN products p ON p.id = oi.product_id
+            WHERE o.id = ?
+              AND o.payment_status = 'paid'
+              AND COALESCE(p.product_type, 'physical') = 'digital'
+          `).bind(orderId).all();
+          digitalItems = (digi as any[]) || [];
+        }
+
+        return json({ ...created, digital_items: digitalItems }, 201);
+      }
+
+      // Post-Purchase Digital Unlock (ONLY verified PAID orders unlock HTML eProducts & eBooks)
+      if (pathname === '/api/digital/unlock' && request.method === 'POST') {
+        const body: any = await request.json();
+        const orderNumber = String(body?.orderNumber || '').trim();
+        const email = String(body?.email || '').trim();
+        if (!orderNumber || !email) {
+          return json({ error: 'Order number and purchase email are required.' }, 400);
+        }
+
+        const { results: unlocked } = await env.BUY4ACHANGE_DB.prepare(`
+          SELECT
+            p.id as product_id,
+            p.name as product_name,
+            COALESCE(p.subcategory, '') as subcategory,
+            p.category,
+            p.image_url,
+            p.digital_html_content,
+            COALESCE(p.digital_access_note, '') as digital_access_note,
+            o.order_number,
+            o.customer_email,
+            o.created_at as purchased_at
+          FROM orders o
+          INNER JOIN order_items oi ON oi.order_id = o.id
+          INNER JOIN products p ON p.id = oi.product_id
+          WHERE o.payment_status = 'paid'
+            AND UPPER(o.order_number) = UPPER(?)
+            AND LOWER(o.customer_email) = LOWER(?)
+            AND COALESCE(p.product_type, 'physical') = 'digital'
+        `).bind(orderNumber, email).all();
+
+        if (!unlocked || unlocked.length === 0) {
+          return json({
+            error: 'No paid eProducts or eBooks found for this order number and email.',
+          }, 404);
+        }
+
+        return json({ success: true, items: unlocked });
       }
 
       // ============================================================
@@ -897,12 +975,26 @@ export default {
           return json(order);
         }
 
+        // Admin Full Products List (includes digital_html_content for editing)
+        if (pathname === '/api/admin/products' && request.method === 'GET') {
+          const { results } = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT p.*, c.title as cause_title, c.category as cause_category FROM products p LEFT JOIN causes c ON p.cause_id = c.id ORDER BY p.created_at DESC, p.rowid DESC'
+          ).all();
+          return json(results || []);
+        }
+
         // Products CRUD
         if (pathname === '/api/admin/products' && request.method === 'POST') {
           const b: any = await request.json();
-          if (!b.name || !b.price || !b.category || !b.cause_id) {
+          if (!b.name || b.price === undefined || b.price === '' || !b.category || !b.cause_id) {
             return json({ error: 'Missing required product fields (name, price, category, cause_id)' }, 400);
           }
+
+          const resolvedType = b.product_type === 'digital' ? 'digital' : 'physical';
+          if (resolvedType === 'digital' && !String(b.digital_html_content || '').trim()) {
+            return json({ error: 'HTML code content is required for eProducts and eBooks.' }, 400);
+          }
+
           const id = `prod-${Date.now()}`;
           const slug =
             b.slug ||
@@ -916,9 +1008,10 @@ export default {
           await env.BUY4ACHANGE_DB.prepare(`
             INSERT INTO products (
               id, name, slug, description, price, compare_at_price, category,
+              subcategory, product_type, digital_html_content, digital_access_note,
               image_url, stock, is_featured, cause_id, cause_allocation_pct,
               cause_impact_text, rating, reviews_count, badge
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `)
             .bind(
               id,
@@ -928,15 +1021,21 @@ export default {
               parseFloat(b.price),
               b.compare_at_price ? parseFloat(b.compare_at_price) : null,
               b.category,
+              b.subcategory || (resolvedType === 'digital' ? 'eBooks' : ''),
+              resolvedType,
+              resolvedType === 'digital' ? String(b.digital_html_content || '') : '',
+              resolvedType === 'digital'
+                ? b.digital_access_note || 'Instant interactive HTML access unlocked immediately after purchase'
+                : '',
               b.image_url || '',
-              parseInt(b.stock) || 50,
+              resolvedType === 'digital' ? parseInt(b.stock) || 9999 : parseInt(b.stock) || 50,
               b.is_featured ? 1 : 0,
               b.cause_id,
               parseFloat(b.cause_allocation_pct) || 15,
               b.cause_impact_text || 'Supports UGT India community development programs',
               0,
               0,
-              b.badge || ''
+              b.badge || (resolvedType === 'digital' ? 'Instant Digital Unlock' : '')
             )
             .run();
 
@@ -964,9 +1063,12 @@ export default {
           const existing: any = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first();
           if (!existing) return json({ error: 'Product not found' }, 404);
 
+          const resolvedType = (b.product_type ?? existing.product_type) === 'digital' ? 'digital' : 'physical';
+
           await env.BUY4ACHANGE_DB.prepare(`
             UPDATE products SET
               name = ?, description = ?, price = ?, compare_at_price = ?, category = ?,
+              subcategory = ?, product_type = ?, digital_html_content = ?, digital_access_note = ?,
               image_url = ?, stock = ?, cause_id = ?, cause_allocation_pct = ?,
               cause_impact_text = ?, badge = ?
             WHERE id = ?
@@ -977,6 +1079,10 @@ export default {
               b.price !== undefined ? parseFloat(b.price) : existing.price,
               b.compare_at_price !== undefined && b.compare_at_price !== '' ? parseFloat(b.compare_at_price) : existing.compare_at_price,
               b.category ?? existing.category,
+              b.subcategory ?? existing.subcategory ?? '',
+              resolvedType,
+              b.digital_html_content !== undefined ? b.digital_html_content : (existing.digital_html_content ?? ''),
+              b.digital_access_note !== undefined ? b.digital_access_note : (existing.digital_access_note ?? ''),
               b.image_url ?? existing.image_url,
               b.stock !== undefined ? parseInt(b.stock) : existing.stock,
               b.cause_id ?? existing.cause_id,
@@ -987,7 +1093,9 @@ export default {
             )
             .run();
 
-          const updated = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first();
+          const updated = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT p.*, c.title as cause_title, c.category as cause_category FROM products p LEFT JOIN causes c ON p.cause_id = c.id WHERE p.id = ?'
+          ).bind(id).first();
           return json(updated);
         }
 

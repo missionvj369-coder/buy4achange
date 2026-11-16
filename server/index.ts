@@ -8,10 +8,12 @@ import {
   getCauseById,
   resetAllCausesToZero,
   getAllProducts,
+  getAllProductsAdmin,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  getUnlockedDigitalItemsByOrder,
   getAllOrders,
   getOrderById,
   createOrder,
@@ -437,12 +439,15 @@ app.post('/api/orders', (req, res) => {
     }
 
     const subtotal = items.reduce((sum: number, it: any) => sum + (it.price || 0) * (it.quantity || 1), 0);
-    const shippingFee = subtotal >= 1000 ? 0 : 70;
+    const isDigitalOnly = items.every((it: any) => it.productType === 'digital');
+    const shippingFee = isDigitalOnly || subtotal >= 1000 ? 0 : 70;
     const totalAmount = subtotal + shippingFee;
 
     const orderId = `ord-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`;
     const orderNumber = `B4C-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
-    const trackingNumber = `UGT-EXP-${(city || 'IND').slice(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const trackingNumber = isDigitalOnly
+      ? `DIGI-INSTANT-${Math.floor(Math.random() * 9000 + 1000)}`
+      : `UGT-EXP-${(city || 'IND').slice(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
     const resolvedCauseId = causeId || items[0]?.causeId || 'cause-everyday-essentials';
 
@@ -492,9 +497,32 @@ app.post('/api/orders', (req, res) => {
     });
 
     const created = createOrder(orderData, orderItems);
-    res.status(201).json(created);
+    const digitalItems =
+      (paymentStatus || 'paid') === 'paid'
+        ? getUnlockedDigitalItemsByOrder(orderNumber, customerEmail)
+        : [];
+    res.status(201).json({ ...created, digital_items: digitalItems });
   } catch (err: any) {
     console.error('Error creating order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Post-Purchase Digital Unlock Endpoint (HTML eProducts & eBooks ONLY after verified paid order!)
+app.post('/api/digital/unlock', (req, res) => {
+  try {
+    const { orderNumber, email } = req.body || {};
+    if (!orderNumber || !email) {
+      return res.status(400).json({ error: 'Order number and purchase email are required.' });
+    }
+    const unlocked = getUnlockedDigitalItemsByOrder(orderNumber, email);
+    if (!unlocked || unlocked.length === 0) {
+      return res.status(404).json({
+        error: 'No paid eProducts or eBooks found for this order number and email.',
+      });
+    }
+    res.json({ success: true, items: unlocked });
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -574,6 +602,15 @@ app.patch('/api/admin/orders/:id/status', requireAdminAuth, (req, res) => {
   }
 });
 
+// Admin Full Products List (includes digital_html_content for editing)
+app.get('/api/admin/products', requireAdminAuth, (_req, res) => {
+  try {
+    res.json(getAllProductsAdmin());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Product Management (CRUD)
 app.post('/api/admin/products', requireAdminAuth, (req, res) => {
   try {
@@ -584,6 +621,10 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
       price,
       compare_at_price,
       category,
+      subcategory,
+      product_type,
+      digital_html_content,
+      digital_access_note,
       image_url,
       stock,
       is_featured,
@@ -593,8 +634,13 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
       badge
     } = req.body;
 
-    if (!name || !price || !category || !cause_id) {
+    if (!name || price === undefined || price === '' || !category || !cause_id) {
       return res.status(400).json({ error: 'Missing required product fields (name, price, category, cause_id)' });
+    }
+
+    const resolvedType = product_type === 'digital' ? 'digital' : 'physical';
+    if (resolvedType === 'digital' && !String(digital_html_content || '').trim()) {
+      return res.status(400).json({ error: 'HTML code content is required for eProducts and eBooks.' });
     }
 
     const id = `prod-${Date.now()}`;
@@ -612,15 +658,22 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
       price: parseFloat(price),
       compare_at_price: compare_at_price ? parseFloat(compare_at_price) : undefined,
       category,
+      subcategory: subcategory || (resolvedType === 'digital' ? 'eBooks' : ''),
+      product_type: resolvedType,
+      digital_html_content: resolvedType === 'digital' ? String(digital_html_content || '') : '',
+      digital_access_note:
+        resolvedType === 'digital'
+          ? digital_access_note || 'Instant interactive HTML access unlocked immediately after purchase'
+          : '',
       image_url: image_url || '',
-      stock: parseInt(stock) || 50,
+      stock: resolvedType === 'digital' ? parseInt(stock) || 9999 : parseInt(stock) || 50,
       is_featured: is_featured ? 1 : 0,
       cause_id,
       cause_allocation_pct: parseFloat(cause_allocation_pct) || 15,
       cause_impact_text: cause_impact_text || 'Supports UGT India community development programs',
       rating: 0,
       reviews_count: 0,
-      badge: badge || ''
+      badge: badge || (resolvedType === 'digital' ? 'Instant Digital Unlock' : '')
     });
 
     res.status(201).json(newProduct);
