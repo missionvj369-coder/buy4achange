@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Proxy all /api/* requests to the live Cloudflare Workers + D1 production API
+[[redirects]]
+  from = "/api/*"
+  to = "https://buy4achange.bethechangeugt.workers.dev/api/:splat"
+  status = 200
+  force = true
+
+# SPA fallback so /admin (and any client-side route) loads React index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

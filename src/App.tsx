@@ -15,20 +15,27 @@ import { Cause, Product, CartItem, Order } from './types.ts';
 import { SlidersHorizontal, RefreshCw } from 'lucide-react';
 
 export function App() {
-  // Simple SPA routing: check if on /admin
+  // Simple SPA routing: check if on /admin (supports /admin, /admin/, /admin/*, or #/admin)
   const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname);
+  const [currentHash, setCurrentHash] = useState<string>(() => window.location.hash);
 
   useEffect(() => {
-    const handlePopState = () => {
+    const handleRouteChange = () => {
       setCurrentPath(window.location.pathname);
+      setCurrentHash(window.location.hash);
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', handleRouteChange);
+    window.addEventListener('hashchange', handleRouteChange);
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('hashchange', handleRouteChange);
+    };
   }, []);
 
   const navigateTo = (path: string) => {
     window.history.pushState({}, '', path);
     setCurrentPath(path);
+    setCurrentHash('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -208,8 +215,12 @@ export function App() {
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // ROUTE: ADMIN PORTAL (/admin)
-  if (currentPath === '/admin' || currentPath === '/admin/') {
+  // ROUTE: ADMIN PORTAL (/admin, /admin/, /admin/*, or #/admin)
+  const isAdminRoute =
+    /^\/admin(\/.*)?$/i.test(currentPath) ||
+    /^#\/?admin(\/.*)?$/i.test(currentHash);
+
+  if (isAdminRoute) {
     return (
       <AdminPortal
         causes={causes}
