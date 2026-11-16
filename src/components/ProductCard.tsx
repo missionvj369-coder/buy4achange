@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, Plus, Star, Check } from 'lucide-react';
 import { Product, Cause } from '../types.ts';
 
 interface ProductCardProps {
   product: Product;
   causes: Cause[];
+  preferredCauseId?: string | null;
   onAddToCart: (product: Product, selectedCauseId: string) => void;
   onOpenDetails: (product: Product, initialCauseId?: string) => void;
 }
@@ -12,13 +13,22 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   causes,
+  preferredCauseId,
   onAddToCart,
   onOpenDetails,
 }) => {
   const [selectedCauseId, setSelectedCauseId] = useState<string>(
-    product.cause_id || causes[0]?.id || 'cause-everyday-essentials'
+    preferredCauseId || product.cause_id || causes[0]?.id || 'cause-everyday-essentials'
   );
   const [justAdded, setJustAdded] = useState(false);
+
+  useEffect(() => {
+    if (preferredCauseId) {
+      setSelectedCauseId(preferredCauseId);
+    } else if (product.cause_id) {
+      setSelectedCauseId(product.cause_id);
+    }
+  }, [preferredCauseId, product.cause_id]);
 
   const selectedCause = causes.find((c) => c.id === selectedCauseId) || causes[0];
   const donationAmount = Math.round((product.price * (product.cause_allocation_pct || 15)) / 100);
@@ -37,12 +47,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Top Media Container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-950/40 text-slate-500 text-xs font-semibold">
+            {product.category}
+          </div>
+        )}
 
         {/* Badge */}
         {product.badge && (
@@ -71,11 +87,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span className="text-slate-400 font-medium tracking-wide">
               {product.category}
             </span>
-            <div className="flex items-center space-x-1 text-amber-400 font-semibold">
-              <Star className="w-3.5 h-3.5 fill-amber-400" />
-              <span>{product.rating}</span>
-              <span className="text-slate-500 text-[10px]">({product.reviews_count})</span>
-            </div>
+            {product.reviews_count > 0 && product.rating > 0 ? (
+              <div className="flex items-center space-x-1 text-amber-400 font-semibold">
+                <Star className="w-3.5 h-3.5 fill-amber-400" />
+                <span>{product.rating}</span>
+                <span className="text-slate-500 text-[10px]">({product.reviews_count})</span>
+              </div>
+            ) : (
+              <span className="text-[10px] font-semibold text-emerald-400">
+                {product.stock > 0 ? `${product.stock} in stock` : 'Sold out'}
+              </span>
+            )}
           </div>
 
           {/* Title */}

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   getAllCauses,
   getCauseById,
+  resetAllCausesToZero,
   getAllProducts,
   getProductById,
   createProduct,
@@ -48,11 +49,18 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(
   express.json({
+    limit: '5mb',
     verify: (req: any, _res, buf) => {
       req.rawBody = buf.toString('utf8');
     },
   })
 );
+
+// Disable caching on all API endpoints so live inventory & mission updates reflect immediately
+app.use('/api', (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  next();
+});
 
 // Request logger
 app.use((req, res, next) => {
@@ -590,7 +598,11 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
     }
 
     const id = `prod-${Date.now()}`;
-    const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const generatedSlug =
+      slug ||
+      name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') +
+        '-' +
+        Math.floor(Math.random() * 900 + 100);
 
     const newProduct = createProduct({
       id,
@@ -600,18 +612,28 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
       price: parseFloat(price),
       compare_at_price: compare_at_price ? parseFloat(compare_at_price) : undefined,
       category,
-      image_url: image_url || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80',
+      image_url: image_url || '',
       stock: parseInt(stock) || 50,
       is_featured: is_featured ? 1 : 0,
       cause_id,
       cause_allocation_pct: parseFloat(cause_allocation_pct) || 15,
       cause_impact_text: cause_impact_text || 'Supports UGT India community development programs',
-      rating: 5.0,
-      reviews_count: 1,
-      badge: badge || 'New Impact Arrival'
+      rating: 0,
+      reviews_count: 0,
+      badge: badge || ''
     });
 
     res.status(201).json(newProduct);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reset all 8 missions to zero (live start)
+app.post('/api/admin/missions/reset', requireAdminAuth, (_req, res) => {
+  try {
+    const causes = resetAllCausesToZero();
+    res.json({ success: true, causes });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -75,18 +75,18 @@ export function App() {
     localStorage.setItem('buy4achange_cart_v2', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Fetch causes and products
+  // Fetch causes and products (always live, never cached)
   const fetchData = async () => {
     setLoading(true);
     try {
       const [causesRes, productsRes] = await Promise.all([
-        fetch('/api/causes'),
-        fetch('/api/products'),
+        fetch('/api/causes', { cache: 'no-store' }),
+        fetch('/api/products', { cache: 'no-store' }),
       ]);
       const causesData = await causesRes.json();
       const productsData = await productsRes.json();
-      setCauses(causesData);
-      setProducts(productsData);
+      if (Array.isArray(causesData)) setCauses(causesData);
+      if (Array.isArray(productsData)) setProducts(productsData);
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
@@ -96,7 +96,7 @@ export function App() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPath]);
 
   // Cart actions with selected cause
   const handleAddToCart = (product: Product, selectedCause: string, quantity: number = 1) => {
@@ -187,31 +187,24 @@ export function App() {
     }
   };
 
-  // Filter products
+  // Filter products (every product can fund any of the 8 missions, so selecting a mission pre-selects it on all cards)
   const filteredProducts = products.filter((p) => {
     const matchesCategory =
       selectedCategory === 'All' || p.category === selectedCategory;
-    const matchesCause =
-      selectedCauseId === null || p.cause_id === selectedCauseId;
     const matchesSearch =
       searchTerm.trim() === '' ||
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.category.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesCause && matchesSearch;
+    return matchesCategory && matchesSearch;
   });
 
-  const categories = [
-    'All',
-    'Living Culture',
-    'Everyday Essentials',
-    'Women Entrepreneurship',
-    'AI Free Training',
-    'Water Security',
-    'Protect the Earth',
-    'Hill and City',
-    'Sports Ecosystem',
-  ];
+  const activeMission = selectedCauseId ? causes.find((c) => c.id === selectedCauseId) : null;
+
+  const dynamicCategories = Array.from(
+    new Set(products.map((p) => p.category).filter((c): c is string => Boolean(c && c.trim())))
+  );
+  const categories = ['All', ...dynamicCategories];
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -289,7 +282,9 @@ export function App() {
                   </span>
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Select your preferred UGT India mission on any product before adding to cart.
+                  {activeMission
+                    ? `Pre-selected to fund "${activeMission.title}" — you can change the mission on any product.`
+                    : 'Select your preferred UGT India mission on any product before adding to cart.'}
                 </p>
               </div>
 
@@ -320,20 +315,26 @@ export function App() {
             ) : filteredProducts.length === 0 ? (
               <div className="py-24 text-center space-y-3">
                 <SlidersHorizontal className="w-8 h-8 mx-auto text-slate-600" />
-                <h3 className="text-sm font-bold text-white">No products found</h3>
+                <h3 className="text-sm font-bold text-white">
+                  {products.length === 0 ? 'Conscious Products Launching Soon' : 'No matching products found'}
+                </h3>
                 <p className="text-xs text-slate-400">
-                  Try clearing your search or category filters.
+                  {products.length === 0
+                    ? 'Products added in the Operations Console will appear here immediately.'
+                    : 'Try clearing your search or category filters.'}
                 </p>
-                <button
-                  onClick={() => {
-                    setSelectedCategory('All');
-                    setSelectedCauseId(null);
-                    setSearchTerm('');
-                  }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-400"
-                >
-                  Reset All Filters
-                </button>
+                {products.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('All');
+                      setSelectedCauseId(null);
+                      setSearchTerm('');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-400"
+                  >
+                    Reset All Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-5">
@@ -342,6 +343,7 @@ export function App() {
                     key={product.id}
                     product={product}
                     causes={causes}
+                    preferredCauseId={selectedCauseId}
                     onAddToCart={(p, cId) => handleAddToCart(p, cId, 1)}
                     onOpenDetails={(p, cId) => {
                       setSelectedProduct(p);

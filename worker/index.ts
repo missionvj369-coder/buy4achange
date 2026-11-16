@@ -47,6 +47,7 @@ function json(data: unknown, status = 200): Response {
     headers: {
       ...CORS_HEADERS,
       'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
     },
   });
 }
@@ -343,7 +344,7 @@ export default {
           const term = `%${search.trim()}%`;
           params.push(term, term, term);
         }
-        query += ' ORDER BY p.is_featured DESC, p.created_at DESC';
+        query += ' ORDER BY p.created_at DESC, p.rowid DESC';
 
         const stmt = env.BUY4ACHANGE_DB.prepare(query);
         const { results } = params.length ? await stmt.bind(...params).all() : await stmt.all();
@@ -927,20 +928,33 @@ export default {
               parseFloat(b.price),
               b.compare_at_price ? parseFloat(b.compare_at_price) : null,
               b.category,
-              b.image_url || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80',
+              b.image_url || '',
               parseInt(b.stock) || 50,
               b.is_featured ? 1 : 0,
               b.cause_id,
               parseFloat(b.cause_allocation_pct) || 15,
               b.cause_impact_text || 'Supports UGT India community development programs',
-              5.0,
-              1,
-              b.badge || 'New Impact Arrival'
+              0,
+              0,
+              b.badge || ''
             )
             .run();
 
-          const created = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first();
+          const created = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT p.*, c.title as cause_title, c.category as cause_category FROM products p LEFT JOIN causes c ON p.cause_id = c.id WHERE p.id = ?'
+          ).bind(id).first();
           return json(created, 201);
+        }
+
+        // Reset all 8 missions to zero (live start)
+        if (pathname === '/api/admin/missions/reset' && request.method === 'POST') {
+          await env.BUY4ACHANGE_DB.prepare(
+            'UPDATE causes SET raised_amount = 0, impact_count = 0'
+          ).run();
+          const { results } = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT * FROM causes ORDER BY id ASC'
+          ).all();
+          return json({ success: true, causes: results || [] });
         }
 
         const adminProdMatch = pathname.match(/^\/api\/admin\/products\/([^/]+)$/);

@@ -3,7 +3,7 @@ import {
   Package, ShoppingCart, Plus, Edit, Trash2, Printer, ShieldCheck,
   Heart, Database, RefreshCw, Lock, LogOut, ArrowLeft, ExternalLink,
   ChevronRight, Calendar, CheckCircle2, AlertCircle, CreditCard, Key,
-  Copy, Check, Zap, Server
+  Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw
 } from 'lucide-react';
 import { Product, Order, Cause, AdminMetrics, PaymentTransaction } from '../types.ts';
 
@@ -62,6 +62,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Product CRUD modal state
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoSizeKb, setPhotoSizeKb] = useState<number | null>(null);
+  const [productError, setProductError] = useState<string | null>(null);
+  const [productNotice, setProductNotice] = useState<string | null>(null);
+  const [resettingMissions, setResettingMissions] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '',
     slug: '',
@@ -254,13 +260,103 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
+  // Resize & compress uploaded photo into an optimized JPEG Data URL (fast in D1 & instant on storefront)
+  const compressImageToDataUrl = (file: File): Promise<{ dataUrl: string; sizeKb: number }> =>
+    new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        return reject(new Error('Please select a valid image file (JPG, PNG, WebP).'));
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        return reject(new Error('Photo is too large (max 15 MB).'));
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not decode image file.'));
+        img.onload = () => {
+          const MAX_DIM = 900;
+          let { width, height } = img;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width >= height) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Canvas context unavailable'));
+          ctx.fillStyle = '#0f1728';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          const sizeKb = Math.round((dataUrl.length * 3) / 4 / 1024);
+          resolve({ dataUrl, sizeKb });
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handlePhotoFileChange = async (file: File | null) => {
+    if (!file) return;
+    setUploadingPhoto(true);
+    setProductError(null);
+    try {
+      const { dataUrl, sizeKb } = await compressImageToDataUrl(file);
+      setProductForm((prev) => ({ ...prev, image_url: dataUrl }));
+      setPhotoSizeKb(sizeKb);
+    } catch (err: any) {
+      setProductError(err.message || 'Photo upload failed');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  // Reset all 8 missions to zero (live data start)
+  const handleResetMissions = async () => {
+    if (!token) return;
+    if (!confirm('Reset all 8 UGT India mission totals and impact counters to 0?')) return;
+    setResettingMissions(true);
+    try {
+      const res = await fetch('/api/admin/missions/reset', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        onRefreshData();
+        fetchMetrics();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setResettingMissions(false);
+    }
+  };
+
   // Product Save (Add / Edit)
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
+    if (!productForm.image_url) {
+      setProductError('Please upload a product photo before saving.');
+      return;
+    }
+    setSavingProduct(true);
+    setProductError(null);
     try {
       const method = editingProduct ? 'PUT' : 'POST';
       const url = editingProduct ? `/api/admin/products/${editingProduct.id}` : '/api/admin/products';
+
+      const payload = {
+        ...productForm,
+        cause_id: productForm.cause_id || causes[0]?.id || 'cause-everyday-essentials',
+      };
 
       const res = await fetch(url, {
         method,
@@ -268,17 +364,29 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(productForm),
+        body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        setShowProductModal(false);
-        setEditingProduct(null);
-        onRefreshData();
-        fetchMetrics();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Failed to save product (HTTP ${res.status})`);
       }
-    } catch (e) {
-      console.error(e);
+
+      setShowProductModal(false);
+      setEditingProduct(null);
+      setPhotoSizeKb(null);
+      setProductNotice(
+        editingProduct
+          ? `"${productForm.name}" updated live on the storefront.`
+          : `"${productForm.name}" published live on the storefront.`
+      );
+      setTimeout(() => setProductNotice(null), 4000);
+      onRefreshData();
+      fetchMetrics();
+    } catch (err: any) {
+      setProductError(err.message || 'Could not save product. Please try again.');
+    } finally {
+      setSavingProduct(false);
     }
   };
 
@@ -302,6 +410,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const openAddProductModal = () => {
     setEditingProduct(null);
+    setProductError(null);
+    setPhotoSizeKb(null);
     setProductForm({
       name: '',
       slug: '',
@@ -309,18 +419,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       price: '',
       compare_at_price: '',
       category: 'Living Culture',
-      image_url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80',
+      image_url: '',
       stock: '50',
       cause_id: causes[0]?.id || 'cause-everyday-essentials',
       cause_allocation_pct: '15',
       cause_impact_text: 'Directly funds UGT India grassroots mission',
-      badge: 'Artisan Crafted',
+      badge: '',
     });
     setShowProductModal(true);
   };
 
   const openEditProductModal = (prod: Product) => {
     setEditingProduct(prod);
+    setProductError(null);
+    setPhotoSizeKb(null);
     setProductForm({
       name: prod.name,
       slug: prod.slug,
@@ -754,19 +866,37 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {/* TAB 2: PRODUCT INVENTORY CRUD */}
         {activeTab === 'products' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-bold text-white">Product Catalog Management</h3>
-                <p className="text-xs text-slate-400">Add, edit, adjust stock, and tie products to causes</p>
+                <p className="text-xs text-slate-400">
+                  Every product saved here publishes immediately to the live storefront ({products.length} active)
+                </p>
               </div>
-              <button
-                onClick={openAddProductModal}
-                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-sm flex items-center space-x-1.5 transition-all active:scale-95"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>Add Product</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={onNavigateStore}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center space-x-1.5 transition-all"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>View Live Store</span>
+                </button>
+                <button
+                  onClick={openAddProductModal}
+                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-sm flex items-center space-x-1.5 transition-all active:scale-95"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Add Product</span>
+                </button>
+              </div>
             </div>
+
+            {productNotice && (
+              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{productNotice}</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {products.map((p) => (
@@ -775,21 +905,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   className="bg-[#0f1728] border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3"
                 >
                   <div className="flex space-x-3">
-                    <img
-                      src={p.image_url}
-                      alt={p.name}
-                      className="w-16 h-16 rounded-xl object-cover bg-slate-900 shrink-0"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-semibold text-emerald-400 uppercase">
+                    {p.image_url ? (
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        className="w-16 h-16 rounded-xl object-cover bg-slate-900 shrink-0 border border-slate-800"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 shrink-0">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-[10px] font-semibold text-emerald-400 uppercase truncate">
                           {p.category}
                         </span>
-                        <span className="text-xs font-mono font-bold text-slate-400">
-                          Stock: {p.stock}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                          p.stock > 0
+                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                        }`}>
+                          {p.stock > 0 ? `Live · ${p.stock}` : 'Sold Out'}
                         </span>
                       </div>
-                      <h4 className="font-bold text-white text-xs line-clamp-1">{p.name}</h4>
+                      <h4 className="font-bold text-white text-xs line-clamp-1 mt-0.5">{p.name}</h4>
                       <div className="text-sm font-extrabold text-amber-300 mt-0.5">
                         ₹{p.price.toLocaleString()}
                       </div>
@@ -825,18 +965,44 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {activeTab === 'missions' && (
           <div className="space-y-4">
             <div className="bg-[#0f1728] p-5 rounded-2xl border border-slate-800 space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-white">
-                  UGT India 8 National Missions Status
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Live fundraising and deliverable metrics connected to ugtindia.space
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-base font-bold text-white">
+                      UGT India 8 National Missions — Live Status
+                    </h3>
+                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-bold text-emerald-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>LIVE DATA</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Real-time contributions updated automatically with every verified order.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => { onRefreshData(); fetchMetrics(); }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center space-x-1.5 transition"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Refresh</span>
+                  </button>
+                  <button
+                    onClick={handleResetMissions}
+                    disabled={resettingMissions}
+                    className="px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/50 text-rose-200 text-xs font-bold flex items-center space-x-1.5 transition"
+                  >
+                    <RotateCcw className={`w-3.5 h-3.5 ${resettingMissions ? 'animate-spin' : ''}`} />
+                    <span>{resettingMissions ? 'Resetting...' : 'Reset All to ₹0'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">
                 {causes.map((c) => {
-                  const pct = Math.min(100, (c.raised_amount / c.target_amount) * 100);
+                  const pct = c.target_amount > 0 ? Math.min(100, (c.raised_amount / c.target_amount) * 100) : 0;
                   return (
                     <div key={c.id} className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
                       <div className="flex justify-between items-center text-xs">
@@ -846,20 +1012,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="font-extrabold text-amber-300">
-                            ₹{(c.raised_amount / 1000).toFixed(1)}k
+                            ₹{Math.round(c.raised_amount || 0).toLocaleString('en-IN')}
                           </span>
                           <span className="text-slate-400"> / ₹{(c.target_amount / 1000).toFixed(0)}k</span>
                         </div>
                       </div>
                       <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-gradient-to-r from-emerald-500 to-amber-400 h-full rounded-full"
+                          className="bg-gradient-to-r from-emerald-500 to-amber-400 h-full rounded-full transition-all duration-500"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                       <div className="flex justify-between text-[11px] text-slate-400">
                         <span>{c.tagline}</span>
-                        <span className="font-bold text-emerald-400">{c.impact_count.toLocaleString()} {c.impact_metric}</span>
+                        <span className="font-bold text-emerald-400">{(c.impact_count || 0).toLocaleString('en-IN')} {c.impact_metric}</span>
                       </div>
                     </div>
                   );
@@ -1363,15 +1529,89 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
               </div>
 
+              {productError && (
+                <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{productError}</span>
+                </div>
+              )}
+
+              {/* Upload Product Photo (replaces external image link) */}
               <div>
-                <label className="block text-slate-400 mb-1">Image URL</label>
-                <input
-                  type="text"
-                  required
-                  value={productForm.image_url}
-                  onChange={(e) => setProductForm({ ...productForm, image_url: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white"
-                />
+                <label className="block text-slate-300 font-semibold mb-1.5">Product Photo</label>
+
+                {productForm.image_url ? (
+                  <div className="relative rounded-2xl border border-slate-700 bg-slate-900/80 p-3 flex items-center space-x-4">
+                    <img
+                      src={productForm.image_url}
+                      alt="Product preview"
+                      className="w-24 h-24 rounded-xl object-cover border border-slate-700 bg-slate-950 shrink-0"
+                    />
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <div className="text-xs font-bold text-emerald-300 flex items-center space-x-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        <span>Photo ready for live storefront</span>
+                      </div>
+                      {photoSizeKb !== null && (
+                        <div className="text-[11px] text-slate-400">
+                          Auto-optimized · {photoSizeKb} KB
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-2 pt-0.5">
+                        <label className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] cursor-pointer inline-flex items-center space-x-1.5 transition">
+                          <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Change Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handlePhotoFileChange(e.target.files?.[0] || null)}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductForm((prev) => ({ ...prev, image_url: '' }));
+                            setPhotoSizeKb(null);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900/70 text-rose-300 font-bold text-[11px] inline-flex items-center space-x-1 transition"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handlePhotoFileChange(e.dataTransfer.files?.[0] || null);
+                    }}
+                    className="flex flex-col items-center justify-center w-full py-6 px-4 rounded-2xl border-2 border-dashed border-slate-700 hover:border-emerald-500/70 bg-slate-900/60 hover:bg-slate-900 cursor-pointer transition-all text-center space-y-2"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                      {uploadingPhoto ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="text-xs font-bold text-white">
+                      {uploadingPhoto ? 'Optimizing photo...' : 'Click to upload photo or drag & drop'}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      JPG, PNG, or WebP · Automatically compressed for fast global loading
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handlePhotoFileChange(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                )}
               </div>
 
               <div>
@@ -1431,9 +1671,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold"
+                  disabled={savingProduct || uploadingPhoto}
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold flex items-center space-x-1.5 transition"
                 >
-                  Save Product
+                  {savingProduct && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{savingProduct ? 'Publishing...' : editingProduct ? 'Update Product' : 'Publish Product Live'}</span>
                 </button>
               </div>
             </form>

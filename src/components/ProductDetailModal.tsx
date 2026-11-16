@@ -94,11 +94,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
                 {product.category}
               </span>
-              <div className="flex items-center space-x-1 text-amber-400 font-bold text-sm">
-                <Star className="w-4 h-4 fill-amber-400" />
-                <span>{product.rating}</span>
-                <span className="text-slate-400 text-xs font-normal">({product.reviews_count} reviews)</span>
-              </div>
+              {product.reviews_count > 0 && product.rating > 0 ? (
+                <div className="flex items-center space-x-1 text-amber-400 font-bold text-sm">
+                  <Star className="w-4 h-4 fill-amber-400" />
+                  <span>{product.rating}</span>
+                  <span className="text-slate-400 text-xs font-normal">({product.reviews_count} reviews)</span>
+                </div>
+              ) : (
+                <span className="text-xs font-semibold text-emerald-400">
+                  {product.stock > 0 ? `${product.stock} available` : 'Out of stock'}
+                </span>
+              )}
             </div>
 
             {/* Product Name */}

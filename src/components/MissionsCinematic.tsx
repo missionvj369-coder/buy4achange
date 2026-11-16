@@ -254,17 +254,18 @@ const MissionCard: React.FC<MissionCardProps> = ({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span style={{ color: accent, fontWeight: 700 }}>
-                ₹{(cause.raised_amount / 1000).toFixed(0)}k raised
+                ₹{Math.round(cause.raised_amount || 0).toLocaleString('en-IN')} raised
               </span>
               <span className="text-slate-400">
-                {pct}% of ₹{(cause.target_amount / 1000).toFixed(0)}k
+                {pct}% of ₹{(cause.target_amount / 1000).toFixed(0)}k goal
               </span>
             </div>
-            {cause.impact_count > 0 && (
-              <div className="text-[11px] text-slate-300/75 font-medium">
-                {cause.impact_count.toLocaleString('en-IN')} {cause.impact_metric}
-              </div>
-            )}
+            <div className="text-[11px] text-slate-300/75 font-medium flex items-center space-x-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>
+                Live · {(cause.impact_count || 0).toLocaleString('en-IN')} {cause.impact_metric}
+              </span>
+            </div>
           </div>
 
           <button

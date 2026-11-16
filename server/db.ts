@@ -184,6 +184,11 @@ export function updateCauseRaised(id: string, amount: number, impactIncrement: n
   stmt.run(amount, impactIncrement, id);
 }
 
+export function resetAllCausesToZero(): Cause[] {
+  db.prepare('UPDATE causes SET raised_amount = 0, impact_count = 0').run();
+  return getAllCauses();
+}
+
 // --- Product Operations ---
 export function getAllProducts(category?: string, search?: string): Product[] {
   let query = `
@@ -205,7 +210,7 @@ export function getAllProducts(category?: string, search?: string): Product[] {
     params.push(term, term, term);
   }
 
-  query += ` ORDER BY p.is_featured DESC, p.created_at DESC`;
+  query += ` ORDER BY p.created_at DESC, p.rowid DESC`;
 
   const stmt = db.prepare(query);
   return stmt.all(...params) as unknown as Product[];
