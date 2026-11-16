@@ -373,8 +373,8 @@ export function getUnlockedDigitalItemsByOrder(orderNumber: string, email?: stri
 }
 
 export function deleteProduct(id: string): boolean {
-  const stmt = db.prepare('DELETE FROM products WHERE id = ?');
-  stmt.run(id);
+  db.prepare('UPDATE order_items SET product_id = NULL WHERE product_id = ?').run(id);
+  db.prepare('DELETE FROM products WHERE id = ?').run(id);
   return true;
 }
 

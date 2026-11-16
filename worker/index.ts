@@ -1101,7 +1101,10 @@ export default {
 
         if (adminProdMatch && request.method === 'DELETE') {
           const id = decodeURIComponent(adminProdMatch[1]);
-          await env.BUY4ACHANGE_DB.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
+          await env.BUY4ACHANGE_DB.batch([
+            env.BUY4ACHANGE_DB.prepare('UPDATE order_items SET product_id = NULL WHERE product_id = ?').bind(id),
+            env.BUY4ACHANGE_DB.prepare('DELETE FROM products WHERE id = ?').bind(id),
+          ]);
           return json({ success: true, message: 'Product successfully removed' });
         }
 
