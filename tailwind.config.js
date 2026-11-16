@@ -6,32 +6,40 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        brand: {
-          dark: '#070b14',
-          navy: '#0d1527',
-          surface: '#111b30',
-          border: '#1a263e',
-          emerald: '#059669',
-          forest: '#064e3b',
-          lightForest: '#047857',
-          gold: '#d97706',
-          amber: '#f59e0b',
-          champagne: '#fef3c7',
-          sand: '#fbfaf7',
-        }
-      },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-        cinematic: ['Cinzel', 'Georgia', 'serif'],
+        sans: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        cinematic: ['Cormorant Garamond', 'Georgia', 'serif'],
+        editorial: ['Newsreader', 'Georgia', 'serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      colors: {
+        obsidian: {
+          950: '#040609',
+          900: '#05070b',
+          850: '#090d14',
+          800: '#0e131d',
+          700: '#161d2b',
+        },
+        champagne: {
+          200: '#f5e6be',
+          300: '#ebd28f',
+          400: '#dfc06b',
+          500: '#d4af37',
+          600: '#b59024',
+        },
+        ivory: {
+          50: '#fcfaf5',
+          100: '#f5f1e8',
+          200: '#e6dfd0',
+          300: '#cfc6b4',
+        },
       },
       boxShadow: {
-        'glow': '0 0 45px -5px rgba(5, 150, 105, 0.35)',
-        'gold-glow': '0 0 45px -5px rgba(217, 119, 6, 0.35)',
-        'cinematic': '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(5, 150, 105, 0.15)',
-        'premium': '0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04)',
-      }
+        luxury: '0 24px 64px -16px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.06)',
+        gold: '0 12px 40px -10px rgba(212, 175, 55, 0.28)',
+        cinematic: '0 30px 90px -20px rgba(0, 0, 0, 0.85)',
+      },
     },
   },
   plugins: [],

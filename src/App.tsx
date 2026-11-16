@@ -12,6 +12,7 @@ import { OrderSuccessModal } from './components/OrderSuccessModal.tsx';
 import { EProductsSection } from './components/EProductsSection.tsx';
 import { DigitalLibraryModal } from './components/DigitalLibraryModal.tsx';
 import { DigitalReaderModal } from './components/DigitalReaderModal.tsx';
+import { MissionDocumentModal } from './components/MissionDocumentModal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { Cause, Product, CartItem, Order, UnlockedDigitalItem } from './types.ts';
@@ -84,6 +85,7 @@ export function App() {
   });
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [activeDigitalReader, setActiveDigitalReader] = useState<UnlockedDigitalItem | null>(null);
+  const [readingMissionCauseId, setReadingMissionCauseId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -280,7 +282,7 @@ export function App() {
 
   // ROUTE: CUSTOMER STOREFRONT (/)
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-[#05070b] text-ivory-100 flex flex-col font-sans selection:bg-champagne-500/30 selection:text-ivory-50">
       
       {/* Cinematic Opening Reveal */}
       {showIntro && <CinematicIntro onComplete={handleIntroComplete} />}
@@ -291,15 +293,21 @@ export function App() {
         libraryCount={unlockedLibrary.length}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenLibrary={() => setIsLibraryOpen(true)}
+        onScrollToMissions={() => {
+          document.getElementById('missions-showcase')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onScrollToCatalog={() => {
+          document.getElementById('catalog-grid')?.scrollIntoView({ behavior: 'smooth' });
+        }}
         onScrollToEProducts={() => {
-          const el = document.getElementById('eproducts-section');
-          el?.scrollIntoView({ behavior: 'smooth' });
+          document.getElementById('eproducts-section')?.scrollIntoView({ behavior: 'smooth' });
         }}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onNavigateHome={() => {
           setSelectedCauseId(null);
           setSelectedCategory('All');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
 
@@ -307,7 +315,7 @@ export function App() {
       <main className="flex-1">
         <div>
           
-          {/* Cinematic Hero */}
+          {/* Editorial Luxury Hero */}
           <HeroBanner
             causes={causes}
             selectedCauseId={selectedCauseId}
@@ -316,9 +324,13 @@ export function App() {
               const el = document.getElementById('missions-showcase') || document.getElementById('catalog-grid');
               el?.scrollIntoView({ behavior: 'smooth' });
             }}
+            onScrollToShop={() => {
+              document.getElementById('catalog-grid')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            onOpenMissionDoc={(causeId) => setReadingMissionCauseId(causeId)}
           />
 
-          {/* The 8 UGT India National Missions — Cinematic Visual Experience */}
+          {/* The 8 Official Living Tamilagam Missions — Editorial Visuals + Full Document Reader */}
           <MissionsCinematic
             causes={causes}
             selectedCauseId={selectedCauseId}
@@ -327,24 +339,28 @@ export function App() {
               const el = document.getElementById('catalog-grid');
               el?.scrollIntoView({ behavior: 'smooth' });
             }}
+            onOpenDocument={(causeId) => setReadingMissionCauseId(causeId)}
           />
 
           {/* Catalog Grid Section */}
-          <div id="catalog-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-16">
+          <div id="catalog-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             
             {/* Category Filter Pills & Catalog Header */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5 border-b border-slate-800">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white tracking-tight flex items-center space-x-2">
-                  <span>Conscious Catalog</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-white/[0.08]">
+              <div className="space-y-1.5">
+                <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-champagne-400">
+                  Curated Collection · Direct Mission Funding
+                </span>
+                <h2 className="font-display text-3xl sm:text-5xl font-medium text-ivory-50 tracking-tight flex flex-wrap items-center gap-3">
+                  <span>Conscious <span className="italic gold-gradient-text font-normal">Catalog</span></span>
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-white/[0.04] text-champagne-300 border border-champagne-500/30 font-semibold">
                     {filteredProducts.length} Items
                   </span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="font-editorial text-sm sm:text-base text-ivory-300/75">
                   {activeMission
                     ? `Pre-selected to fund "${activeMission.title}" — you can change the mission on any product.`
-                    : 'Select your preferred UGT India mission on any product before adding to cart.'}
+                    : 'Select your preferred Living Tamilagam mission on any product before adding to bag.'}
                 </p>
               </div>
 
@@ -354,10 +370,10 @@ export function App() {
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                       selectedCategory === cat
-                        ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                        : 'bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                        ? 'bg-champagne-400 text-obsidian-950 font-bold shadow-gold'
+                        : 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.08] border border-white/10'
                     }`}
                   >
                     {cat}
@@ -503,8 +519,23 @@ export function App() {
         onClose={() => setActiveDigitalReader(null)}
       />
 
+      {/* Official Living Tamilagam Mission Document Reader (All 8 Projects) */}
+      <MissionDocumentModal
+        causeId={readingMissionCauseId}
+        causes={causes}
+        onClose={() => setReadingMissionCauseId(null)}
+        onSelectMission={(cId) => setReadingMissionCauseId(cId)}
+        onFundMission={(cId) => {
+          setSelectedCauseId(cId);
+          setReadingMissionCauseId(null);
+          setTimeout(() => {
+            document.getElementById('catalog-grid')?.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }}
+      />
+
       {/* Footer */}
-      <Footer />
+      <Footer onOpenMissionDoc={(cId) => setReadingMissionCauseId(cId)} />
 
     </div>
   );

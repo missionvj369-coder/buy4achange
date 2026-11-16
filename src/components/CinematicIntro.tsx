@@ -9,7 +9,6 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete }) =>
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
 
-  // Particle canvas effect
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -20,16 +19,16 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete }) =>
     let h = (canvas.height = window.innerHeight);
 
     const particles: { x: number; y: number; vx: number; vy: number; alpha: number; r: number; color: string }[] = [];
-    const COLORS = ['#10b981', '#059669', '#f59e0b', '#6ee7b7', '#fbbf24'];
+    const COLORS = ['#d4af37', '#ebd28f', '#f5f1e8', '#10b981', '#c8a45c'];
 
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 75; i++) {
       particles.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        alpha: Math.random() * 0.5 + 0.1,
-        r: Math.random() * 1.5 + 0.5,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: -Math.random() * 0.25 - 0.05,
+        alpha: Math.random() * 0.45 + 0.08,
+        r: Math.random() * 1.4 + 0.4,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
       });
     }
@@ -65,154 +64,104 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete }) =>
     };
   }, []);
 
-  // Sequence
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('reveal-title'), 300);
-    const t2 = setTimeout(() => setPhase('reveal-tagline'), 1300);
-    const t3 = setTimeout(() => setPhase('exit'), 2900);
-    const t4 = setTimeout(() => onComplete(), 3800);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+    const t1 = setTimeout(() => setPhase('reveal-title'), 250);
+    const t2 = setTimeout(() => setPhase('reveal-tagline'), 1150);
+    const t3 = setTimeout(() => setPhase('exit'), 2650);
+    const t4 = setTimeout(() => onComplete(), 3450);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
   }, [onComplete]);
 
   const handleSkip = () => {
     setPhase('exit');
-    setTimeout(onComplete, 450);
+    setTimeout(onComplete, 400);
   };
 
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
       style={{
-        background: '#020408',
-        transition: phase === 'exit' ? 'opacity 1s ease, transform 1s ease' : undefined,
+        background: '#030508',
+        transition: phase === 'exit' ? 'opacity 0.85s ease, transform 0.85s ease' : undefined,
         opacity: phase === 'exit' ? 0 : 1,
-        transform: phase === 'exit' ? 'scale(1.04)' : 'scale(1)',
+        transform: phase === 'exit' ? 'scale(1.03)' : 'scale(1)',
         pointerEvents: phase === 'exit' ? 'none' : 'all',
       }}
     >
-      {/* Particle layer */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-60" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-70" />
 
-      {/* Cinematic bars */}
-      <div className="absolute top-0 left-0 w-full h-[52px] bg-black z-10" />
-      <div className="absolute bottom-0 left-0 w-full h-[52px] bg-black z-10" />
+      {/* Architectural Gold Hairline Frame */}
+      <div className="absolute inset-6 sm:inset-10 border border-champagne-500/15 pointer-events-none z-10" />
 
-      {/* Center vignette glow */}
+      {/* Warm Obsidian & Champagne Ambient Glow */}
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(5,150,105,0.12) 0%, transparent 70%)',
+          background:
+            'radial-gradient(ellipse 55% 45% at 50% 50%, rgba(212,175,55,0.09) 0%, rgba(16,185,129,0.04) 45%, transparent 75%)',
         }}
       />
 
       {/* Content */}
-      <div className="relative z-20 flex flex-col items-center select-none" style={{ gap: '1.5rem' }}>
-        {/* Pre-title line */}
+      <div className="relative z-20 flex flex-col items-center select-none px-6 space-y-6 text-center">
         <div
           style={{
             opacity: phase === 'reveal-title' || phase === 'reveal-tagline' ? 1 : 0,
             transform: phase === 'reveal-title' || phase === 'reveal-tagline' ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'opacity 0.9s ease, transform 0.9s ease',
-            transitionDelay: '0.1s',
+            transition: 'opacity 0.85s ease, transform 0.85s ease',
           }}
-          className="flex items-center space-x-3"
+          className="flex items-center space-x-4"
         >
-          <span className="h-px w-10 bg-gradient-to-r from-transparent to-emerald-500/60" />
-          <span
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: '0.65rem',
-              letterSpacing: '0.4em',
-              color: '#6ee7b7',
-              textTransform: 'uppercase',
-            }}
-          >
-            UGT India Initiative
+          <span className="h-px w-10 bg-gradient-to-r from-transparent to-champagne-500/60" />
+          <span className="font-mono text-[10px] tracking-[0.42em] text-champagne-300 uppercase">
+            Living Tamilagam · UGT India
           </span>
-          <span className="h-px w-10 bg-gradient-to-l from-transparent to-emerald-500/60" />
+          <span className="h-px w-10 bg-gradient-to-l from-transparent to-champagne-500/60" />
         </div>
 
-        {/* Main Title */}
         <div
           style={{
             opacity: phase === 'reveal-title' || phase === 'reveal-tagline' ? 1 : 0,
-            transform: phase === 'reveal-title' || phase === 'reveal-tagline' ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 1.1s cubic-bezier(0.16,1,0.3,1), transform 1.1s cubic-bezier(0.16,1,0.3,1)',
-            transitionDelay: '0.15s',
-            textAlign: 'center',
+            transform: phase === 'reveal-title' || phase === 'reveal-tagline' ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 1s cubic-bezier(0.16,1,0.3,1) 0.1s, transform 1s cubic-bezier(0.16,1,0.3,1) 0.1s',
           }}
         >
           <h1
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontWeight: 800,
-              fontSize: 'clamp(2.8rem, 8vw, 6.5rem)',
-              letterSpacing: '0.08em',
-              lineHeight: 1,
-              background: 'linear-gradient(135deg, #ffffff 0%, #d1fae5 40%, #6ee7b7 70%, #f59e0b 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              textShadow: 'none',
-            }}
+            className="font-display font-medium gold-gradient-text tracking-[0.14em]"
+            style={{ fontSize: 'clamp(2.6rem, 7.8vw, 6.4rem)', lineHeight: 1 }}
           >
             BUY4ACHANGE
           </h1>
         </div>
 
-        {/* Tagline */}
         <div
           style={{
             opacity: phase === 'reveal-tagline' ? 1 : 0,
-            transform: phase === 'reveal-tagline' ? 'translateY(0)' : 'translateY(16px)',
-            transition: 'opacity 1s ease, transform 1s ease',
-            textAlign: 'center',
+            transform: phase === 'reveal-tagline' ? 'translateY(0)' : 'translateY(14px)',
+            transition: 'opacity 0.9s ease, transform 0.9s ease',
           }}
+          className="space-y-3"
         >
-          <p
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 'clamp(0.75rem, 2vw, 1.05rem)',
-              letterSpacing: '0.25em',
-              color: 'rgba(255,255,255,0.65)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Every Purchase Changes A Life
+          <p className="font-editorial italic text-ivory-200/80 text-base sm:text-xl tracking-wide">
+            Where Every Purchase Sustains a Living Mission
           </p>
-          <div className="mt-3 flex justify-center">
-            <span className="h-px w-24 bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+          <div className="mx-auto h-px w-24 gold-hairline" />
+          <div className="font-mono text-[10px] tracking-[0.32em] uppercase text-champagne-400/75">
+            Eight National Missions · Verified Direct Impact
           </div>
-        </div>
-
-        {/* Tagline 2 */}
-        <div
-          style={{
-            opacity: phase === 'reveal-tagline' ? 1 : 0,
-            transform: phase === 'reveal-tagline' ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'opacity 1s ease 0.3s, transform 1s ease 0.3s',
-          }}
-        >
-          <span
-            style={{
-              fontSize: '0.65rem',
-              letterSpacing: '0.3em',
-              color: 'rgba(16,185,129,0.7)',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-            }}
-          >
-            8 National Missions · 1 Purchase · Infinite Impact
-          </span>
         </div>
       </div>
 
-      {/* Subtle Skip Button */}
       <button
         onClick={handleSkip}
-        className="absolute bottom-4 right-6 z-30 text-[11px] uppercase tracking-[0.25em] text-slate-400 hover:text-emerald-300 transition-colors cursor-pointer"
+        className="absolute bottom-9 right-10 z-30 font-mono text-[10px] uppercase tracking-[0.28em] text-slate-400 hover:text-champagne-300 transition-colors cursor-pointer"
       >
-        Skip Intro →
+        Enter Store →
       </button>
     </div>
   );

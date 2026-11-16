@@ -1,133 +1,126 @@
 import React from 'react';
-import { ArrowDown, ShieldCheck } from 'lucide-react';
+import { ArrowDown, BookOpen, Sparkles } from 'lucide-react';
+import { MISSION_DOCUMENTS } from '../data/missionDocuments.ts';
 
 interface HeroBannerProps {
   causes: any[];
   selectedCauseId: string | null;
   onSelectCause: (id: string | null) => void;
   onScrollToCatalog: () => void;
+  onScrollToShop?: () => void;
+  onOpenMissionDoc?: (causeId: string) => void;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
   onScrollToCatalog,
+  onScrollToShop,
+  onOpenMissionDoc,
 }) => {
   return (
-    <div
-      className="relative overflow-hidden flex flex-col items-center justify-center text-center"
+    <section
+      className="relative overflow-hidden flex flex-col justify-between"
       style={{
-        minHeight: '92vh',
-        background: 'linear-gradient(180deg, #020408 0%, #060c14 60%, #070b14 100%)',
+        minHeight: '90vh',
+        background:
+          'radial-gradient(ellipse 80% 60% at 50% 18%, rgba(212,175,55,0.08) 0%, rgba(16,185,129,0.04) 40%, #05070b 78%)',
       }}
     >
-      {/* Ambient radial glow */}
+      {/* Subtle Architectural Grid Lines */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-[0.035]"
         style={{
-          background: 'radial-gradient(ellipse 70% 55% at 50% 42%, rgba(5,150,105,0.14) 0%, rgba(245,158,11,0.04) 50%, transparent 80%)',
+          backgroundImage:
+            'linear-gradient(to right, #d4af37 1px, transparent 1px), linear-gradient(to bottom, #d4af37 1px, transparent 1px)',
+          backgroundSize: '88px 88px',
         }}
       />
 
-      {/* Subtle horizontal scan line */}
-      <div
-        className="absolute inset-x-0 pointer-events-none"
-        style={{
-          top: '42%',
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent 0%, rgba(16,185,129,0.15) 30%, rgba(16,185,129,0.3) 50%, rgba(16,185,129,0.15) 70%, transparent 100%)',
-        }}
-      />
-
-      {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-8 flex flex-col items-center space-y-7">
-
-        {/* Badge */}
-        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-950/40 backdrop-blur-sm">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: '0.6rem',
-              letterSpacing: '0.3em',
-              color: '#6ee7b7',
-              textTransform: 'uppercase',
-            }}
-          >
-            UGT India · ugtindia.space
+      {/* Main Editorial Centerpiece */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center max-w-5xl mx-auto px-6 sm:px-8 pt-20 pb-14 space-y-8">
+        <div className="inline-flex items-center space-x-3 px-4 py-1.5 rounded-full border border-champagne-500/30 bg-champagne-500/[0.06] backdrop-blur-sm">
+          <Sparkles className="w-3 h-3 text-champagne-400" />
+          <span className="font-mono text-[10px] tracking-[0.32em] uppercase text-champagne-200">
+            Living Tamilagam · Universal Guard Trust
           </span>
         </div>
 
-        {/* Main headline */}
-        <div>
+        <div className="space-y-4">
           <h1
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontWeight: 800,
-              fontSize: 'clamp(2.2rem, 7vw, 5.5rem)',
-              letterSpacing: '0.05em',
-              lineHeight: 1.05,
-              background: 'linear-gradient(135deg, #ffffff 0%, #d1fae5 35%, #6ee7b7 60%, #f59e0b 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
+            className="font-display font-medium text-ivory-50 tracking-tight"
+            style={{ fontSize: 'clamp(2.7rem, 6.8vw, 5.75rem)', lineHeight: 1.02 }}
           >
-            BUY4ACHANGE
+            Commerce Elevated Into{' '}
+            <span className="italic gold-gradient-text font-normal">
+              Living Impact
+            </span>
           </h1>
-          <p
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 'clamp(0.7rem, 1.8vw, 1rem)',
-              letterSpacing: '0.3em',
-              color: 'rgba(255,255,255,0.45)',
-              textTransform: 'uppercase',
-              marginTop: '0.75rem',
-            }}
-          >
-            Every Purchase Changes A Life
+          <p className="font-editorial text-base sm:text-xl text-ivory-300/85 max-w-2xl mx-auto leading-relaxed">
+            Discover thoughtfully crafted goods and interactive digital editions. On every single order, you choose which of Tamil Nadu&rsquo;s eight Living Tamilagam missions your purchase directly funds.
           </p>
         </div>
 
-        {/* Divider */}
-        <div className="flex items-center space-x-4 w-full max-w-xs">
-          <span className="flex-1 h-px bg-gradient-to-r from-transparent to-emerald-500/40" />
-          <span style={{ fontSize: '0.6rem', letterSpacing: '0.3em', color: 'rgba(16,185,129,0.6)', textTransform: 'uppercase', fontWeight: 700 }}>
-            8 Missions
-          </span>
-          <span className="flex-1 h-px bg-gradient-to-l from-transparent to-emerald-500/40" />
-        </div>
-
-        {/* Sub-headline */}
-        <p className="text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed">
-          Shop our conscious catalog and direct a portion of every purchase to one of UGT India's eight verified national missions.
-        </p>
-
-        {/* CTA */}
-        <button
-          onClick={onScrollToCatalog}
-          className="group flex flex-col items-center space-y-2 mt-4"
-        >
-          <span
-            className="px-7 py-3 rounded-full font-bold text-sm transition-all active:scale-95"
-            style={{
-              background: 'linear-gradient(135deg, #059669, #10b981)',
-              color: '#020408',
-              boxShadow: '0 0 32px rgba(16,185,129,0.3)',
-              letterSpacing: '0.05em',
-            }}
+        {/* Luxury Dual CTA */}
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <button
+            onClick={onScrollToCatalog}
+            className="px-8 py-3.5 rounded-full bg-gradient-to-r from-champagne-500 via-champagne-400 to-champagne-500 hover:brightness-110 text-obsidian-950 font-bold text-xs tracking-[0.18em] uppercase shadow-gold transition-all active:scale-95 flex items-center space-x-2"
           >
-            Explore Causes & Shop
-          </span>
-          <span className="flex flex-col items-center opacity-50 group-hover:opacity-80 transition-opacity">
-            <ArrowDown className="w-4 h-4 text-emerald-400 animate-bounce mt-1" />
-          </span>
-        </button>
+            <span>Explore The 8 Missions</span>
+            <ArrowDown className="w-3.5 h-3.5" />
+          </button>
+
+          {onScrollToShop && (
+            <button
+              onClick={onScrollToShop}
+              className="px-8 py-3.5 rounded-full border border-white/15 hover:border-champagne-500/60 bg-white/[0.03] hover:bg-white/[0.06] text-ivory-100 font-semibold text-xs tracking-[0.18em] uppercase transition-all"
+            >
+              Browse Collection
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Bottom fade */}
-      <div
-        className="absolute bottom-0 left-0 w-full h-32 pointer-events-none"
-        style={{ background: 'linear-gradient(to bottom, transparent, #070b14)' }}
-      />
-    </div>
+      {/* Architectural 8-Project Dossier Index Strip */}
+      <div className="relative z-10 border-t border-white/[0.07] bg-[#070a10]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-champagne-400/90">
+              Official Living Tamilagam Dossiers · Click Any Project To Read
+            </span>
+            <span className="hidden sm:inline font-mono text-[10px] tracking-[0.2em] text-slate-500">
+              38 DISTRICTS · 8 MISSIONS
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {MISSION_DOCUMENTS.map((doc) => (
+              <button
+                key={doc.causeId}
+                type="button"
+                onClick={() =>
+                  onOpenMissionDoc ? onOpenMissionDoc(doc.causeId) : onScrollToCatalog()
+                }
+                className="group text-left p-2.5 rounded-xl border border-white/[0.07] hover:border-champagne-500/45 bg-white/[0.02] hover:bg-champagne-500/[0.06] transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className="font-mono text-[10px] font-semibold"
+                    style={{ color: doc.accent }}
+                  >
+                    0{doc.projectNumber}
+                  </span>
+                  <BookOpen className="w-3 h-3 text-slate-600 group-hover:text-champagne-400 transition-colors" />
+                </div>
+                <div className="text-[11px] font-semibold text-ivory-200 group-hover:text-ivory-50 line-clamp-2 mt-1 leading-snug">
+                  {doc.officialTitle
+                    .replace(/^Tamil\s*Nadu\s*/i, '')
+                    .replace(/\s*Mission$/i, '')}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };

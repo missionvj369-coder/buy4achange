@@ -2,61 +2,21 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Cause } from '../types.ts';
 import {
   ArrowRight,
-  Heart,
-  Users,
-  Droplets,
-  Leaf,
-  Mountain,
-  Dumbbell,
-  Music,
-  Cpu,
+  BookOpen,
   CheckCircle2,
+  Clock,
 } from 'lucide-react';
+import { MISSION_DOCUMENTS, MissionDocument } from '../data/missionDocuments.ts';
 
 interface MissionsCinematicProps {
   causes: Cause[];
   selectedCauseId: string | null;
   onSelectCause: (id: string | null) => void;
   onScrollToCatalog: () => void;
+  onOpenDocument: (causeId: string) => void;
 }
 
-const MISSION_ICONS: Record<
-  string,
-  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
-> = {
-  'Everyday Essentials': Heart,
-  'Women Entrepreneurship': Users,
-  'AI Free Training': Cpu,
-  'Water Security': Droplets,
-  'Protect the Earth': Leaf,
-  'Hill and City': Mountain,
-  'Sports Ecosystem': Dumbbell,
-  'Living Culture': Music,
-};
-
-const MISSION_GRADIENTS: string[] = [
-  'from-emerald-950/90 via-emerald-950/45 to-transparent',
-  'from-violet-950/90 via-violet-950/45 to-transparent',
-  'from-cyan-950/90 via-cyan-950/45 to-transparent',
-  'from-blue-950/90 via-blue-950/45 to-transparent',
-  'from-green-950/90 via-green-950/45 to-transparent',
-  'from-orange-950/90 via-orange-950/45 to-transparent',
-  'from-rose-950/90 via-rose-950/45 to-transparent',
-  'from-amber-950/90 via-amber-950/45 to-transparent',
-];
-
-const MISSION_ACCENT: string[] = [
-  '#10b981',
-  '#a78bfa',
-  '#22d3ee',
-  '#60a5fa',
-  '#4ade80',
-  '#fb923c',
-  '#fb7185',
-  '#fbbf24',
-];
-
-function useInView(threshold = 0.12) {
+function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
@@ -77,216 +37,181 @@ function useInView(threshold = 0.12) {
   return { ref, inView };
 }
 
-function getHighResImageUrl(url: string): string {
+function getHighResImageUrl(url?: string): string {
   if (!url) return '';
-  if (url.includes('w=800')) {
-    return url.replace('w=800', 'w=1600');
-  }
-  return url;
+  return url.includes('w=800') ? url.replace('w=800', 'w=1600') : url;
 }
 
 interface MissionCardProps {
-  cause: Cause;
-  index: number;
+  doc: MissionDocument;
+  cause?: Cause;
   isSelected: boolean;
   onSelect: () => void;
   onScrollToCatalog: () => void;
+  onOpenDocument: () => void;
 }
 
 const MissionCard: React.FC<MissionCardProps> = ({
+  doc,
   cause,
-  index,
   isSelected,
   onSelect,
   onScrollToCatalog,
+  onOpenDocument,
 }) => {
   const { ref, inView } = useInView();
-  const Icon = MISSION_ICONS[cause.title] || Heart;
-  const gradient = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length];
-  const accent = MISSION_ACCENT[index % MISSION_ACCENT.length];
-  const pct =
-    cause.target_amount > 0
-      ? Math.min(100, Math.round((cause.raised_amount / cause.target_amount) * 100))
-      : 0;
+  const raised = cause?.raised_amount || 0;
+  const target = cause?.target_amount || 500000;
+  const impactCount = cause?.impact_count || 0;
+  const impactMetric = cause?.impact_metric || 'Community Impact Units';
+  const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 0;
 
-  // Alternating cinematic rhythm: cards 0 and 5 are panoramic full-width widescreen scenes
-  const isWidescreen = index === 0 || index === 5;
-  const highResBg = getHighResImageUrl(cause.image_url);
+  // Alternating editorial gallery rhythm: Project 01 and Project 06 span full width
+  const isPanoramic = doc.projectNumber === 1 || doc.projectNumber === 6;
+  const highResBg = getHighResImageUrl(cause?.image_url);
 
   return (
-    <div
+    <article
       ref={ref}
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.98)',
-        transition: `opacity 0.9s cubic-bezier(0.16,1,0.3,1) ${(index % 2) * 0.1}s, transform 0.9s cubic-bezier(0.16,1,0.3,1) ${(index % 2) * 0.1}s`,
+        transform: inView ? 'translateY(0)' : 'translateY(32px)',
+        transition: `opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1)`,
         ...(isSelected
-          ? { boxShadow: `0 0 0 2px ${accent}, 0 0 36px ${accent}33` }
+          ? { boxShadow: `0 0 0 1.5px ${doc.accent}, 0 24px 60px -15px ${doc.accent}33` }
           : {}),
       }}
-      className={`relative overflow-hidden rounded-3xl cursor-pointer group border border-white/10 hover:border-white/20 transition-colors
-        ${isWidescreen ? 'sm:col-span-2 h-[440px] sm:h-[520px]' : 'h-[380px] sm:h-[440px]'}`}
-      onClick={() => {
-        onSelect();
-        onScrollToCatalog();
-      }}
+      className={`relative overflow-hidden rounded-3xl group border border-white/[0.08] hover:border-champagne-500/40 transition-all duration-500 flex flex-col justify-between bg-[#090d14]
+        ${isPanoramic ? 'lg:col-span-2 min-h-[470px] sm:min-h-[520px]' : 'min-h-[430px] sm:min-h-[460px]'}`}
     >
-      {/* Full-bleed cinematic photography */}
-      <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 ease-out group-hover:scale-110"
-        style={{
-          backgroundImage: `url(${highResBg})`,
-        }}
-      />
+      {/* Full-bleed Photography */}
+      {highResBg && (
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 ease-out group-hover:scale-105 opacity-75"
+          style={{ backgroundImage: `url(${highResBg})` }}
+        />
+      )}
 
-      {/* Cinematic lighting & depth overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#04070d] via-[#04070d]/55 to-black/25" />
-      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-80`} />
+      {/* Luxury Obsidian Vignette */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#05070b] via-[#05070b]/75 to-[#05070b]/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#05070b]/90 via-[#05070b]/35 to-transparent" />
 
-      {/* Subtle film grain */}
-      <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
-
-      {/* Vignette */}
-      <div className="absolute inset-0 shadow-[inset_0_0_90px_rgba(0,0,0,0.75)] pointer-events-none rounded-3xl" />
-
-      {/* Top Bar: Chapter Number + Category + Selected Indicator */}
-      <div className="absolute top-5 left-5 right-5 sm:top-7 sm:left-7 sm:right-7 flex items-center justify-between z-10">
+      {/* Top Metadata Bar */}
+      <div className="relative z-10 p-6 sm:p-8 flex items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">
           <span
-            className="px-2.5 py-1 rounded-full backdrop-blur-md border border-white/15 bg-black/40"
+            className="px-3 py-1 rounded-full font-mono text-[10px] font-semibold tracking-[0.25em] uppercase backdrop-blur-md border"
             style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: '0.62rem',
-              letterSpacing: '0.28em',
-              color: accent,
-              textTransform: 'uppercase',
-              fontWeight: 700,
+              color: doc.accent,
+              borderColor: `${doc.accent}45`,
+              backgroundColor: 'rgba(5,7,11,0.7)',
             }}
           >
-            Mission {String(index + 1).padStart(2, '0')}
+            Project 0{doc.projectNumber}
           </span>
-          <span className="hidden sm:inline-block text-[10px] uppercase tracking-[0.2em] text-slate-300/80 font-semibold">
-            {cause.category}
+          <span className="hidden sm:inline-flex items-center space-x-1 font-mono text-[10px] text-ivory-300/75 bg-black/40 backdrop-blur px-2.5 py-1 rounded-full border border-white/10">
+            <Clock className="w-3 h-3 text-champagne-400" />
+            <span>
+              {doc.sectionCount} Chapters · {doc.readMinutes} min
+            </span>
           </span>
         </div>
 
         {isSelected && (
-          <span
-            className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: accent, color: '#020408' }}
-          >
+          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-champagne-400 text-obsidian-950">
             <CheckCircle2 className="w-3 h-3" />
-            <span>Active Filter</span>
+            <span>Selected Cause</span>
           </span>
         )}
       </div>
 
-      {/* Bottom Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10 z-10">
-        {/* Icon Emblem */}
-        <div
-          className="mb-3 w-11 h-11 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/15 group-hover:scale-110 transition-transform duration-500"
-          style={{ background: `${accent}24` }}
-        >
-          <Icon className="w-5 h-5" style={{ color: accent }} />
+      {/* Bottom Editorial Content */}
+      <div className="relative z-10 p-6 sm:p-8 lg:p-10 space-y-5 mt-auto">
+        <div className="space-y-2.5 max-w-2xl">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {doc.pillars.map((p) => (
+              <span
+                key={p}
+                className="font-mono text-[9px] tracking-[0.2em] uppercase text-champagne-200/80 px-2 py-0.5 rounded border border-white/10 bg-black/35"
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+
+          <h3
+            className="font-display font-medium text-ivory-50 leading-[1.08] tracking-tight"
+            style={{
+              fontSize: isPanoramic
+                ? 'clamp(1.9rem, 3.8vw, 3.2rem)'
+                : 'clamp(1.5rem, 2.5vw, 2.15rem)',
+            }}
+          >
+            {doc.officialTitle}
+          </h3>
+
+          <p className="font-editorial italic text-champagne-200/90 text-sm sm:text-base">
+            {doc.subtitle}
+          </p>
+
+          <p className="text-xs sm:text-sm text-slate-300/85 leading-relaxed line-clamp-2 max-w-xl">
+            {doc.sections[0]?.paragraphs[0] || cause?.description}
+          </p>
         </div>
 
-        {/* Mission Title */}
-        <h3
-          style={{
-            fontFamily: "'Cinzel', serif",
-            fontWeight: 700,
-            fontSize: isWidescreen
-              ? 'clamp(1.65rem, 3.8vw, 2.9rem)'
-              : 'clamp(1.25rem, 2.4vw, 1.85rem)',
-            letterSpacing: '0.03em',
-            color: '#ffffff',
-            lineHeight: 1.12,
-          }}
-          className="drop-shadow-lg"
-        >
-          {cause.title}
-        </h3>
-
-        {/* Tagline */}
-        <p
-          className="mt-1.5 font-medium tracking-wide"
-          style={{
-            color: accent,
-            fontSize: isWidescreen ? '0.9rem' : '0.78rem',
-          }}
-        >
-          {cause.tagline}
-        </p>
-
-        {/* Description */}
-        <p
-          className="text-slate-300/85 leading-relaxed mt-2 mb-5"
-          style={{
-            fontSize: isWidescreen ? '0.88rem' : '0.78rem',
-            maxWidth: isWidescreen ? '580px' : '420px',
-            display: '-webkit-box',
-            WebkitLineClamp: isWidescreen ? 3 : 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {cause.description}
-        </p>
-
-        {/* Progress & Action Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-3 border-t border-white/10">
+        {/* Live Telemetry & Dual Luxury Actions */}
+        <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-1.5 flex-1 max-w-xs">
-            <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
+            <div className="w-full h-[3px] rounded-full bg-white/10 overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-1000 ease-out"
+                className="h-full rounded-full transition-all duration-1000"
                 style={{
                   width: inView ? `${pct}%` : '0%',
-                  background: `linear-gradient(90deg, ${accent}, #ffffff)`,
+                  background: `linear-gradient(90deg, ${doc.accent}, #ebd28f)`,
                 }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span style={{ color: accent, fontWeight: 700 }}>
-                ₹{Math.round(cause.raised_amount || 0).toLocaleString('en-IN')} raised
+            <div className="flex items-center justify-between font-mono text-[11px]">
+              <span style={{ color: doc.accent }} className="font-semibold">
+                ₹{Math.round(raised).toLocaleString('en-IN')} raised
               </span>
               <span className="text-slate-400">
-                {pct}% of ₹{(cause.target_amount / 1000).toFixed(0)}k goal
+                {pct}% · ₹{(target / 1000).toFixed(0)}k goal
               </span>
             </div>
-            <div className="text-[11px] text-slate-300/75 font-medium flex items-center space-x-1.5">
+            <div className="text-[11px] text-slate-400 flex items-center space-x-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>
-                Live · {(cause.impact_count || 0).toLocaleString('en-IN')} {cause.impact_metric}
+                Live · {impactCount.toLocaleString('en-IN')} {impactMetric}
               </span>
             </div>
           </div>
 
-          <button
-            className="self-start sm:self-end flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all group-hover:translate-x-0.5 active:scale-95 shrink-0"
-            style={{
-              background: accent,
-              color: '#020408',
-              boxShadow: `0 6px 24px ${accent}40`,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect();
-              onScrollToCatalog();
-            }}
-          >
-            <span>Support Mission</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={onOpenDocument}
+              className="px-4 py-2.5 rounded-full border border-champagne-500/50 bg-black/50 hover:bg-champagne-500/15 text-champagne-200 hover:text-ivory-50 font-semibold text-xs tracking-wider uppercase flex items-center space-x-2 backdrop-blur-md transition active:scale-95"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-champagne-400" />
+              <span>Read Full Document</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onSelect();
+                onScrollToCatalog();
+              }}
+              className="px-4 py-2.5 rounded-full bg-gradient-to-r from-champagne-500 to-champagne-400 hover:brightness-110 text-obsidian-950 font-bold text-xs tracking-wider uppercase flex items-center space-x-1.5 shadow-gold transition active:scale-95"
+            >
+              <span>Support</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 
@@ -295,93 +220,75 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
   selectedCauseId,
   onSelectCause,
   onScrollToCatalog,
+  onOpenDocument,
 }) => {
   const { ref: headerRef, inView: headerInView } = useInView(0.1);
-
-  if (causes.length === 0) return null;
 
   return (
     <section
       id="missions-showcase"
-      className="relative bg-[#070b14] py-16 sm:py-24 overflow-hidden border-b border-slate-800/60"
+      className="relative bg-[#05070b] py-20 sm:py-28 overflow-hidden border-b border-white/[0.06]"
     >
-      {/* Ambient top glow */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-72 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(5,150,105,0.12) 0%, transparent 80%)',
-        }}
-      />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section header */}
+        {/* Editorial Section Header */}
         <div
           ref={headerRef}
-          className="text-center mb-12 sm:mb-16"
+          className="text-center max-w-3xl mx-auto mb-14 sm:mb-20 space-y-4"
           style={{
             opacity: headerInView ? 1 : 0,
-            transform: headerInView ? 'translateY(0)' : 'translateY(28px)',
+            transform: headerInView ? 'translateY(0)' : 'translateY(24px)',
             transition: 'opacity 0.9s ease, transform 0.9s ease',
           }}
         >
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <span className="h-px w-10 bg-gradient-to-r from-transparent to-emerald-500/60" />
-            <span
-              style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: '0.68rem',
-                letterSpacing: '0.38em',
-                color: '#6ee7b7',
-                textTransform: 'uppercase',
-              }}
-            >
-              UGT India · Eight Living Causes
+          <div className="flex items-center justify-center space-x-4">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-champagne-500/60" />
+            <span className="font-mono text-[10px] tracking-[0.38em] text-champagne-400 uppercase">
+              Living Tamilagam · Official Blueprints
             </span>
-            <span className="h-px w-10 bg-gradient-to-l from-transparent to-emerald-500/60" />
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-champagne-500/60" />
           </div>
 
           <h2
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontWeight: 700,
-              fontSize: 'clamp(1.9rem, 4.8vw, 3.3rem)',
-              letterSpacing: '0.04em',
-              color: '#ffffff',
-              lineHeight: 1.1,
-              marginBottom: '1rem',
-            }}
+            className="font-display font-medium text-ivory-50 tracking-tight"
+            style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', lineHeight: 1.06 }}
           >
-            The Eight National Missions
+            The Eight National <span className="italic gold-gradient-text font-normal">Missions</span>
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Every purchase funds the mission you choose. Explore all eight grassroots initiatives powering communities across India.
+
+          <p className="font-editorial text-ivory-300/80 text-base sm:text-lg leading-relaxed">
+            Read the complete official Living Tamilagam project dossier for each mission, then direct a verified contribution from any purchase toward the future you believe in.
           </p>
 
           {selectedCauseId && (
-            <button
-              onClick={() => onSelectCause(null)}
-              className="mt-5 inline-flex items-center px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-xs text-amber-300 hover:bg-amber-500/25 font-semibold transition"
-            >
-              Clear Mission Filter · Show All 8 Missions
-            </button>
+            <div className="pt-2">
+              <button
+                onClick={() => onSelectCause(null)}
+                className="inline-flex items-center px-4 py-1.5 rounded-full border border-champagne-500/40 bg-champagne-500/10 text-xs font-mono uppercase tracking-wider text-champagne-300 hover:bg-champagne-500/20 transition"
+              >
+                Clear Selected Mission · View All 8
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Cinematic Visual Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-7">
-          {causes.map((cause, i) => (
-            <MissionCard
-              key={cause.id}
-              cause={cause}
-              index={i}
-              isSelected={selectedCauseId === cause.id}
-              onSelect={() =>
-                onSelectCause(selectedCauseId === cause.id ? null : cause.id)
-              }
-              onScrollToCatalog={onScrollToCatalog}
-            />
-          ))}
+        {/* All 8 Projects in Official Living Tamilagam Order (Project 01 -> Project 08) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-7">
+          {MISSION_DOCUMENTS.map((doc) => {
+            const matchedCause = causes.find((c) => c.id === doc.causeId);
+            return (
+              <MissionCard
+                key={doc.causeId}
+                doc={doc}
+                cause={matchedCause}
+                isSelected={selectedCauseId === doc.causeId}
+                onSelect={() =>
+                  onSelectCause(selectedCauseId === doc.causeId ? null : doc.causeId)
+                }
+                onScrollToCatalog={onScrollToCatalog}
+                onOpenDocument={() => onOpenDocument(doc.causeId)}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
