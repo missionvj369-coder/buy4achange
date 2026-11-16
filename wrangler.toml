@@ -1,0 +1,21 @@
+name = "buy4achange"
+main = "worker/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Serve built Vite SPA directly from Cloudflare Edge Assets
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+# Cloudflare D1 Production Database (Region: APAC)
+[[d1_databases]]
+binding = "BUY4ACHANGE_DB"
+database_name = "buy4achange-db"
+database_id = "a098f89e-a498-4479-86b5-194bc537c246"
+
+[vars]
+ENVIRONMENT = "production"
+UGT_NETWORK = "ugtindia.space"
