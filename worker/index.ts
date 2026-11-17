@@ -359,6 +359,35 @@ export default {
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS bulk_inquiries (
+              id TEXT PRIMARY KEY, org_name TEXT NOT NULL, org_type TEXT DEFAULT 'Corporate CSR',
+              contact_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL,
+              state TEXT DEFAULT '', city TEXT DEFAULT '', estimated_budget REAL DEFAULT 0,
+              cause_id TEXT DEFAULT 'cause-everyday-essentials', requirements TEXT DEFAULT '',
+              status TEXT DEFAULT 'new', created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS subscriptions (
+              id TEXT PRIMARY KEY, subscriber_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL,
+              plan_name TEXT NOT NULL, frequency TEXT DEFAULT 'Monthly', monthly_budget REAL DEFAULT 999,
+              cause_id TEXT DEFAULT 'cause-everyday-essentials', delivery_address TEXT DEFAULT '',
+              state TEXT DEFAULT '', pincode TEXT DEFAULT '', status TEXT DEFAULT 'active',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS field_audits (
+              id TEXT PRIMARY KEY, auditor_name TEXT NOT NULL, auditor_phone TEXT DEFAULT '',
+              audit_type TEXT DEFAULT 'Manufacturer Factory Inspection', subject_name TEXT NOT NULL,
+              state TEXT NOT NULL, district TEXT DEFAULT '', latitude REAL, longitude REAL,
+              zero_chemical_pass INTEGER DEFAULT 1, hygiene_pass INTEGER DEFAULT 1,
+              fair_wage_pass INTEGER DEFAULT 1, impact_verified INTEGER DEFAULT 1,
+              photo_url TEXT DEFAULT '', notes TEXT DEFAULT '', verification_status TEXT DEFAULT 'pending',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
         } catch {}
         const migrations = [
           "ALTER TABLE products ADD COLUMN seller_id TEXT DEFAULT ''",
@@ -1362,6 +1391,80 @@ export default {
         }
       }
 
+      // Stage 2 Public Endpoints: India Map, CSR Bulk, Subscriptions, Field Audits
+      if (pathname === '/api/map/public' && request.method === 'GET') {
+        await ensureMarketplaceSchema();
+        const { results: verifiedMakers } = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT id, store_name, business_type, city, state, pincode, story,
+                  (SELECT COUNT(*) FROM products p WHERE p.seller_id = sellers.id AND COALESCE(p.approval_status, 'approved') = 'approved') as live_products
+           FROM sellers WHERE status = 'approved' ORDER BY created_at DESC`
+        ).all();
+        const { results: verifiedAudits } = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT id, auditor_name, audit_type, subject_name, state, district, latitude, longitude,
+                  zero_chemical_pass, hygiene_pass, fair_wage_pass, impact_verified, notes, created_at
+           FROM field_audits WHERE verification_status = 'verified' ORDER BY created_at DESC LIMIT 50`
+        ).all();
+        const { results: causes } = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM causes ORDER BY id ASC').all();
+        const subRow: any = await env.BUY4ACHANGE_DB.prepare("SELECT COUNT(*) as c FROM subscriptions WHERE status = 'active'").first();
+        const bulkRow: any = await env.BUY4ACHANGE_DB.prepare('SELECT COUNT(*) as c FROM bulk_inquiries').first();
+        return json({
+          verifiedMakers: verifiedMakers || [],
+          verifiedAudits: verifiedAudits || [],
+          causes: causes || [],
+          stats: {
+            verifiedMakersCount: (verifiedMakers || []).length,
+            verifiedAuditsCount: (verifiedAudits || []).length,
+            activeSubscriptions: subRow?.c || 0,
+            bulkInquiriesCount: bulkRow?.c || 0,
+          },
+        });
+      }
+
+      if (pathname === '/api/bulk-inquiries' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        if (!b.org_name || !b.contact_name || !b.email || !b.phone) {
+          return json({ error: 'Organization name, contact person, email, and phone are required.' }, 400);
+        }
+        const id = `bulk_${Date.now()}_${randomHex(3)}`;
+        await env.BUY4ACHANGE_DB.prepare(
+          `INSERT INTO bulk_inquiries (id, org_name, org_type, contact_name, email, phone, state, city, estimated_budget, cause_id, requirements, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`
+        ).bind(id, String(b.org_name).trim(), b.org_type || 'Corporate CSR', String(b.contact_name).trim(), String(b.email).trim().toLowerCase(), String(b.phone).trim(), String(b.state || '').trim(), String(b.city || '').trim(), Number(b.estimated_budget) || 0, b.cause_id || 'cause-everyday-essentials', String(b.requirements || '').trim()).run();
+        const inquiry = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM bulk_inquiries WHERE id = ?').bind(id).first();
+        return json({ success: true, inquiry }, 201);
+      }
+
+      if (pathname === '/api/subscriptions' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        if (!b.subscriber_name || !b.email || !b.phone || !b.plan_name) {
+          return json({ error: 'Name, email, phone, and subscription plan are required.' }, 400);
+        }
+        const id = `sub_${Date.now()}_${randomHex(3)}`;
+        await env.BUY4ACHANGE_DB.prepare(
+          `INSERT INTO subscriptions (id, subscriber_name, email, phone, plan_name, frequency, monthly_budget, cause_id, delivery_address, state, pincode, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`
+        ).bind(id, String(b.subscriber_name).trim(), String(b.email).trim().toLowerCase(), String(b.phone).trim(), String(b.plan_name).trim(), b.frequency || 'Monthly', Number(b.monthly_budget) || 999, b.cause_id || 'cause-everyday-essentials', String(b.delivery_address || '').trim(), String(b.state || '').trim(), String(b.pincode || '').trim()).run();
+        const subscription = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM subscriptions WHERE id = ?').bind(id).first();
+        return json({ success: true, subscription }, 201);
+      }
+
+      if (pathname === '/api/field-audits' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        if (!b.auditor_name || !b.subject_name || !b.state) {
+          return json({ error: 'Auditor name, inspection subject, and state are required.' }, 400);
+        }
+        const id = `audit_${Date.now()}_${randomHex(3)}`;
+        await env.BUY4ACHANGE_DB.prepare(
+          `INSERT INTO field_audits (id, auditor_name, auditor_phone, audit_type, subject_name, state, district, latitude, longitude, zero_chemical_pass, hygiene_pass, fair_wage_pass, impact_verified, photo_url, notes, verification_status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
+        ).bind(id, String(b.auditor_name).trim(), String(b.auditor_phone || '').trim(), b.audit_type || 'Manufacturer Factory Inspection', String(b.subject_name).trim(), String(b.state).trim(), String(b.district || '').trim(), b.latitude ?? null, b.longitude ?? null, b.zero_chemical_pass === false ? 0 : 1, b.hygiene_pass === false ? 0 : 1, b.fair_wage_pass === false ? 0 : 1, b.impact_verified === false ? 0 : 1, String(b.photo_url || ''), String(b.notes || '').trim()).run();
+        const audit = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM field_audits WHERE id = ?').bind(id).first();
+        return json({ success: true, audit }, 201);
+      }
+
       // ============================================================
       // ADMIN AUTHENTICATION
       // ============================================================
@@ -1983,6 +2086,52 @@ export default {
               },
             },
           });
+        }
+
+        // Stage 2 Admin National Programs Console
+        if (pathname === '/api/admin/national-programs' && request.method === 'GET') {
+          await ensureMarketplaceSchema();
+          const { results: bulkInquiries } = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT b.*, c.title as cause_title FROM bulk_inquiries b LEFT JOIN causes c ON b.cause_id = c.id ORDER BY b.created_at DESC'
+          ).all();
+          const { results: subscriptions } = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT s.*, c.title as cause_title FROM subscriptions s LEFT JOIN causes c ON s.cause_id = c.id ORDER BY s.created_at DESC'
+          ).all();
+          const { results: fieldAudits } = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT * FROM field_audits ORDER BY created_at DESC'
+          ).all();
+          return json({
+            bulkInquiries: bulkInquiries || [],
+            subscriptions: subscriptions || [],
+            fieldAudits: fieldAudits || [],
+          });
+        }
+
+        const bulkPatch = pathname.match(/^\/api\/admin\/bulk-inquiries\/([^/]+)$/);
+        if (bulkPatch && request.method === 'PATCH') {
+          const b: any = await request.json().catch(() => ({}));
+          await env.BUY4ACHANGE_DB.prepare('UPDATE bulk_inquiries SET status = ? WHERE id = ?')
+            .bind(b.status || 'quoted', decodeURIComponent(bulkPatch[1]))
+            .run();
+          return json({ success: true });
+        }
+
+        const subPatch = pathname.match(/^\/api\/admin\/subscriptions\/([^/]+)$/);
+        if (subPatch && request.method === 'PATCH') {
+          const b: any = await request.json().catch(() => ({}));
+          await env.BUY4ACHANGE_DB.prepare('UPDATE subscriptions SET status = ? WHERE id = ?')
+            .bind(b.status || 'active', decodeURIComponent(subPatch[1]))
+            .run();
+          return json({ success: true });
+        }
+
+        const audPatch = pathname.match(/^\/api\/admin\/field-audits\/([^/]+)$/);
+        if (audPatch && request.method === 'PATCH') {
+          const b: any = await request.json().catch(() => ({}));
+          await env.BUY4ACHANGE_DB.prepare('UPDATE field_audits SET verification_status = ? WHERE id = ?')
+            .bind(b.verificationStatus || 'verified', decodeURIComponent(audPatch[1]))
+            .run();
+          return json({ success: true });
         }
       }
 

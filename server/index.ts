@@ -50,6 +50,14 @@ import {
   createVerifiedProductReview,
   generatePayoutSplitCsv,
   generateOndcBecknCatalog,
+  getPublicIndiaMapData,
+  createBulkInquiry,
+  createSubscription,
+  createFieldAudit,
+  getNationalProgramsAdmin,
+  updateBulkInquiryStatus,
+  updateSubscriptionStatus,
+  updateFieldAuditStatus,
   verifyAdminLogin,
   validateAdminToken
 } from './db.ts';
@@ -1157,6 +1165,101 @@ app.get('/api/admin/exports/ondc-catalog.json', requireAdminAuth, (_req, res) =>
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="buy4achange-ondc-beckn-catalog.json"');
     res.json(generateOndcBecknCatalog());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// STAGE 2: INDIA MAP, CSR BULK, SUBSCRIPTIONS & FIELD AUDITS
+// ============================================================
+
+app.get('/api/map/public', (_req, res) => {
+  try {
+    res.json(getPublicIndiaMapData());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/bulk-inquiries', (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.org_name || !b.contact_name || !b.email || !b.phone) {
+      return res.status(400).json({ error: 'Organization name, contact person, email, and phone are required.' });
+    }
+    const created = createBulkInquiry(b);
+    res.status(201).json({ success: true, inquiry: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/subscriptions', (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.subscriber_name || !b.email || !b.phone || !b.plan_name) {
+      return res.status(400).json({ error: 'Name, email, phone, and subscription box plan are required.' });
+    }
+    const created = createSubscription(b);
+    res.status(201).json({ success: true, subscription: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/field-audits', (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.auditor_name || !b.subject_name || !b.state) {
+      return res.status(400).json({ error: 'Auditor name, inspection subject, and state are required.' });
+    }
+    const created = createFieldAudit(b);
+    res.status(201).json({ success: true, audit: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/national-programs', requireAdminAuth, (_req, res) => {
+  try {
+    res.json(getNationalProgramsAdmin());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/bulk-inquiries/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!['new', 'quoted', 'approved', 'fulfilled'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    res.json({ success: true, inquiry: updateBulkInquiryStatus(req.params.id, status) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/subscriptions/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!['active', 'paused', 'cancelled'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    res.json({ success: true, subscription: updateSubscriptionStatus(req.params.id, status) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/field-audits/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { verificationStatus } = req.body || {};
+    if (!['pending', 'verified', 'flagged'].includes(verificationStatus)) {
+      return res.status(400).json({ error: 'Invalid verificationStatus' });
+    }
+    res.json({ success: true, audit: updateFieldAuditStatus(req.params.id, verificationStatus) });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

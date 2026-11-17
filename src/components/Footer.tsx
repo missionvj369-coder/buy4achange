@@ -1,5 +1,16 @@
 import React from 'react';
-import { ExternalLink, ShieldCheck, Download, MessageCircle, Mail, Store } from 'lucide-react';
+import {
+  ExternalLink,
+  ShieldCheck,
+  Download,
+  MessageCircle,
+  Mail,
+  Store,
+  MapPin,
+  Repeat,
+  Building2,
+  ClipboardCheck,
+} from 'lucide-react';
 import { MISSION_DOCUMENTS } from '../data/missionDocuments.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
@@ -7,6 +18,9 @@ interface FooterProps {
   onOpenMissionDoc?: (causeId: string) => void;
   onOpenTrack?: (tab: 'track' | 'ledger') => void;
   onOpenSellerPortal?: () => void;
+  onOpenIndiaMap?: () => void;
+  onOpenPrograms?: (tab: 'subscription' | 'bulk') => void;
+  onOpenAuditorPortal?: () => void;
   canInstallPwa?: boolean;
   onInstallPwa?: () => void;
   whatsappSupportNumber?: string;
@@ -17,6 +31,9 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenMissionDoc,
   onOpenTrack,
   onOpenSellerPortal,
+  onOpenIndiaMap,
+  onOpenPrograms,
+  onOpenAuditorPortal,
   canInstallPwa = false,
   onInstallPwa,
   whatsappSupportNumber,
@@ -72,7 +89,47 @@ export const Footer: React.FC<FooterProps> = ({
                   className="px-3 py-1.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-[11px] inline-flex items-center space-x-1.5"
                 >
                   <Store className="w-3.5 h-3.5" />
-                  <span>Sell With Us (Manufacturer Portal)</span>
+                  <span>Sell With Us (Manufacturer)</span>
+                </button>
+              )}
+              {onOpenIndiaMap && (
+                <button
+                  type="button"
+                  onClick={onOpenIndiaMap}
+                  className="px-3 py-1.5 rounded-lg bg-[#F0FDF4] hover:bg-green-100 border border-[#BBF7D0] text-[#166534] font-semibold text-[11px] inline-flex items-center space-x-1"
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>India Live Map</span>
+                </button>
+              )}
+              {onOpenPrograms && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onOpenPrograms('subscription')}
+                    className="px-3 py-1.5 rounded-lg bg-[#FAF9F6] hover:bg-gray-100 border border-gray-200 text-gray-800 font-semibold text-[11px] inline-flex items-center space-x-1"
+                  >
+                    <Repeat className="w-3 h-3 text-[#166534]" />
+                    <span>Monthly Box</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenPrograms('bulk')}
+                    className="px-3 py-1.5 rounded-lg bg-[#FAF9F6] hover:bg-gray-100 border border-gray-200 text-gray-800 font-semibold text-[11px] inline-flex items-center space-x-1"
+                  >
+                    <Building2 className="w-3 h-3 text-[#166534]" />
+                    <span>CSR / Bulk Orders</span>
+                  </button>
+                </>
+              )}
+              {onOpenAuditorPortal && (
+                <button
+                  type="button"
+                  onClick={onOpenAuditorPortal}
+                  className="px-3 py-1.5 rounded-lg bg-[#FAF9F6] hover:bg-gray-100 border border-gray-200 text-gray-700 font-semibold text-[11px] inline-flex items-center space-x-1"
+                >
+                  <ClipboardCheck className="w-3 h-3 text-[#166534]" />
+                  <span>Field Auditor</span>
                 </button>
               )}
               {onOpenTrack && (

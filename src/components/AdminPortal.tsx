@@ -5,11 +5,12 @@ import {
   CheckCircle2, AlertCircle, CreditCard, Key,
   Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw,
   BookOpen, Code2, Eye, FileCode, Truck, FileDown, Activity, Mail, Sliders,
-  Store, Leaf, FileCheck2, Download
+  Store, Leaf, FileCheck2, Download, Globe, ClipboardCheck, Repeat, Building2
 } from 'lucide-react';
 import {
   Product, Order, Cause, AdminMetrics, PaymentTransaction,
-  UnlockedDigitalItem, SiteIntegrations, AnalyticsSummary, Seller
+  UnlockedDigitalItem, SiteIntegrations, AnalyticsSummary, Seller,
+  BulkInquiry, SubscriptionRecord, FieldAuditReport
 } from '../types.ts';
 import { EPRODUCT_SUBCATEGORIES } from './EProductsSection.tsx';
 import { DigitalReaderModal } from './DigitalReaderModal.tsx';
@@ -38,8 +39,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Tab state
   const [activeTab, setActiveTab] = useState<
-    'orders' | 'products' | 'sellers' | 'missions' | 'transactions' | 'gateway' | 'integrations'
+    'orders' | 'products' | 'sellers' | 'programs' | 'missions' | 'transactions' | 'gateway' | 'integrations'
   >('orders');
+
+  // Stage 2 National Programs state (CSR Bulk, Subscriptions, Field Audits)
+  const [bulkInquiries, setBulkInquiries] = useState<BulkInquiry[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionRecord[]>([]);
+  const [fieldAudits, setFieldAudits] = useState<FieldAuditReport[]>([]);
 
   // Manufacturer / Seller Store & Certificate Audit state
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -435,6 +441,54 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const fetchNationalPrograms = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/national-programs', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setBulkInquiries(d.bulkInquiries || []);
+        setSubscriptions(d.subscriptions || []);
+        setFieldAudits(d.fieldAudits || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleUpdateFieldAudit = async (id: string, verificationStatus: 'verified' | 'flagged') => {
+    if (!token) return;
+    const res = await fetch(`/api/admin/field-audits/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ verificationStatus }),
+    });
+    if (res.ok) fetchNationalPrograms();
+  };
+
+  const handleUpdateBulkStatus = async (id: string, status: string) => {
+    if (!token) return;
+    const res = await fetch(`/api/admin/bulk-inquiries/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) fetchNationalPrograms();
+  };
+
+  const handleUpdateSubStatus = async (id: string, status: string) => {
+    if (!token) return;
+    const res = await fetch(`/api/admin/subscriptions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) fetchNationalPrograms();
+  };
+
   useEffect(() => {
     if (token) {
       fetchMetrics();
@@ -444,6 +498,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       fetchAdminProducts();
       fetchIntegrationsAndAnalytics();
       fetchSellers();
+      fetchNationalPrograms();
     }
   }, [token, orderDateFilter]);
 
@@ -899,6 +954,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     adminProducts.filter((p) => p.approval_status === 'pending_approval').length}
                 </span>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('programs')}
+              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+                activeTab === 'programs'
+                  ? 'bg-[#166534] text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>National Programs</span>
             </button>
 
             <button
@@ -1658,6 +1726,183 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </div>
                       </div>
                     ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2C: NATIONAL PROGRAMS (FIELD AUDITS, CSR BULK, SUBSCRIPTIONS) */}
+        {activeTab === 'programs' && (
+          <div className="space-y-6">
+            {/* 1. Field Auditor Ground Reports */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                    <ClipboardCheck className="w-4 h-4 text-[#166534]" />
+                    <span>Ground Field Audit Reports ({fieldAudits.length})</span>
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Verified field inspections appear live on the Public Living India OpenStreetMap Map.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchNationalPrograms}
+                  className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {fieldAudits.length === 0 ? (
+                <p className="text-xs text-gray-500 py-3 text-center">
+                  No field inspection reports submitted yet. Ground auditors can submit offline/online at <span className="font-mono">/auditor</span>.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {fieldAudits.map((fa) => (
+                    <div
+                      key={fa.id}
+                      className="p-4 rounded-xl bg-[#FAF9F6] border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-start space-x-3">
+                        {fa.photo_url && (
+                          <img
+                            src={fa.photo_url}
+                            alt={fa.subject_name}
+                            className="w-16 h-16 rounded-lg object-cover border shrink-0"
+                          />
+                        )}
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-bold text-gray-900">{fa.subject_name}</span>
+                            <span className="px-2 py-0.5 rounded bg-white border text-[10px] font-semibold">
+                              {fa.audit_type}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                fa.verification_status === 'verified'
+                                  ? 'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]'
+                                  : fa.verification_status === 'flagged'
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+                              }`}
+                            >
+                              {fa.verification_status.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="text-gray-600">
+                            Auditor: <strong>{fa.auditor_name}</strong> · {fa.district ? `${fa.district}, ` : ''}{fa.state}
+                            {fa.latitude && fa.longitude ? ` (GPS ${fa.latitude}, ${fa.longitude})` : ''}
+                          </div>
+                          {fa.notes && <p className="text-gray-600">{fa.notes}</p>}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        {fa.verification_status !== 'verified' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateFieldAudit(fa.id, 'verified')}
+                            className="px-3 py-1.5 rounded-lg bg-[#166534] text-white font-semibold"
+                          >
+                            Verify &amp; Publish to Map
+                          </button>
+                        )}
+                        {fa.verification_status !== 'flagged' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateFieldAudit(fa.id, 'flagged')}
+                            className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold"
+                          >
+                            Flag
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 2. Institutional & CSR Bulk Procurement */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-3">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                <Building2 className="w-4 h-4 text-[#166534]" />
+                <span>Institutional &amp; Corporate CSR Bulk Inquiries ({bulkInquiries.length})</span>
+              </h3>
+              {bulkInquiries.length === 0 ? (
+                <p className="text-xs text-gray-500 py-2">No bulk CSR procurement inquiries yet.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {bulkInquiries.map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-gray-900">
+                          {b.org_name} <span className="font-normal text-gray-500">({b.org_type})</span>
+                        </div>
+                        <div className="text-gray-600">
+                          {b.contact_name} · {b.email} · {b.phone} · Est. ₹{Number(b.estimated_budget || 0).toLocaleString('en-IN')}
+                        </div>
+                        <div className="text-gray-600">{b.requirements}</div>
+                      </div>
+                      <select
+                        value={b.status}
+                        onChange={(e) => handleUpdateBulkStatus(b.id, e.target.value)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white border border-gray-300 font-semibold text-xs shrink-0"
+                      >
+                        <option value="new">New</option>
+                        <option value="quoted">Quoted</option>
+                        <option value="approved">Approved</option>
+                        <option value="fulfilled">Fulfilled</option>
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 3. Monthly Conscious Essentials Subscriptions */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-3">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                <Repeat className="w-4 h-4 text-[#166534]" />
+                <span>Recurring Monthly Essentials Boxes ({subscriptions.length})</span>
+              </h3>
+              {subscriptions.length === 0 ? (
+                <p className="text-xs text-gray-500 py-2">No recurring box enrollments yet.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {subscriptions.map((s) => (
+                    <div
+                      key={s.id}
+                      className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-gray-900">
+                          {s.subscriber_name} — <span className="text-[#166534]">{s.plan_name}</span>
+                        </div>
+                        <div className="text-gray-600">
+                          {s.frequency} · ₹{s.monthly_budget} · {s.email} · {s.phone} · PIN {s.pincode}
+                        </div>
+                        <div className="text-[11px] text-[#166534]">
+                          Mission: {s.cause_title || s.cause_id}
+                        </div>
+                      </div>
+                      <select
+                        value={s.status}
+                        onChange={(e) => handleUpdateSubStatus(s.id, e.target.value)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white border border-gray-300 font-semibold text-xs shrink-0"
+                      >
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

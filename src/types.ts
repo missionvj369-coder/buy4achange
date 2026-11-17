@@ -93,6 +93,60 @@ export interface SellerEarningsSummary {
   pendingOrdersCount: number;
 }
 
+export interface BulkInquiry {
+  id: string;
+  org_name: string;
+  org_type: string;
+  contact_name: string;
+  email: string;
+  phone: string;
+  state: string;
+  city: string;
+  estimated_budget: number;
+  cause_id: string;
+  cause_title?: string;
+  requirements: string;
+  status: 'new' | 'quoted' | 'approved' | 'fulfilled';
+  created_at: string;
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  subscriber_name: string;
+  email: string;
+  phone: string;
+  plan_name: string;
+  frequency: string;
+  monthly_budget: number;
+  cause_id: string;
+  cause_title?: string;
+  delivery_address: string;
+  state: string;
+  pincode: string;
+  status: 'active' | 'paused' | 'cancelled';
+  created_at: string;
+}
+
+export interface FieldAuditReport {
+  id: string;
+  auditor_name: string;
+  auditor_phone: string;
+  audit_type: string;
+  subject_name: string;
+  state: string;
+  district: string;
+  latitude: number | null;
+  longitude: number | null;
+  zero_chemical_pass: number;
+  hygiene_pass: number;
+  fair_wage_pass: number;
+  impact_verified: number;
+  photo_url: string;
+  notes: string;
+  verification_status: 'pending' | 'verified' | 'flagged';
+  created_at: string;
+}
+
 export interface UnlockedDigitalItem {
   product_id: string;
   product_name: string;

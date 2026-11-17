@@ -109,6 +109,55 @@ export function initDatabase() {
       verified_purchase INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS bulk_inquiries (
+      id TEXT PRIMARY KEY,
+      org_name TEXT NOT NULL,
+      org_type TEXT DEFAULT 'Corporate CSR',
+      contact_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      state TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      estimated_budget REAL DEFAULT 0,
+      cause_id TEXT DEFAULT 'cause-everyday-essentials',
+      requirements TEXT DEFAULT '',
+      status TEXT DEFAULT 'new',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id TEXT PRIMARY KEY,
+      subscriber_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      plan_name TEXT NOT NULL,
+      frequency TEXT DEFAULT 'Monthly',
+      monthly_budget REAL DEFAULT 999,
+      cause_id TEXT DEFAULT 'cause-everyday-essentials',
+      delivery_address TEXT DEFAULT '',
+      state TEXT DEFAULT '',
+      pincode TEXT DEFAULT '',
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS field_audits (
+      id TEXT PRIMARY KEY,
+      auditor_name TEXT NOT NULL,
+      auditor_phone TEXT DEFAULT '',
+      audit_type TEXT DEFAULT 'Manufacturer Factory Inspection',
+      subject_name TEXT NOT NULL,
+      state TEXT NOT NULL,
+      district TEXT DEFAULT '',
+      latitude REAL,
+      longitude REAL,
+      zero_chemical_pass INTEGER DEFAULT 1,
+      hygiene_pass INTEGER DEFAULT 1,
+      fair_wage_pass INTEGER DEFAULT 1,
+      impact_verified INTEGER DEFAULT 1,
+      photo_url TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      verification_status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   console.log('✓ Database schema verified and active at:', dbPath);
@@ -1509,4 +1558,193 @@ export function generateOndcBecknCatalog() {
       },
     },
   };
+}
+
+// ============================================================
+// STAGE 2: INDIA MAP, CSR BULK, SUBSCRIPTIONS & FIELD AUDITS
+// ============================================================
+
+export function getPublicIndiaMapData() {
+  const verifiedMakers = db
+    .prepare(
+      `SELECT id, store_name, business_type, city, state, pincode, story,
+              (SELECT COUNT(*) FROM products p WHERE p.seller_id = sellers.id AND COALESCE(p.approval_status, 'approved') = 'approved') as live_products
+       FROM sellers
+       WHERE status = 'approved'
+       ORDER BY created_at DESC`
+    )
+    .all();
+
+  const verifiedAudits = db
+    .prepare(
+      `SELECT id, auditor_name, audit_type, subject_name, state, district, latitude, longitude,
+              zero_chemical_pass, hygiene_pass, fair_wage_pass, impact_verified, notes, created_at
+       FROM field_audits
+       WHERE verification_status = 'verified'
+       ORDER BY created_at DESC
+       LIMIT 50`
+    )
+    .all();
+
+  const causes = getAllCauses();
+  const activeSubscriptions =
+    (db.prepare("SELECT COUNT(*) as c FROM subscriptions WHERE status = 'active'").get() as any)?.c || 0;
+  const bulkInquiriesCount = (db.prepare('SELECT COUNT(*) as c FROM bulk_inquiries').get() as any)?.c || 0;
+
+  return {
+    verifiedMakers,
+    verifiedAudits,
+    causes,
+    stats: {
+      verifiedMakersCount: verifiedMakers.length,
+      verifiedAuditsCount: verifiedAudits.length,
+      activeSubscriptions,
+      bulkInquiriesCount,
+    },
+  };
+}
+
+export function createBulkInquiry(input: {
+  org_name: string;
+  org_type?: string;
+  contact_name: string;
+  email: string;
+  phone: string;
+  state?: string;
+  city?: string;
+  estimated_budget?: number;
+  cause_id?: string;
+  requirements?: string;
+}) {
+  const id = `bulk_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  db.prepare(
+    `INSERT INTO bulk_inquiries (
+      id, org_name, org_type, contact_name, email, phone, state, city,
+      estimated_budget, cause_id, requirements, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`
+  ).run(
+    id,
+    input.org_name.trim(),
+    input.org_type || 'Corporate CSR',
+    input.contact_name.trim(),
+    input.email.trim().toLowerCase(),
+    input.phone.trim(),
+    (input.state || '').trim(),
+    (input.city || '').trim(),
+    Number(input.estimated_budget) || 0,
+    input.cause_id || 'cause-everyday-essentials',
+    (input.requirements || '').trim()
+  );
+  return db.prepare('SELECT * FROM bulk_inquiries WHERE id = ?').get(id);
+}
+
+export function createSubscription(input: {
+  subscriber_name: string;
+  email: string;
+  phone: string;
+  plan_name: string;
+  frequency?: string;
+  monthly_budget?: number;
+  cause_id?: string;
+  delivery_address?: string;
+  state?: string;
+  pincode?: string;
+}) {
+  const id = `sub_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  db.prepare(
+    `INSERT INTO subscriptions (
+      id, subscriber_name, email, phone, plan_name, frequency, monthly_budget,
+      cause_id, delivery_address, state, pincode, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`
+  ).run(
+    id,
+    input.subscriber_name.trim(),
+    input.email.trim().toLowerCase(),
+    input.phone.trim(),
+    input.plan_name.trim(),
+    input.frequency || 'Monthly',
+    Number(input.monthly_budget) || 999,
+    input.cause_id || 'cause-everyday-essentials',
+    (input.delivery_address || '').trim(),
+    (input.state || '').trim(),
+    (input.pincode || '').trim()
+  );
+  return db.prepare('SELECT * FROM subscriptions WHERE id = ?').get(id);
+}
+
+export function createFieldAudit(input: {
+  auditor_name: string;
+  auditor_phone?: string;
+  audit_type?: string;
+  subject_name: string;
+  state: string;
+  district?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  zero_chemical_pass?: boolean;
+  hygiene_pass?: boolean;
+  fair_wage_pass?: boolean;
+  impact_verified?: boolean;
+  photo_url?: string;
+  notes?: string;
+}) {
+  const id = `audit_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  db.prepare(
+    `INSERT INTO field_audits (
+      id, auditor_name, auditor_phone, audit_type, subject_name, state, district,
+      latitude, longitude, zero_chemical_pass, hygiene_pass, fair_wage_pass,
+      impact_verified, photo_url, notes, verification_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
+  ).run(
+    id,
+    input.auditor_name.trim(),
+    (input.auditor_phone || '').trim(),
+    input.audit_type || 'Manufacturer Factory Inspection',
+    input.subject_name.trim(),
+    input.state.trim(),
+    (input.district || '').trim(),
+    input.latitude ?? null,
+    input.longitude ?? null,
+    input.zero_chemical_pass === false ? 0 : 1,
+    input.hygiene_pass === false ? 0 : 1,
+    input.fair_wage_pass === false ? 0 : 1,
+    input.impact_verified === false ? 0 : 1,
+    input.photo_url || '',
+    (input.notes || '').trim()
+  );
+  return db.prepare('SELECT * FROM field_audits WHERE id = ?').get(id);
+}
+
+export function getNationalProgramsAdmin() {
+  const bulkInquiries = db
+    .prepare(
+      `SELECT b.*, c.title as cause_title FROM bulk_inquiries b
+       LEFT JOIN causes c ON b.cause_id = c.id ORDER BY b.created_at DESC`
+    )
+    .all();
+  const subscriptions = db
+    .prepare(
+      `SELECT s.*, c.title as cause_title FROM subscriptions s
+       LEFT JOIN causes c ON s.cause_id = c.id ORDER BY s.created_at DESC`
+    )
+    .all();
+  const fieldAudits = db
+    .prepare('SELECT * FROM field_audits ORDER BY created_at DESC')
+    .all();
+  return { bulkInquiries, subscriptions, fieldAudits };
+}
+
+export function updateBulkInquiryStatus(id: string, status: string) {
+  db.prepare('UPDATE bulk_inquiries SET status = ? WHERE id = ?').run(status, id);
+  return db.prepare('SELECT * FROM bulk_inquiries WHERE id = ?').get(id);
+}
+
+export function updateSubscriptionStatus(id: string, status: string) {
+  db.prepare('UPDATE subscriptions SET status = ? WHERE id = ?').run(status, id);
+  return db.prepare('SELECT * FROM subscriptions WHERE id = ?').get(id);
+}
+
+export function updateFieldAuditStatus(id: string, verificationStatus: string) {
+  db.prepare('UPDATE field_audits SET verification_status = ? WHERE id = ?').run(verificationStatus, id);
+  return db.prepare('SELECT * FROM field_audits WHERE id = ?').get(id);
 }

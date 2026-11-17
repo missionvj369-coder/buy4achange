@@ -14,6 +14,9 @@ import { DigitalReaderModal } from './components/DigitalReaderModal.tsx';
 import { MissionDocumentModal } from './components/MissionDocumentModal.tsx';
 import { OrderTrackLedgerModal } from './components/OrderTrackLedgerModal.tsx';
 import { SellerPortal } from './components/SellerPortal.tsx';
+import { IndiaImpactMapModal } from './components/IndiaImpactMapModal.tsx';
+import { NationalProgramsModal } from './components/NationalProgramsModal.tsx';
+import { FieldAuditorPortal } from './components/FieldAuditorPortal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { Cause, Product, CartItem, Order, UnlockedDigitalItem } from './types.ts';
@@ -89,6 +92,11 @@ export function App() {
   const [trackLedgerTab, setTrackLedgerTab] = useState<'track' | 'ledger'>(() =>
     /^\/(ledger|impact)\b/i.test(window.location.pathname) ? 'ledger' : 'track'
   );
+  const [isIndiaMapOpen, setIsIndiaMapOpen] = useState<boolean>(
+    () => /^\/map\b/i.test(window.location.pathname)
+  );
+  const [isProgramsOpen, setIsProgramsOpen] = useState<boolean>(false);
+  const [programsTab, setProgramsTab] = useState<'subscription' | 'bulk'>('subscription');
 
   // Digital Library (strictly populated ONLY after verified paid orders)
   const [unlockedLibrary, setUnlockedLibrary] = useState<UnlockedDigitalItem[]>(() => {
@@ -348,6 +356,8 @@ export function App() {
     /^\/admin(\/.*)?$/i.test(currentPath) || /^#\/?admin(\/.*)?$/i.test(currentHash);
   const isSellerRoute =
     /^\/seller(\/.*)?$/i.test(currentPath) || /^#\/?seller(\/.*)?$/i.test(currentHash);
+  const isAuditorRoute =
+    /^\/auditor(\/.*)?$/i.test(currentPath) || /^#\/?auditor(\/.*)?$/i.test(currentHash);
 
   if (isAdminRoute) {
     return (
@@ -368,6 +378,10 @@ export function App() {
         onRefreshStore={fetchData}
       />
     );
+  }
+
+  if (isAuditorRoute) {
+    return <FieldAuditorPortal onNavigateStore={() => navigateTo('/')} />;
   }
 
   // PUBLIC STOREFRONT — Clean Futuristic Warm-Paper & Forest-Green Editorial UI
@@ -671,6 +685,19 @@ export function App() {
         }}
       />
 
+      <IndiaImpactMapModal
+        isOpen={isIndiaMapOpen}
+        onClose={() => setIsIndiaMapOpen(false)}
+        causes={causes}
+      />
+
+      <NationalProgramsModal
+        isOpen={isProgramsOpen}
+        initialTab={programsTab}
+        onClose={() => setIsProgramsOpen(false)}
+        causes={causes}
+      />
+
       <Footer
         onOpenMissionDoc={(cId) => {
           setReadingMissionCauseId(cId);
@@ -681,6 +708,12 @@ export function App() {
           setIsTrackLedgerOpen(true);
         }}
         onOpenSellerPortal={() => navigateTo('/seller')}
+        onOpenIndiaMap={() => setIsIndiaMapOpen(true)}
+        onOpenPrograms={(tab) => {
+          setProgramsTab(tab);
+          setIsProgramsOpen(true);
+        }}
+        onOpenAuditorPortal={() => navigateTo('/auditor')}
         canInstallPwa={Boolean(deferredPwaPrompt)}
         onInstallPwa={handleInstallPwa}
         whatsappSupportNumber={publicIntegrations.whatsappSupportNumber}
