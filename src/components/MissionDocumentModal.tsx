@@ -102,19 +102,17 @@ export const MissionDocumentModal: React.FC<MissionDocumentModalProps> = ({
       ? 'text-[19px] leading-[1.92]'
       : 'text-[17px] leading-[1.88]';
 
-  const heroImg = cause?.image_url
-    ? cause.image_url.replace('w=800', 'w=1600')
-    : '';
+  const heroImg = doc.imageUrl || cause?.image_url || '';
 
   return (
-    <div className="fixed inset-0 z-[110] bg-[#040609]/95 backdrop-blur-xl flex flex-col">
-      {/* Top Champagne Gold Reading Progress Line */}
-      <div className="h-[2px] w-full bg-white/5 shrink-0">
+    <div className="fixed inset-0 z-[110] bg-[#04030e]/95 backdrop-blur-2xl flex flex-col">
+      {/* Top Prismatic Reading Progress Line */}
+      <div className="h-[3px] w-full bg-white/10 shrink-0">
         <div
           className="h-full transition-all duration-150"
           style={{
             width: `${scrollProgress}%`,
-            background: `linear-gradient(90deg, ${doc.accent}, #ebd28f)`,
+            background: `linear-gradient(90deg, ${doc.accent}, ${doc.accentSecondary})`,
           }}
         />
       </div>
@@ -257,9 +255,9 @@ export const MissionDocumentModal: React.FC<MissionDocumentModalProps> = ({
             </nav>
 
             {/* Quick Jump to Other 7 Missions */}
-            <div className="pt-5 border-t border-white/[0.07] space-y-2">
-              <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-slate-500">
-                Living Tamilagam Portfolio
+            <div className="pt-5 border-t border-white/[0.1] space-y-2">
+              <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-[#00f0ff]">
+                Living India Portfolio
               </div>
               <div className="grid grid-cols-4 gap-1.5">
                 {MISSION_DOCUMENTS.map((m) => (
@@ -300,23 +298,26 @@ export const MissionDocumentModal: React.FC<MissionDocumentModalProps> = ({
 
             <div className="relative max-w-3xl mx-auto px-6 sm:px-10 py-14 sm:py-20 space-y-6">
               <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono tracking-[0.22em] uppercase">
-                <span className="text-champagne-400">{doc.series}</span>
-                <span className="text-slate-600">·</span>
-                <span style={{ color: doc.accent }}>
+                <span className="text-[#00f0ff] font-bold">{doc.series}</span>
+                <span className="text-slate-500">·</span>
+                <span style={{ color: doc.accent }} className="font-bold">
                   Project 0{doc.projectNumber}
                 </span>
-                <span className="text-slate-600">·</span>
-                <span className="text-slate-400 inline-flex items-center space-x-1">
+                <span className="text-slate-500">·</span>
+                <span className="text-slate-300 inline-flex items-center space-x-1">
                   <Clock className="w-3 h-3" />
                   <span>{doc.readMinutes} min read</span>
                 </span>
               </div>
 
-              <h1 className="font-display text-3xl sm:text-5xl lg:text-[3.4rem] font-medium text-ivory-50 leading-[1.08] tracking-tight">
+              <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white leading-[1.08] tracking-tight">
                 {doc.officialTitle}
               </h1>
 
-              <p className="font-editorial italic text-lg sm:text-xl text-champagne-200/90 leading-relaxed">
+              <p
+                className="font-medium text-base sm:text-lg leading-relaxed"
+                style={{ color: doc.accentSecondary }}
+              >
                 {doc.subtitle}
               </p>
 

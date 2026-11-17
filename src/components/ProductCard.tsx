@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Plus, Check } from 'lucide-react';
 import { Product, Cause } from '../types.ts';
+import { Tilt3DCard } from './Tilt3DCard.tsx';
 
 interface ProductCardProps {
   product: Product;
@@ -40,9 +41,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div
+    <Tilt3DCard
+      maxTilt={6}
+      glowColor="rgba(0, 240, 255, 0.25)"
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="group luxury-card rounded-2xl overflow-hidden transition-all duration-400 flex flex-col justify-between cursor-pointer relative"
+      className="group luxury-card rounded-3xl overflow-hidden transition-all duration-400 flex flex-col justify-between cursor-pointer relative"
     >
       {/* Top Media Container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#080c13]">
@@ -138,10 +141,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             disabled={product.stock <= 0}
             className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase flex items-center space-x-1.5 transition-all ${
               justAdded
-                ? 'bg-emerald-500 text-obsidian-950 scale-105'
+                ? 'bg-[#00e5a0] text-[#060416] scale-105'
                 : product.stock <= 0
                 ? 'bg-white/5 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-champagne-500 to-champagne-400 hover:brightness-110 text-obsidian-950 shadow-gold active:scale-95'
+                : 'prism-button text-white active:scale-95'
             }`}
           >
             {justAdded ? (
@@ -160,6 +163,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </Tilt3DCard>
   );
 };

@@ -5,64 +5,137 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    background-color: #05070b;
-    color: #f5f1e8;
+    background-color: #060416;
+    color: #ffffff;
   }
 
   body {
-    background-color: #05070b;
-    color: #f5f1e8;
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #060416;
+    color: #ffffff;
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
 }
 
-/* Luxury surface & architectural accents */
-.luxury-glass {
-  background: linear-gradient(180deg, rgba(16, 21, 31, 0.78) 0%, rgba(9, 13, 20, 0.88) 100%);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.075);
+/* Futuristic 3D Animations */
+@keyframes float3d {
+  0%, 100% { transform: translate3d(0, 0px, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -18px, 24px) rotate(4deg); }
 }
 
-.luxury-card {
-  background: linear-gradient(165deg, rgba(15, 20, 30, 0.92) 0%, rgba(8, 11, 18, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.8);
+@keyframes floatSlow {
+  0%, 100% { transform: translate3d(0, 0px, 0) scale(1); }
+  50% { transform: translate3d(16px, -22px, 0) scale(1.06); }
 }
 
-.luxury-card:hover {
-  border-color: rgba(212, 175, 55, 0.35);
+@keyframes spinPrism {
+  0% { transform: rotateX(20deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(380deg) rotateY(360deg) rotateZ(360deg); }
 }
 
-.gold-gradient-text {
-  background: linear-gradient(125deg, #fcfaf5 0%, #ebd28f 42%, #d4af37 72%, #f5e6be 100%);
+@keyframes auroraShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-float-3d {
+  animation: float3d 7s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 12s ease-in-out infinite;
+}
+
+.animate-prism-3d {
+  transform-style: preserve-3d;
+  animation: spinPrism 16s linear infinite;
+}
+
+/* Colourful Prismatic Gradients & 3D Glass Surfaces */
+.prism-gradient-text {
+  background: linear-gradient(120deg, #00f0ff 0%, #a855f7 28%, #ff2e97 58%, #ffb800 85%, #00e5a0 100%);
+  background-size: 220% 220%;
+  animation: auroraShift 8s ease infinite;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.gold-hairline {
-  background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.55) 50%, transparent 100%);
+.gold-gradient-text {
+  background: linear-gradient(120deg, #00f0ff 0%, #c084fc 35%, #ff2e97 70%, #ffb800 100%);
+  background-size: 200% 200%;
+  animation: auroraShift 7s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Subtle luxury scrollbar */
+.glass-3d {
+  background: linear-gradient(145deg, rgba(24, 18, 60, 0.72) 0%, rgba(10, 7, 30, 0.85) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 24px 60px -18px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 28px rgba(139, 92, 246, 0.12);
+}
+
+.luxury-card {
+  background: linear-gradient(155deg, rgba(22, 16, 56, 0.85) 0%, rgba(10, 7, 28, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 22px 54px -20px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.luxury-card:hover {
+  border-color: rgba(0, 240, 255, 0.55);
+  box-shadow:
+    0 26px 64px -18px rgba(0, 0, 0, 0.85),
+    0 0 32px rgba(0, 240, 255, 0.2),
+    0 0 48px rgba(255, 46, 151, 0.14);
+}
+
+.prism-button {
+  background: linear-gradient(115deg, #00f0ff 0%, #8b5cf6 48%, #ff2e97 100%);
+  background-size: 180% 180%;
+  animation: auroraShift 6s ease infinite;
+  box-shadow: 0 10px 30px -8px rgba(255, 46, 151, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.prism-button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+/* 3D Perspective Floor Grid */
+.perspective-grid-3d {
+  background-image:
+    linear-gradient(to right, rgba(0, 240, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 46, 151, 0.16) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(650px) rotateX(64deg) scale(1.8);
+  transform-origin: center top;
+}
+
+.gold-hairline {
+  background: linear-gradient(90deg, transparent 0%, #00f0ff 28%, #ff2e97 65%, #ffb800 88%, transparent 100%);
+}
+
+/* Futuristic Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #05070b;
+  background: #060416;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.25);
+  background: linear-gradient(180deg, #00f0ff, #ff2e97);
   border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.55);
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -73,11 +146,10 @@
   background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: linear-gradient(90deg, #00f0ff, #ff2e97);
   border-radius: 9999px;
 }
 
-/* High precision Print media rules */
 @media print {
   @page {
     margin: 10mm;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Search, BookOpen, Compass } from 'lucide-react';
+import { ShoppingBag, Search, BookOpen, Compass, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   cartCount: number;
@@ -27,44 +27,47 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateHome,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#05070b]/85 backdrop-blur-xl border-b border-white/[0.07] transition-all">
+    <header className="sticky top-0 z-40 bg-[#07051a]/80 backdrop-blur-2xl border-b border-white/[0.12] transition-all">
+      {/* Prismatic top hairline */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-[#00f0ff] via-[#ff2e97] to-[#ffb800]" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
-          {/* Editorial Luxury Wordmark */}
+          {/* 3D Futuristic Brand Wordmark */}
           <div
             onClick={onNavigateHome}
-            className="flex items-center space-x-3.5 cursor-pointer group select-none shrink-0"
+            className="flex items-center space-x-3 cursor-pointer group select-none shrink-0"
           >
-            <div className="w-10 h-10 rounded-full border border-champagne-500/40 bg-champagne-500/[0.06] flex items-center justify-center group-hover:border-champagne-400 transition-colors">
-              <span className="font-display text-lg font-semibold text-champagne-300 tracking-tight">
-                B4
-              </span>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#00f0ff] via-[#8b5cf6] to-[#ff2e97] p-[2px] shadow-[0_0_24px_rgba(0,240,255,0.35)] group-hover:scale-105 transition-transform">
+              <div className="w-full h-full bg-[#090620] rounded-[14px] flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-[#00f0ff]" />
+              </div>
             </div>
             <div>
-              <div className="font-display font-semibold text-xl sm:text-2xl tracking-[0.14em] text-ivory-50 group-hover:text-champagne-300 transition-colors leading-none">
-                BUY<span className="text-champagne-400">4</span>ACHANGE
+              <div className="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-white leading-none">
+                BUY<span className="text-[#00f0ff]">4</span>A<span className="text-[#ff2e97]">CHANGE</span>
               </div>
-              <div className="font-mono text-[9px] tracking-[0.28em] uppercase text-slate-400 mt-1">
-                Living Tamilagam · UGT India
+              <div className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#ffb800] mt-1 font-semibold">
+                Living India · Open National Movement
               </div>
             </div>
           </div>
 
-          {/* Center Editorial Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-7 text-xs font-medium tracking-[0.12em] uppercase text-slate-300">
+          {/* Center 3D Glass Navigation Pills */}
+          <nav className="hidden lg:flex items-center space-x-1.5 p-1 rounded-full bg-white/[0.04] border border-white/10 text-xs font-semibold">
             {onScrollToMissions && (
               <button
                 onClick={onScrollToMissions}
-                className="hover:text-champagne-300 transition-colors flex items-center space-x-1.5"
+                className="px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5"
               >
-                <Compass className="w-3.5 h-3.5 text-champagne-400/80" />
+                <Compass className="w-3.5 h-3.5 text-[#00f0ff]" />
                 <span>8 Missions</span>
               </button>
             )}
             {onScrollToCatalog && (
               <button
                 onClick={onScrollToCatalog}
-                className="hover:text-champagne-300 transition-colors"
+                className="px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition"
               >
                 Catalog
               </button>
@@ -72,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onScrollToEProducts && (
               <button
                 onClick={onScrollToEProducts}
-                className="hover:text-champagne-300 transition-colors"
+                className="px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition"
               >
                 E-Products &amp; eBooks
               </button>
@@ -82,18 +85,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Search + Actions */}
           <div className="flex items-center space-x-2.5">
             <div className="hidden md:flex relative w-44 xl:w-56">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 text-[#00f0ff] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search collection..."
+                placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-full pl-9 pr-3 py-2 text-xs text-ivory-100 placeholder-slate-500 focus:outline-none focus:border-champagne-500/60 transition-all"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-full pl-9 pr-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#00f0ff] focus:shadow-[0_0_16px_rgba(0,240,255,0.25)] transition-all"
               />
               {searchTerm && (
                 <button
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-ivory-100"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 hover:text-white"
                 >
                   ✕
                 </button>
@@ -103,13 +106,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onOpenLibrary && (
               <button
                 onClick={onOpenLibrary}
-                className="relative flex items-center space-x-1.5 px-3.5 py-2 rounded-full border border-white/12 hover:border-champagne-500/50 bg-white/[0.03] text-ivory-200 font-medium text-xs transition-all"
+                className="relative flex items-center space-x-1.5 px-3.5 py-2 rounded-full border border-[#00f0ff]/40 bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-white font-semibold text-xs transition-all"
                 title="Open your purchased eBooks & eProducts"
               >
-                <BookOpen className="w-3.5 h-3.5 text-champagne-400" />
+                <BookOpen className="w-3.5 h-3.5 text-[#00f0ff]" />
                 <span className="hidden sm:inline">Library</span>
                 {libraryCount > 0 && (
-                  <span className="flex items-center justify-center bg-champagne-400 text-obsidian-950 text-[10px] font-extrabold h-4 min-w-4 px-1 rounded-full">
+                  <span className="flex items-center justify-center bg-[#ffb800] text-[#060416] text-[10px] font-black h-4 min-w-4 px-1 rounded-full">
                     {libraryCount}
                   </span>
                 )}
@@ -118,12 +121,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={onOpenCart}
-              className="relative flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-champagne-500 via-champagne-400 to-champagne-500 hover:brightness-110 text-obsidian-950 font-bold text-xs tracking-wider uppercase shadow-gold transition-all active:scale-95"
+              className="relative flex items-center space-x-2 px-4 py-2 rounded-full prism-button text-white font-bold text-xs tracking-wider uppercase transition-all active:scale-95"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>Bag</span>
               {cartCount > 0 && (
-                <span className="flex items-center justify-center bg-obsidian-950 text-champagne-300 text-[10px] font-extrabold h-4 min-w-4 px-1 rounded-full">
+                <span className="flex items-center justify-center bg-white text-[#060416] text-[10px] font-black h-4 min-w-4 px-1 rounded-full">
                   {cartCount}
                 </span>
               )}

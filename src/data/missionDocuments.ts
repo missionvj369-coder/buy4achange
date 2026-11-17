@@ -1,4 +1,4 @@
-// Auto-generated official Living Tamilagam Project 1-8 Dossiers
+// Official Living India National Movement — Project 1-8 Dossiers
 export interface MissionSection {
   number: string;
   heading: string;
@@ -13,6 +13,9 @@ export interface MissionDocument {
   subtitle: string;
   pillars: string[];
   accent: string;
+  accentSecondary: string;
+  gradient: string;
+  imageUrl: string;
   readMinutes: number;
   sectionCount: number;
   sections: MissionSection[];
@@ -22,9 +25,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 1,
     "causeId": "cause-women-entrepreneurship",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Tamil Nadu Women Entrepreneurship Mission",
-    "subtitle": "3,800 Women • 38 Districts • One Connected Entrepreneurial Ecosystem",
+    "series": "LIVING INDIA",
+    "officialTitle": "India Women Entrepreneurship Mission",
+    "subtitle": "Open Nationwide Network • Every District • One Connected Entrepreneurial Ecosystem",
     "pillars": [
       "Identify",
       "Train",
@@ -32,7 +35,10 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Connect",
       "Scale"
     ],
-    "accent": "#d4af37",
+    "accent": "#ff2e97",
+    "accentSecondary": "#ffb800",
+    "gradient": "from-[#ff2e97] via-[#ff6b4a] to-[#ffb800]",
+    "imageUrl": "/missions/mission-01.jpg",
     "readMinutes": 11,
     "sectionCount": 29,
     "sections": [
@@ -40,7 +46,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "01",
         "heading": "PROJECT VISION",
         "paragraphs": [
-          "Tamil Nadu Women Entrepreneurship Mission creates a statewide network of 3,800 women entrepreneurs-100 from each of Tamil Nadu's 38 districts.",
+          "India Women Entrepreneurship Mission creates a nationwide network of an open nationwide network of women entrepreneurs across every district of India.",
           "The mission moves beyond conventional entrepreneurship programs that stop at training, certification or financial assistance.",
           "It creates an integrated pathway:",
           "Identify → Assess → Train → Equip → Create → Connect → Market → Grow → Scale",
@@ -52,7 +58,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "PROJECT OBJECTIVE",
         "paragraphs": [
           "The mission will:",
-          "Identify 100 women with entrepreneurial potential in each district;",
+          "Identify women with entrepreneurial potential openly across every district;",
           "Provide practical entrepreneurship and business training;",
           "Develop their technical, digital and managerial capabilities;",
           "Provide or facilitate access to required infrastructure;",
@@ -62,7 +68,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Provide continuing mentorship and enterprise support;",
           "Measure enterprise performance and continuously improve the model.",
           "Primary target",
-          "38 districts × 100 women = 3,800 women entrepreneurs"
+          "Open nationwide participation across every district of India"
         ]
       },
       {
@@ -101,10 +107,10 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "05",
-        "heading": "THE 38-DISTRICT MODEL",
+        "heading": "THE OPEN NATIONWIDE DISTRICT MODEL",
         "paragraphs": [
-          "The mission covers all 38 districts of Tamil Nadu.",
-          "Each district identifies and develops 100 women, creating a total initial cohort of 3,800 women entrepreneurs. The 100 women in each district will not be restricted to identical businesses. Business opportunities will be identified according to the district's:",
+          "The mission covers every district across India.",
+          "Each district welcomes and develops aspiring women entrepreneurs openly without fixed caps. Participating women entrepreneurs in each district will not be restricted to identical businesses. Business opportunities will be identified according to the district's:",
           "Natural Resources",
           "Agricultural Strengths",
           "Traditional Skills",
@@ -412,7 +418,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "17",
         "heading": "DISTRICT WOMEN ENTREPRENEUR NETWORK",
         "paragraphs": [
-          "The 100 women in each district will form a connected entrepreneurial network.",
+          "Participating women entrepreneurs in each district will form a connected entrepreneurial network.",
           "They will be encouraged to:",
           "Share Knowledge",
           "Purchase From One Another",
@@ -423,21 +429,21 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Develop Joint Products",
           "Exchange Market Opportunities",
           "Mentor One Another",
-          "100 women should become an economic network—not 100 isolated businesses."
+          "District cohorts should become an economic network—not isolated businesses."
         ]
       },
       {
         "number": "18",
-        "heading": "STATEWIDE WOMEN ENTREPRENEUR NETWORK",
+        "heading": "NATIONWIDE WOMEN ENTREPRENEUR NETWORK",
         "paragraphs": [
-          "The 38 district networks will connect with one another.",
+          "The district-level networks will connect with one another.",
           "This allows:",
           "Products To Move Between Districts",
           "Businesses To Source From Other Districts",
-          "Service Providers To Support Enterprises Across Tamil Nadu",
+          "Service Providers To Support Enterprises Across India",
           "Successful Models To Be Replicated",
           "Inter-District Commerce To Develop",
-          "The result is: 38 DISTRICTS → ONE WOMEN-LED ECONOMIC NETWORK"
+          "The result is: ALL DISTRICTS OF INDIA → ONE WOMEN-LED ECONOMIC NETWORK"
         ]
       },
       {
@@ -455,17 +461,17 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Establish The Mentorship Network",
           "Develop Market Strategy",
           "Establish The Monitoring Framework.",
-          "Output: 38 district opportunity maps and an implementation system.",
+          "Output: district-level opportunity maps and an implementation system.",
           "Phase 2 — Selection & Training (Months 2–4)",
           "UGT will:",
-          "Identify 3,800 Participants",
+          "Identify Open Nationwide Participants",
           "Conduct Baseline Assessments",
           "Provide Entrepreneurship Training",
           "Provide Digital And AI Orientation",
           "Develop Enterprise Plans",
           "Organize Business Clusters",
           "Identify Infrastructure Requirements",
-          "Output: 3,800 women with assessed capabilities and enterprise plans.",
+          "Output: women entrepreneurs nationwide with assessed capabilities and enterprise plans.",
           "Phase 3 — Enterprise Development (Months 5–12)",
           "UGT will:",
           "Provide Or Facilitate Infrastructure",
@@ -496,7 +502,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Support Employment Generation",
           "Encourage Independent Investment",
           "Replicate Successful Enterprise Models",
-          "Output: A sustainable statewide women entrepreneurship network."
+          "Output: A sustainable nationwide women entrepreneurship network."
         ]
       },
       {
@@ -504,7 +510,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "KEY PERFORMANCE INDICATORS",
         "paragraphs": [
           "The mission will measure performance at six levels.",
-          "A. Participation: 38 districts covered • 100 women per district • 3,800 total participants",
+          "A. Participation: districts across India covered • open cohorts per district • Open nationwide enrollment",
           "B. Capability: Training & Completion • Enterprise Plans Completed • Business Capability Assessment • Digital Capability Acquired",
           "C. Enterprise: Enterprises Established • Enterprises Actively Operating • Products/Services Launched • Enterprise Survival Rate • Repeat Customers",
           "D. Economic Impact: Revenue Generated • Income Generated By Participating Women • Employment Created • Local Procurement • Reinvestment • Market Expansion",
@@ -517,8 +523,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "DESIRED OUTPUT",
         "paragraphs": [
           "The mission targets:",
-          "3,800 women with verified entrepreneurial capability",
-          "38 district-level women entrepreneur networks",
+          "women entrepreneurs nationwide with verified entrepreneurial capability",
+          "nationwide district-level women entrepreneur networks",
           "A portfolio of women-led enterprises across multiple sectors",
           "Shared infrastructure supporting production and services",
           "Structured connections with farmers and suppliers",
@@ -526,15 +532,15 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Market channels connecting entrepreneurs with consumers",
           "Products and services suitable for Human Essential Stores and other markets",
           "New employment generated through successful enterprises",
-          "A statewide network capable of continuing beyond the initial support period"
+          "A nationwide network capable of continuing beyond the initial support period"
         ]
       },
       {
         "number": "22",
         "heading": "DESIRED LONG-TERM OUTCOME",
         "paragraphs": [
-          "The mission does not define its ultimate success as: 3,800 women trained.",
-          "Its intended outcome is: 3,800 women progressively becoming capable and sustainable economic contributors.",
+          "The mission does not define its ultimate success as: women entrepreneurs nationwide trained.",
+          "Its intended outcome is: women entrepreneurs nationwide progressively becoming capable and sustainable economic contributors.",
           "The multiplier effect is equally important. One successful entrepreneur can:",
           "Employ Other Women",
           "Create Demand For Farmers",
@@ -543,14 +549,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Create New Products",
           "Create New Businesses",
           "Strengthen Her Local Economy",
-          "Therefore: The economic impact of the mission can extend far beyond the original 3,800 participants."
+          "Therefore: The economic impact of the mission can extend far beyond the original Open Nationwide Participants."
         ]
       },
       {
         "number": "23",
         "heading": "UGT'S ROLE",
         "paragraphs": [
-          "UGT will focus on building and operating the entrepreneurial ecosystem in partnership with the Government of Tamil Nadu.",
+          "UGT will focus on building and operating the entrepreneurial ecosystem in partnership with the National & State Governments.",
           "UGT will focus on:",
           "Programme Implementation",
           "Entrepreneur Development",
@@ -570,11 +576,11 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "24",
-        "heading": "GOVERNMENT OF TAMIL NADU'S ROLE",
+        "heading": "National & State Government ROLE",
         "paragraphs": [
-          "The project proposes that the Government of Tamil Nadu will act as an enabling and institutional partner.",
+          "The project proposes that the National & State Governments will act as an enabling and institutional partner.",
           "The Government will be requested to facilitate:",
-          "State-Level Institutional Coordination",
+          "National & State-Level Institutional Coordination",
           "District-Level Coordination",
           "Convergence With Relevant Government Programs",
           "Access To Suitable Public Infrastructure Where Appropriate",
@@ -639,7 +645,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "28",
         "heading": "THE CORE PROPOSITION",
         "paragraphs": [
-          "38 Districts • 100 Women per District • 3,800 Women Entrepreneurs • One connected system.",
+          "Every District of India • Open to Women Entrepreneurs Nationwide • One connected system.",
           "Women connect with farmers.",
           "Women connect with technology.",
           "Women connect with manufacturing.",
@@ -655,15 +661,15 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "29",
         "heading": "FINAL VISION",
         "paragraphs": [
-          "Tamil Nadu does not need to merely train more entrepreneurs.",
-          "Tamil Nadu needs to create an environment in which entrepreneurship can survive, grow and multiply.",
-          "The Tamil Nadu Women Entrepreneurship Mission creates that beginning with:",
-          "3,800 women • 38 districts • Multiple sectors • Connected supply chains • Shared infrastructure • Technology • Market access • Enterprise ownership",
+          "India does not need to merely train more entrepreneurs.",
+          "India needs to create an environment in which entrepreneurship can survive, grow and multiply.",
+          "The India Women Entrepreneurship Mission creates that beginning with:",
+          "women entrepreneurs nationwide • districts across India • Multiple sectors • Connected supply chains • Shared infrastructure • Technology • Market access • Enterprise ownership",
           "The mission creates a pathway through which a woman can move from:",
           "Idea → Skill → Enterprise → Market → Income → Employment → Growth → Contribution",
-          "And as these enterprises grow, they strengthen not only individual women, but their families, communities, districts and the wider Tamil Nadu economy.",
-          "TAMIL NADU WOMEN ENTREPRENEURSHIP MISSION",
-          "3,800 Women. 38 Districts. One Connected Entrepreneurial Ecosystem.",
+          "And as these enterprises grow, they strengthen not only individual women, but their families, communities, districts and the wider India economy.",
+          "India WOMEN ENTREPRENEURSHIP MISSION",
+          "women entrepreneurs nationwide. districts across India. One Connected Entrepreneurial Ecosystem.",
           "A project to create economic capability—not dependency."
         ]
       }
@@ -672,9 +678,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 2,
     "causeId": "cause-ai-free-training",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Tamilnadu Free AI Student Mission",
-    "subtitle": "3,800 Students • 38 Districts • One Generation Ready for the AI Era",
+    "series": "LIVING INDIA",
+    "officialTitle": "India Free AI Student Mission",
+    "subtitle": "Open to Youth Across Every District of India • One Generation Ready for the AI Era",
     "pillars": [
       "Understand",
       "Use",
@@ -682,8 +688,11 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Create",
       "Innovate"
     ],
-    "accent": "#38bdf8",
-    "readMinutes": 10,
+    "accent": "#00f0ff",
+    "accentSecondary": "#8b5cf6",
+    "gradient": "from-[#00f0ff] via-[#3b82f6] to-[#8b5cf6]",
+    "imageUrl": "/missions/mission-02.jpg",
+    "readMinutes": 9,
     "sectionCount": 34,
     "sections": [
       {
@@ -691,7 +700,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "EXECUTIVE SUMMARY",
         "paragraphs": [
           "Artificial Intelligence is rapidly becoming a fundamental capability across education, business, science, healthcare, agriculture, manufacturing, governance, environmental management and almost every field of human activity.",
-          "UGT proposes the Tamilnadu Free AI Student Mission as a statewide initiative to provide structured, practical and free AI capability development to 3,800 students aged 16–21, with 100 students from each of Tamil Nadu's 38 districts.",
+          "UGT proposes the India Free AI Student Mission as a nationwide initiative to provide structured, practical and free AI capability development to students aged 16–21 openly across every district of India.",
           "The mission will move beyond conventional technology training.",
           "UGT will focus on enabling students to:",
           "Understand AI → Use AI → Think with AI → Create with AI → Solve Problems → Innovate",
@@ -704,9 +713,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "02",
         "heading": "PROJECT VISION",
         "paragraphs": [
-          "UGT envisions a Tamil Nadu in which young people are not passive consumers of emerging technology.",
+          "UGT envisions a India in which young people are not passive consumers of emerging technology.",
           "They become capable participants in shaping it.",
-          "The Tamilnadu Free AI Student Mission will create an accessible pathway through which students from different districts and backgrounds can acquire practical AI capability and apply it to education, entrepreneurship, science, agriculture, environment, community development and other areas of public value.",
+          "The India Free AI Student Mission will create an accessible pathway through which students from different districts and backgrounds can acquire practical AI capability and apply it to education, entrepreneurship, science, agriculture, environment, community development and other areas of public value.",
           "Core vision: AI should amplify human potential—not diminish human potential."
         ]
       },
@@ -715,8 +724,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "PROJECT OBJECTIVES",
         "paragraphs": [
           "UGT will focus on:",
-          "Providing free AI capability development to 3,800 students.",
-          "Establishing participation across all 38 districts.",
+          "Providing free AI capability development to students nationwide.",
+          "Establishing participation across all districts across India.",
           "Building foundational understanding of Artificial Intelligence.",
           "Developing practical AI usage skills.",
           "Developing critical thinking and AI-output verification.",
@@ -725,7 +734,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Educating students about responsible and ethical AI.",
           "Connecting students with mentors and technology professionals.",
           "Enabling students to develop real-world AI projects.",
-          "Creating district-level and statewide student innovation networks.",
+          "Creating district-level and nationwide student innovation networks.",
           "Identifying high-potential projects for further development."
         ]
       },
@@ -734,7 +743,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "TARGET GROUP",
         "paragraphs": [
           "The mission will focus on students aged 16–21 years.",
-          "UGT proposes to select: 100 students from each of Tamil Nadu's 38 districts. Total: 3,800 Students.",
+          "UGT proposes to select: Open cohorts of youth across every district of India.",
           "The programme will seek participation from students across appropriate educational pathways, including:",
           "Higher Secondary Education",
           "Colleges",
@@ -960,15 +969,15 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "DISTRICT AI CHALLENGE",
         "paragraphs": [
           "UGT will develop a district-level AI challenge framework.",
-          "The 100 participating students in each district can form teams and work on problems relevant to their local environment: Agriculture, Education, Local Industry, Environment, Public Information, Community Services, Accessibility, Local Business."
+          "Participating student cohorts in each district can form teams and work on problems relevant to their local environment: Agriculture, Education, Local Industry, Environment, Public Information, Community Services, Accessibility, Local Business."
         ]
       },
       {
         "number": "18",
-        "heading": "TAMILNADU AI INNOVATION CHALLENGE",
+        "heading": "India AI INNOVATION CHALLENGE",
         "paragraphs": [
-          "UGT will connect promising district projects through a statewide innovation pathway:",
-          "District Students → District Projects → District Evaluation → Statewide AI Innovation Challenge → Expert Mentorship → Prototype Development → Testing → Potential Implementation / Entrepreneurship"
+          "UGT will connect promising district projects through a nationwide innovation pathway:",
+          "District Students → District Projects → District Evaluation → Nationwide AI Innovation Challenge → Expert Mentorship → Prototype Development → Testing → Potential Implementation / Entrepreneurship"
         ]
       },
       {
@@ -1000,8 +1009,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "22",
         "heading": "STUDENT NETWORK",
         "paragraphs": [
-          "The 3,800 students will form a statewide learning and innovation network across all 38 districts: Collaborate Across Districts, Exchange Ideas, Share Projects, Form Teams, Participate In Challenges, Mentor Peers, Access Experts, Build Collaborative Projects.",
-          "Core structure: 38 Districts → One Young AI Network"
+          "The students nationwide will form a nationwide learning and innovation network across all districts across India: Collaborate Across Districts, Exchange Ideas, Share Projects, Form Teams, Participate In Challenges, Mentor Peers, Access Experts, Build Collaborative Projects.",
+          "Core structure: districts across India → One Young AI Network"
         ]
       },
       {
@@ -1009,7 +1018,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "IMPLEMENTATION ROADMAP",
         "paragraphs": [
           "PHASE 1 — DESIGN & PREPARATION (Months 1–2): Curriculum Development, District Coordination, Student Selection Framework, Infrastructure Assessment, Mentor Identification, AI Tool Assessment, Project Framework, Responsible-AI Framework, Monitoring System.",
-          "PHASE 2 — STUDENT SELECTION & FOUNDATION (Months 3–6): Selecting 3,800 Students, Baseline Capability Assessment, AI Fundamentals, Practical AI Use, Responsible AI, Research And Verification.",
+          "PHASE 2 — STUDENT SELECTION & FOUNDATION (Months 3–6): Selecting students nationwide, Baseline Capability Assessment, AI Fundamentals, Practical AI Use, Responsible AI, Research And Verification.",
           "PHASE 3 — PRACTICAL AI DEVELOPMENT (Months 7–12): Advanced AI Usage, Research, Coding, Automation, Creativity, Domain Applications, Team Development.",
           "PHASE 4 — REAL-WORLD PROJECTS (Year 2): Project Identification, Team Formation, Mentorship, Prototype Development, Testing, Feedback, Improvement.",
           "PHASE 5 — INNOVATION & SCALE (Years 2–3): Advanced Mentorship, Technical Development, Incubation, Entrepreneurship Support, Industry Exposure, Potential Implementation."
@@ -1019,10 +1028,10 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "24",
         "heading": "KEY PERFORMANCE INDICATORS",
         "paragraphs": [
-          "Participation: 38 districts covered • 100 students per district • 3,800 students",
+          "Participation: districts across India covered • open student cohorts per district • students nationwide",
           "Capability: Training Completion • AI Competency Assessment • Practical Task Performance • Responsible-AI Assessment",
           "Application: Projects Initiated • Projects Completed • Prototypes Developed • Real-World Problems Addressed",
-          "Innovation: District AI Challenges • Statewide Projects • Cross-District Collaboration • High-Potential Projects Identified",
+          "Innovation: District AI Challenges • Nationwide Projects • Cross-District Collaboration • High-Potential Projects Identified",
           "Opportunity: Mentorship Opportunities • Internships Where Available • Industry Exposure • Entrepreneurship Pathways • Advanced Technical Opportunities"
         ]
       },
@@ -1030,15 +1039,15 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "25",
         "heading": "DESIRED OUTPUT",
         "paragraphs": [
-          "3,800 students with practical AI capability • 38 district AI student networks • One statewide young AI network • A portfolio of student-developed projects • District-level AI problem-solving capability • Responsible AI awareness • AI-enabled creative and entrepreneurial capability • A pipeline of young innovators."
+          "students nationwide with practical AI capability • district-level AI student networks • One nationwide young AI network • A portfolio of student-developed projects • District-level AI problem-solving capability • Responsible AI awareness • AI-enabled creative and entrepreneurial capability • A pipeline of young innovators."
         ]
       },
       {
         "number": "26",
         "heading": "DESIRED LONG-TERM OUTCOME",
         "paragraphs": [
-          "The mission does not define its ultimate success as 3,800 students trained in AI.",
-          "UGT defines the intended long-term outcome as: 3,800 young people capable of using human intelligence together with artificial intelligence to create value, solve problems and contribute to society — as Engineers, Researchers, Entrepreneurs, Scientists, Designers, Educators, Developers, Innovators, and Social Problem-Solvers."
+          "The mission does not define its ultimate success as students nationwide trained in AI.",
+          "UGT defines the intended long-term outcome as: young people nationwide capable of using human intelligence together with artificial intelligence to create value, solve problems and contribute to society — as Engineers, Researchers, Entrepreneurs, Scientists, Designers, Educators, Developers, Innovators, and Social Problem-Solvers."
         ]
       },
       {
@@ -1052,14 +1061,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "28",
         "heading": "PROPOSED GOVERNMENT PARTNERSHIP",
         "paragraphs": [
-          "UGT proposes that the Government of Tamil Nadu act as an institutional and enabling partner through State-Level Coordination, District-Level Coordination, Participation Of Appropriate Educational Institutions, Access To Suitable Public Or Institutional Infrastructure, Convergence With Relevant Government Programs, Institutional Support, Administrative Facilitation, Monitoring And Evaluation, and Policy Support Where Required."
+          "UGT proposes that the National & State Governments act as an institutional and enabling partner through National & State-Level Coordination, District-Level Coordination, Participation Of Appropriate Educational Institutions, Access To Suitable Public Or Institutional Infrastructure, Convergence With Relevant Government Programs, Institutional Support, Administrative Facilitation, Monitoring And Evaluation, and Policy Support Where Required."
         ]
       },
       {
         "number": "29",
         "heading": "FINANCIAL PRINCIPLE",
         "paragraphs": [
-          "UGT proposes that the financial requirement be established through a detailed implementation assessment covering Training Infrastructure, Devices, Connectivity, AI Tools And Software, Learning Platforms, Mentors, Trainers, Project Support, District-Level Activities, Statewide Activities, Monitoring, and Administration."
+          "UGT proposes that the financial requirement be established through a detailed implementation assessment covering Training Infrastructure, Devices, Connectivity, AI Tools And Software, Learning Platforms, Mentors, Trainers, Project Support, District-Level Activities, Nationwide Activities, Monitoring, and Administration."
         ]
       },
       {
@@ -1087,7 +1096,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "33",
         "heading": "CORE PROPOSITION",
         "paragraphs": [
-          "38 DISTRICTS • 100 STUDENTS PER DISTRICT • 3,800 STUDENTS • ONE YOUNG AI NETWORK",
+          "EVERY DISTRICT OF INDIA • OPEN TO ALL ELIGIBLE STUDENTS • ONE YOUNG AI NETWORK",
           "Understand AI. Use AI. Think with AI. Create with AI. Solve with AI. Innovate with AI. Remain human in the process."
         ]
       },
@@ -1095,7 +1104,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "34",
         "heading": "FINAL VISION",
         "paragraphs": [
-          "Tamil Nadu has an opportunity to prepare its young generation not merely for a future shaped by Artificial Intelligence, but to participate in shaping that future themselves.",
+          "India has an opportunity to prepare its young generation not merely for a future shaped by Artificial Intelligence, but to participate in shaping that future themselves.",
           "Learners → Thinkers → Creators → Problem Solvers → Innovators",
           "A young generation that possesses the confidence to understand emerging technology, the wisdom to use it responsibly, and the capability to apply it for meaningful human progress."
         ]
@@ -1105,9 +1114,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 3,
     "causeId": "cause-everyday-essentials",
-    "series": "LIVING TAMILAGAM",
+    "series": "LIVING INDIA",
     "officialTitle": "Human Essential Store Mission",
-    "subtitle": "38 Districts • 38 Pilot Stores • One Connected Essential-Goods Ecosystem",
+    "subtitle": "Open District Network • Community Stores • One Connected Essential-Goods Ecosystem",
     "pillars": [
       "Source",
       "Connect",
@@ -1115,18 +1124,21 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Serve",
       "Sustain"
     ],
-    "accent": "#10b981",
-    "readMinutes": 7,
+    "accent": "#00e5a0",
+    "accentSecondary": "#facc15",
+    "gradient": "from-[#00e5a0] via-[#10b981] to-[#facc15]",
+    "imageUrl": "/missions/mission-03.jpg",
+    "readMinutes": 6,
     "sectionCount": 32,
     "sections": [
       {
         "number": "01",
         "heading": "EXECUTIVE SUMMARY",
         "paragraphs": [
-          "UGT proposes the Human Essential Store Mission as a 38-district pilot designed to connect farmers, women entrepreneurs, local producers, processors, logistics providers and consumers through an integrated essential-goods procurement, supply-chain and retail ecosystem.",
+          "UGT proposes the Human Essential Store Mission as a nationwide district pilot designed to connect farmers, women entrepreneurs, local producers, processors, logistics providers and consumers through an integrated essential-goods procurement, supply-chain and retail ecosystem.",
           "UGT will focus on developing a model that creates stronger connections between the source of production and the final consumer while reducing unnecessary supply-chain layers, improving market access, increasing transparency and creating fair value for producers and consumers.",
-          "The proposed pilot consists of: One Human Essential Store in each of Tamil Nadu's 38 districts, subject to district-level feasibility, suitable infrastructure and agreed implementation arrangements.",
-          "The project will also provide an important market channel for suitable products created through the Tamil Nadu Women Entrepreneurship Mission.",
+          "The proposed pilot consists of: One Human Essential Store in every district across India, subject to district-level feasibility, suitable infrastructure and agreed implementation arrangements.",
+          "The project will also provide an important market channel for suitable products created through the India Women Entrepreneurship Mission.",
           "Build → Operate → Measure → Learn → Improve → Scale",
           "The objective is not to establish stores simply for the sake of creating stores. The objective is to prove, measure and continuously improve a better essential-goods ecosystem."
         ]
@@ -1171,7 +1183,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "05",
         "heading": "PROPOSED SCALE",
         "paragraphs": [
-          "Districts: 38 • Pilot stores: 38 • Initial model: 1 store per district • Primary market: District consumers • Major supply sources: Farmers, women entrepreneurs, local producers • Approach: Pilot → Measure → Improve → Scale."
+          "Districts: Open Nationwide • Pilot stores: Scalable District Network • Initial model: 1 store per district • Primary market: District consumers • Major supply sources: Farmers, women entrepreneurs, local producers • Approach: Pilot → Measure → Improve → Scale."
         ]
       },
       {
@@ -1315,7 +1327,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "23",
         "heading": "IMPLEMENTATION ROADMAP",
         "paragraphs": [
-          "PHASE 1 — DISTRICT FEASIBILITY (Months 1–3): 38 District Feasibility Assessments.",
+          "PHASE 1 — DISTRICT FEASIBILITY (Months 1–3): district-level Feasibility Assessments.",
           "PHASE 2 — PILOT DESIGN (Months 4–6): Human Essential Store Pilot Operating Framework.",
           "PHASE 3 — ESTABLISHMENT (Months 7–9): Operational district pilot stores.",
           "PHASE 4 — PILOT OPERATION (Months 10–18): Monitor sales, customer response, margins, inventory, wastage, logistics.",
@@ -1334,7 +1346,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "25",
         "heading": "DESIRED OUTPUTS",
         "paragraphs": [
-          "38 district-level pilot stores • Tested farmer-to-consumer supply-chain model • Structured market channel for women entrepreneurs • District-level producer networks • Digital retail and supply-chain system • Transparent product-information framework • Tested membership ecosystem • Validated financial and operating model • Evidence-based expansion framework."
+          "open district-level pilot stores across India • Tested farmer-to-consumer supply-chain model • Structured market channel for women entrepreneurs • District-level producer networks • Digital retail and supply-chain system • Transparent product-information framework • Tested membership ecosystem • Validated financial and operating model • Evidence-based expansion framework."
         ]
       },
       {
@@ -1355,7 +1367,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "28",
         "heading": "PROPOSED GOVERNMENT PARTNERSHIP",
         "paragraphs": [
-          "State-Level Coordination, District Administration Coordination, Convergence With Relevant Government Programmes, Suitable Infrastructure Facilitation, Farmer And Producer Linkages, Regulatory Facilitation, Institutional Support, Monitoring And Evaluation, Policy Support Where Required."
+          "National & State-Level Coordination, District Administration Coordination, Convergence With Relevant Government Programmes, Suitable Infrastructure Facilitation, Farmer And Producer Linkages, Regulatory Facilitation, Institutional Support, Monitoring And Evaluation, Policy Support Where Required."
         ]
       },
       {
@@ -1391,9 +1403,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 4,
     "causeId": "cause-protect-earth",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Earth Guardians Tamilnadu",
-    "subtitle": "A Statewide Mission for Earth Protection, Restoration & Regeneration",
+    "series": "LIVING INDIA",
+    "officialTitle": "Earth Guardians India",
+    "subtitle": "A National Mission for Earth Protection, Restoration & Regeneration",
     "pillars": [
       "Protect",
       "Restore",
@@ -1401,19 +1413,22 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Reduce",
       "Create"
     ],
-    "accent": "#34d399",
-    "readMinutes": 14,
+    "accent": "#10b981",
+    "accentSecondary": "#00f0ff",
+    "gradient": "from-[#10b981] via-[#14b8a6] to-[#00f0ff]",
+    "imageUrl": "/missions/mission-04.jpg",
+    "readMinutes": 13,
     "sectionCount": 44,
     "sections": [
       {
         "number": "01",
         "heading": "EXECUTIVE SUMMARY",
         "paragraphs": [
-          "Tamil Nadu's future depends not only on economic development, infrastructure and technological progress, but also on the health of its land, water, air, biodiversity and natural ecosystems.",
-          "UGT proposes Earth Guardians Tamilnadu as a statewide environmental mission designed to move environmental protection from occasional campaigns to continuous, measurable community participation and ecological action.",
+          "India's future depends not only on economic development, infrastructure and technological progress, but also on the health of its land, water, air, biodiversity and natural ecosystems.",
+          "UGT proposes Earth Guardians India as a nationwide environmental mission designed to move environmental protection from occasional campaigns to continuous, measurable community participation and ecological action.",
           "The mission will connect:",
           "Students + Women Entrepreneurs + Farmers + Communities + Educational Institutions + Local Organisations + Environmental Practitioners + Technology",
-          "across Tamil Nadu.",
+          "across India.",
           "The programme will focus on five fundamental actions:",
           "PROTECT- Protect existing natural ecosystems and environmental assets.",
           "RESTORE - Restore damaged and degraded ecosystems.",
@@ -1425,17 +1440,17 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "AI, data and digital tools will help participating communities understand local environmental conditions, identify priorities, monitor interventions and measure outcomes.",
           "The mission will follow:",
           "OBSERVE → ANALYSE → PRIORITISE → ACT → MEASURE → LEARN → IMPROVE",
-          "The ultimate vision is to create a Tamil Nadu where environmental protection becomes a shared culture of responsibility, rather than the responsibility of Government departments alone."
+          "The ultimate vision is to create a India where environmental protection becomes a shared culture of responsibility, rather than the responsibility of Government departments alone."
         ]
       },
       {
         "number": "02",
         "heading": "PROJECT VISION",
         "paragraphs": [
-          "UGT envisions a Tamil Nadu where people do not merely live on the Earth, but actively participate in protecting and regenerating it.",
+          "UGT envisions a India where people do not merely live on the Earth, but actively participate in protecting and regenerating it.",
           "The mission will encourage every district to develop a network of people capable of identifying environmental challenges and taking responsible action in partnership with appropriate authorities and experts.",
           "Vision",
-          "Creating a Tamil Nadu where people protect, restore and regenerate the Earth for present and future generations."
+          "Creating a India where people protect, restore and regenerate the Earth for present and future generations."
         ]
       },
       {
@@ -1461,7 +1476,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Water And Ecological Indicators Where Appropriate",
           "Maintenance",
           "Measurable Improvement",
-          "This outcome-based approach will become a fundamental principle of Earth Guardians Tamilnadu."
+          "This outcome-based approach will become a fundamental principle of Earth Guardians India."
         ]
       },
       {
@@ -1469,7 +1484,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "PROJECT OBJECTIVES",
         "paragraphs": [
           "UGT will focus on:",
-          "Building environmental participation across all 38 districts.",
+          "Building environmental participation across all districts across India.",
           "Creating District Earth Guardian Networks.",
           "Increasing community participation in environmental protection.",
           "Protecting existing ecosystems and natural resources.",
@@ -1507,7 +1522,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Structure",
           "State Earth Guardians Framework",
           "↓",
-          "38 District Earth Guardian Networks",
+          "district-level Earth Guardian Networks",
           "↓",
           "Local Environmental Teams",
           "↓",
@@ -1594,7 +1609,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Student Innovations",
           "Community Enterprises",
           "Local Ecological Solutions",
-          "This pillar will connect directly with the Tamil Nadu Women Entrepreneurship Mission.",
+          "This pillar will connect directly with the India Women Entrepreneurship Mission.",
           "Women entrepreneurs who develop suitable environmentally responsible products can potentially access the Human Essential Store ecosystem, subject to quality, safety, demand and applicable requirements.",
           "Thus: Environmental Protection can become Environmental Opportunity."
         ]
@@ -1603,7 +1618,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "11",
         "heading": "PILLAR 6 - ENVIRONMENTAL INTELLIGENCE & AI",
         "paragraphs": [
-          "This will be one of the distinguishing features of Earth Guardians Tamilnadu. The mission will use appropriate AI and digital technologies to support environmental decision-making. AI will not replace:",
+          "This will be one of the distinguishing features of Earth Guardians India. The mission will use appropriate AI and digital technologies to support environmental decision-making. AI will not replace:",
           "Scientific Expertise",
           "Environmental Professionals",
           "Local Knowledge",
@@ -1679,8 +1694,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "16",
         "heading": "AI FOR STUDENT ENVIRONMENTAL INNOVATION",
         "paragraphs": [
-          "The Tamilnadu Free AI Student Mission provides an important connection.",
-          "The 3,800 students trained through Project 2 can be encouraged to apply their capabilities to environmental challenges.",
+          "The India Free AI Student Mission provides an important connection.",
+          "The students nationwide trained through Project 2 can be encouraged to apply their capabilities to environmental challenges.",
           "Potential student projects include:",
           "Waste Mapping",
           "Water Monitoring",
@@ -1697,7 +1712,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "17",
-        "heading": "NATIVE TAMIL NADU",
+        "heading": "NATIVE India",
         "paragraphs": [
           "UGT will focus on strengthening native biodiversity through appropriate projects involving:",
           "Native Trees",
@@ -1789,7 +1804,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "22",
         "heading": "GREEN CITIES",
         "paragraphs": [
-          "Earth Guardians Tamilnadu will also support environmental improvement in urban areas.",
+          "Earth Guardians India will also support environmental improvement in urban areas.",
           "Potential focus areas include:",
           "Urban Tree Cover",
           "Green Spaces",
@@ -1814,7 +1829,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Soil Stability",
           "Climate Resilience",
           "Local Communities",
-          "Earth Guardians Tamilnadu will focus on awareness, protection and appropriate restoration activities.",
+          "Earth Guardians India will focus on awareness, protection and appropriate restoration activities.",
           "Large-scale physical transformation of hill areas will not be undertaken through this project without appropriate scientific, legal and Government approvals. This provides a natural transition into Project 5."
         ]
       },
@@ -1834,7 +1849,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Plastic Reduction",
           "Local Environmental Monitoring",
           "The mission will avoid imposing the same project on every district.",
-          "Principle: One State. 38 Districts. Different Ecological Priorities."
+          "Principle: One State. districts across India. Different Ecological Priorities."
         ]
       },
       {
@@ -1915,7 +1930,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Student Projects",
           "Relevant Data",
           "Project Outcomes",
-          "The platform can create a transparent statewide environmental learning system."
+          "The platform can create a transparent nationwide environmental learning system."
         ]
       },
       {
@@ -1944,14 +1959,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "paragraphs": [
           "PHASE 1 — FRAMEWORK & DISTRICT MAPPING - Months 1–6",
           "UGT will focus on:",
-          "Statewide Framework",
+          "Nationwide Framework",
           "District Environmental Mapping",
           "Stakeholder Identification",
           "Priority-Area Identification",
           "Student Participation Framework",
           "Ai/Data Framework",
           "Project-Selection Methodology",
-          "Output - 38 District Environmental Baselines",
+          "Output - district-level Environmental Baselines",
           "PHASE 2 — DISTRICT NETWORK DEVELOPMENT - Months 7–12",
           "UGT will focus on establishing and activating:",
           "District Earth Guardian Networks",
@@ -1960,7 +1975,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Institutional Partnerships",
           "Environmental Mentors",
           "Local Project Teams",
-          "Output - 38 active district networks",
+          "Output - Nationwide active district networks",
           "PHASE 3 — PILOT PROJECTS - Year 2",
           "Each district will identify and implement appropriate priority projects.",
           "Projects will be selected based on:",
@@ -1977,7 +1992,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Digital Monitoring",
           "Student Ai Projects",
           "Environmental Dashboards Where Feasible",
-          "Output - A statewide environmental intelligence network",
+          "Output - A nationwide environmental intelligence network",
           "PHASE 5 — RESTORATION & REGENERATION - Years 3–5",
           "Successful models will be strengthened and expanded.",
           "Focus will be placed on:",
@@ -1988,7 +2003,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Waste Reduction",
           "Green Cities",
           "Environmental Entrepreneurship",
-          "PHASE 6 — STATEWIDE LEARNING & SCALE",
+          "PHASE 6 — NATIONWIDE LEARNING & SCALE",
           "UGT will evaluate district models and identify those suitable for broader adoption.",
           "Principle: Scale what works. Improve what can work. Stop what does not create sufficient value."
         ]
@@ -2035,8 +2050,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "DESIRED OUTPUTS",
         "paragraphs": [
           "The mission aims to establish:",
-          "38 District Earth Guardian Networks",
-          "A statewide environmental participation network",
+          "district-level Earth Guardian Networks",
+          "A nationwide environmental participation network",
           "District environmental baseline information",
           "Local environmental project portfolios",
           "AI-supported environmental intelligence capability",
@@ -2082,16 +2097,16 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Outcome Measurement",
           "Documentation",
           "Continuous Improvement",
-          "UGT is ready to take the mission forward in partnership with the Government of Tamil Nadu, appropriate institutions, experts and communities."
+          "UGT is ready to take the mission forward in partnership with the National & State Governments, appropriate institutions, experts and communities."
         ]
       },
       {
         "number": "36",
         "heading": "PROPOSED GOVERNMENT PARTNERSHIP",
         "paragraphs": [
-          "UGT proposes that the Government of Tamil Nadu act as an institutional, enabling and coordinating partner.",
+          "UGT proposes that the National & State Governments act as an institutional, enabling and coordinating partner.",
           "UGT proposes Government support in appropriate areas including:",
-          "State-Level Coordination",
+          "National & State-Level Coordination",
           "District Administration Coordination",
           "Access To Relevant Public Environmental Information",
           "Convergence With Existing Government Programmes",
@@ -2132,7 +2147,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Restoration Needs",
           "Monitoring",
           "Maintenance",
-          "UGT will not present an arbitrary statewide financial requirement without appropriate project-level assessment.",
+          "UGT will not present an arbitrary nationwide financial requirement without appropriate project-level assessment.",
           "Where possible, the mission will explore:",
           "Community Participation",
           "Institutional Partnerships",
@@ -2186,7 +2201,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "41",
-        "heading": "THE UNIQUE STRENGTH OF EARTH GUARDIANS TAMILNADU",
+        "heading": "THE UNIQUE STRENGTH OF EARTH GUARDIANS India",
         "paragraphs": [
           "The mission brings together four capabilities:",
           "HUMAN PARTICIPATION -  People who care and act.",
@@ -2199,9 +2214,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "42",
-        "heading": "CONNECTION WITH THE LIVING TAMILAGAM PORTFOLIO",
+        "heading": "CONNECTION WITH THE LIVING INDIA PORTFOLIO",
         "paragraphs": [
-          "Earth Guardians Tamilnadu becomes the environmental layer of the first four projects.",
+          "Earth Guardians India becomes the environmental layer of the first four projects.",
           "PROJECT 1",
           "Women Entrepreneurs",
           "↓",
@@ -2215,7 +2230,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "↓",
           "Market access for appropriate sustainable products",
           "PROJECT 4",
-          "Earth Guardians Tamilnadu",
+          "Earth Guardians India",
           "↓",
           "Environmental protection, restoration and regeneration",
           "This creates a practical cycle:",
@@ -2226,8 +2241,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "43",
         "heading": "CORE PROPOSITION",
         "paragraphs": [
-          "38 DISTRICTS",
-          "38 EARTH GUARDIAN NETWORKS",
+          "ALL DISTRICTS OF INDIA",
+          "NATIONWIDE EARTH GUARDIAN NETWORKS",
           "ONE SHARED RESPONSIBILITY",
           "PROTECT",
           "RESTORE",
@@ -2242,8 +2257,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "44",
         "heading": "FINAL VISION",
         "paragraphs": [
-          "Tamil Nadu's development must not be measured only by the roads it builds, the industries it attracts, the technology it adopts or the economic growth it achieves.",
-          "A truly developed Tamil Nadu must also be able to say:",
+          "India's development must not be measured only by the roads it builds, the industries it attracts, the technology it adopts or the economic growth it achieves.",
+          "A truly developed India must also be able to say:",
           "Our water is protected.",
           "Our soil is respected.",
           "Our biodiversity is valued.",
@@ -2253,12 +2268,12 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "Our communities are participating.",
           "Our children are learning to care for the Earth.",
           "Our development does not destroy the foundation upon which future generations depend.",
-          "UGT proposes Earth Guardians Tamilnadu as a long-term statewide mission to build that culture.",
+          "UGT proposes Earth Guardians India as a long-term nationwide mission to build that culture.",
           "The objective is not to create a generation that merely talks about saving the Earth.",
           "It is to create a generation that understands the Earth, protects it, restores what has been damaged, regenerates what is possible and takes responsibility for the future.",
-          "EARTH GUARDIANS TAMILNADU",
+          "EARTH GUARDIANS India",
           "Protect. Restore. Regenerate.",
-          "One Earth. One Tamil Nadu. One Shared Responsibility."
+          "One Earth. One India. One Shared Responsibility."
         ]
       }
     ]
@@ -2266,9 +2281,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 5,
     "causeId": "cause-hill-and-city",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Tamil Nadu Hills & Cities",
-    "subtitle": "Mutual Growth & Transformation Mission — Connecting Places. Sharing Opportunities. Growing Together.",
+    "series": "LIVING INDIA",
+    "officialTitle": "India Hills & Cities Mission",
+    "subtitle": "Mutual Growth & Transformation — Connecting Places. Sharing Opportunities. Growing Together.",
     "pillars": [
       "Livelihoods",
       "Connectivity",
@@ -2276,16 +2291,19 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Balance",
       "Mutual Growth"
     ],
-    "accent": "#f59e0b",
-    "readMinutes": 6,
+    "accent": "#fb7185",
+    "accentSecondary": "#6366f1",
+    "gradient": "from-[#fb7185] via-[#a855f7] to-[#6366f1]",
+    "imageUrl": "/missions/mission-05.jpg",
+    "readMinutes": 5,
     "sectionCount": 41,
     "sections": [
       {
         "number": "01",
         "heading": "EXECUTIVE SUMMARY",
         "paragraphs": [
-          "Tamil Nadu has developed strong urban, industrial, technological and economic centres. At the same time, many hill regions continue to face limited economic opportunities, migration of young people and inadequate access to advanced services and technology.",
-          "UGT proposes Hills & Cities — Tamil Nadu Mutual Growth & Transformation Mission to address this imbalance through a new development relationship between hill regions and cities.",
+          "India has developed strong urban, industrial, technological and economic centres. At the same time, many hill regions continue to face limited economic opportunities, migration of young people and inadequate access to advanced services and technology.",
+          "UGT proposes Hills & Cities — India Mutual Growth & Transformation Mission to address this imbalance through a new development relationship between hill regions and cities.",
           "The mission does not propose turning hills into cities, nor does it seek to restrict people's freedom to migrate. Instead, it seeks to create conditions where people can access meaningful opportunities without being forced to leave their communities solely because opportunities are concentrated elsewhere.",
           "The central proposition is: HILLS ↔ CITIES — connecting People + Technology + Knowledge + Products + Markets + Healthcare + Education + Finance + Logistics + Opportunities.",
           "Five interconnected transformation systems: Hill Livelihoods • City Deconcentration • Technology Bridge • Resource & Market Exchange • Ecological Balance.",
@@ -2305,7 +2323,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "03",
         "heading": "THE VISION",
         "paragraphs": [
-          "To connect the strengths of Tamil Nadu's hills and cities so that both can grow together while preserving their unique ecological, social and economic identities."
+          "To connect the strengths of India's hills and cities so that both can grow together while preserving their unique ecological, social and economic identities."
         ]
       },
       {
@@ -2379,7 +2397,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "13",
         "heading": "CITY DECONCENTRATION",
         "paragraphs": [
-          "Distributing selected economic and service activities — Technology, Professional Services, Education, Innovation, Entrepreneurship, Selected Healthcare Services, Remote Employment — strengthens the wider State."
+          "Distributing selected economic and service activities — Technology, Professional Services, Education, Innovation, Entrepreneurship, Selected Healthcare Services, Remote Employment — strengthens the entire nation."
         ]
       },
       {
@@ -2500,14 +2518,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "29",
         "heading": "DESIRED OUTPUTS",
         "paragraphs": [
-          "Hill Knowledge & Technology Hubs • Connected Hill–City Economic Networks • Digital Connectivity Systems • Healthcare & Education Connectivity Models • Market Networks • Responsible Tourism Models • Pilot Transformed Hill Regions & Urban Areas • Replicable Tamil Nadu Hills–Cities Framework."
+          "Hill Knowledge & Technology Hubs • Connected Hill–City Economic Networks • Digital Connectivity Systems • Healthcare & Education Connectivity Models • Market Networks • Responsible Tourism Models • Pilot Transformed Hill Regions & Urban Areas • Replicable India Hills–Cities Framework."
         ]
       },
       {
         "number": "30",
         "heading": "DESIRED LONG-TERM OUTCOMES",
         "paragraphs": [
-          "Stronger hill economies → More local opportunities → Greater choice for residents → Less opportunity-driven migration → More distributed economic activity → Reduced urban concentration pressure → Healthier cities & protected hill ecosystems = MORE BALANCED TAMIL NADU."
+          "Stronger hill economies → More local opportunities → Greater choice for residents → Less opportunity-driven migration → More distributed economic activity → Reduced urban concentration pressure → Healthier cities & protected hill ecosystems = MORE BALANCED India."
         ]
       },
       {
@@ -2521,7 +2539,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "32",
         "heading": "GOVERNMENT PARTNERSHIP",
         "paragraphs": [
-          "State-Level Coordination, District Coordination, Access To Relevant Information, Convergence With Existing Programmes, Infrastructure Facilitation, Departmental Coordination, Regulatory Facilitation, Technical Support, Policy Support Where Required."
+          "National & State-Level Coordination, District Coordination, Access To Relevant Information, Convergence With Existing Programmes, Infrastructure Facilitation, Departmental Coordination, Regulatory Facilitation, Technical Support, Policy Support Where Required."
         ]
       },
       {
@@ -2554,7 +2572,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "37",
-        "heading": "CONNECTION WITH THE LIVING TAMILAGAM PORTFOLIO",
+        "heading": "CONNECTION WITH THE LIVING INDIA PORTFOLIO",
         "paragraphs": [
           "PEOPLE (Project 1) → TECHNOLOGY (Project 2) → ECONOMY (Project 3) → EARTH (Project 4) → PLACE (Project 5)"
         ]
@@ -2570,7 +2588,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "39",
         "heading": "THE CORE PROPOSITION",
         "paragraphs": [
-          "Tamil Nadu does not need every region to become a city. It needs every region to become capable of contributing to and benefiting from the State's development.",
+          "India does not need every region to become a city. It needs every region to become capable of contributing to and benefiting from the nation's development.",
           "The future should not force people to choose between the opportunities of the city and the identity of their home."
         ]
       },
@@ -2586,9 +2604,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 6,
     "causeId": "cause-sports-ecosystem",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Sports Village Tamilnadu",
-    "subtitle": "A Sports Village in Every District — PLAY • DEVELOP • COMPETE • BELONG",
+    "series": "LIVING INDIA",
+    "officialTitle": "Sports Village India",
+    "subtitle": "A Sports Village Ecosystem in Every District — PLAY • DEVELOP • COMPETE • BELONG",
     "pillars": [
       "Play",
       "Train",
@@ -2596,8 +2614,11 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Discover",
       "Belong"
     ],
-    "accent": "#fb7185",
-    "readMinutes": 6,
+    "accent": "#ff6b2b",
+    "accentSecondary": "#ec4899",
+    "gradient": "from-[#ff6b2b] via-[#f43f5e] to-[#ec4899]",
+    "imageUrl": "/missions/mission-06.jpg",
+    "readMinutes": 4,
     "sectionCount": 49,
     "sections": [
       {
@@ -2605,7 +2626,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "heading": "EXECUTIVE SUMMARY",
         "paragraphs": [
           "Sport is more than competition. It contributes to physical fitness, mental resilience, discipline, teamwork, leadership, confidence, social connection and personal development.",
-          "UGT proposes Sports Village Tamilnadu — A Sports Village in Every District, a statewide initiative designed to establish a connected sports ecosystem across all 38 districts of Tamil Nadu: 38 DISTRICT SPORTS ECOSYSTEMS connected as ONE TAMIL NADU SPORTS NETWORK.",
+          "UGT proposes Sports Village India — A Sports Village in Every District, a nationwide initiative designed to establish a connected sports ecosystem across every district across India: NATIONWIDE DISTRICT SPORTS ECOSYSTEMS connected as ONE India SPORTS NETWORK.",
           "PLAY → TRAIN → FITNESS → COMPETE → DISCOVER → DEVELOP → OPPORTUNITY",
           "Two complementary purposes:",
           "Mass Participation — Giving every child, young person and community member greater access to sport and physical activity.",
@@ -2624,7 +2645,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "03",
         "heading": "THE VISION",
         "paragraphs": [
-          "To create an inclusive, accessible and connected sports ecosystem across Tamil Nadu that enables every individual to participate, every talented athlete to develop and every district to become a centre of sporting opportunity."
+          "To create an inclusive, accessible and connected sports ecosystem across India that enables every individual to participate, every talented athlete to develop and every district to become a centre of sporting opportunity."
         ]
       },
       {
@@ -2642,7 +2663,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "05",
         "heading": "PROJECT OBJECTIVES",
         "paragraphs": [
-          "Developing a Sports Village ecosystem in every district; increasing access to quality sporting opportunities; encouraging regular physical activity; creating structured coaching and training pathways; establishing district-level talent identification; providing regular competitions and leagues; supporting women and girls in sport; promoting inclusive sport for persons with disabilities; integrating sports science and technology; connecting district sporting ecosystems into a statewide network."
+          "Developing a Sports Village ecosystem in every district; increasing access to quality sporting opportunities; encouraging regular physical activity; creating structured coaching and training pathways; establishing district-level talent identification; providing regular competitions and leagues; supporting women and girls in sport; promoting inclusive sport for persons with disabilities; integrating sports science and technology; connecting district sporting ecosystems into a nationwide network."
         ]
       },
       {
@@ -2654,10 +2675,10 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "07",
-        "heading": "SPORTS VILLAGE TAMILNADU MODEL",
+        "heading": "SPORTS VILLAGE India MODEL",
         "paragraphs": [
-          "SPORTS VILLAGE TAMILNADU → 38 DISTRICT SPORTS VILLAGES → LOCAL SPORTS PROGRAMMES → SCHOOLS + COLLEGES + COMMUNITIES + CLUBS → DISTRICT COMPETITIONS → STATE-LEVEL OPPORTUNITIES",
-          "Local identity + Statewide unity (Coimbatore Sports Village, Madurai Sports Village, Salem Sports Village, The Nilgiris Sports Village, and all 38 districts)."
+          "SPORTS VILLAGE India → NATIONWIDE DISTRICT SPORTS VILLAGES → LOCAL SPORTS PROGRAMMES → SCHOOLS + COLLEGES + COMMUNITIES + CLUBS → DISTRICT COMPETITIONS → NATIONAL & STATE-LEVEL OPPORTUNITIES",
+          "Local identity + Nationwide unity (District Sports Villages across every region of India)."
         ]
       },
       {
@@ -2775,7 +2796,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "19",
         "heading": "TALENT IDENTIFICATION",
         "paragraphs": [
-          "School → Community → District Sports Village → District Development Programme → State-Level Opportunity → National / Professional Pathway"
+          "School → Community → District Sports Village → District Development Programme → National & State-Level Opportunity → National / Professional Pathway"
         ]
       },
       {
@@ -2796,7 +2817,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "22",
         "heading": "SPORTS LEAGUE ECOSYSTEM",
         "paragraphs": [
-          "Local competitions → District leagues → Inter-district competitions → State championships"
+          "Local competitions → District leagues → Inter-district competitions → National championships"
         ]
       },
       {
@@ -2817,14 +2838,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "25",
         "heading": "SPORTS ECONOMY & ENTREPRENEURSHIP",
         "paragraphs": [
-          "Coaching, Fitness, Sports Equipment, Nutrition, Sports Media, Event Management, Sports Technology, Facility Management, Sports Apparel, Tournament Operations — connecting with Project 1 (Tamil Nadu Women Entrepreneurship Mission)."
+          "Coaching, Fitness, Sports Equipment, Nutrition, Sports Media, Event Management, Sports Technology, Facility Management, Sports Apparel, Tournament Operations — connecting with Project 1 (India Women Entrepreneurship Mission)."
         ]
       },
       {
         "number": "26",
         "heading": "TECHNOLOGY & DIGITAL SPORTS NETWORK",
         "paragraphs": [
-          "Athlete Profiles, Tournament Registration, Schedules, Results, Rankings, Performance Records, Coaching Resources, Facility Information, Talent Identification — ONE CONNECTED SPORTS NETWORK FOR TAMIL NADU."
+          "Athlete Profiles, Tournament Registration, Schedules, Results, Rankings, Performance Records, Coaching Resources, Facility Information, Talent Identification — ONE CONNECTED SPORTS NETWORK FOR India."
         ]
       },
       {
@@ -2866,14 +2887,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "32",
         "heading": "PILOT APPROACH",
         "paragraphs": [
-          "Selected districts test Infrastructure, Participation Models, Coaching, Competition, Digital Systems, Talent Identification, and Operational Sustainability before statewide scaling."
+          "Selected districts test Infrastructure, Participation Models, Coaching, Competition, Digital Systems, Talent Identification, and Operational Sustainability before nationwide scaling."
         ]
       },
       {
         "number": "33",
-        "heading": "38-DISTRICT SPORTS NETWORK",
+        "heading": "NATIONWIDE DISTRICT SPORTS NETWORK",
         "paragraphs": [
-          "38 DISTRICTS → 38 SPORTS VILLAGE ECOSYSTEMS → DISTRICT SPORTS PROGRAMMES → INTER-DISTRICT NETWORK → TAMIL NADU SPORTS NETWORK"
+          "ALL DISTRICTS OF INDIA → CONNECTED DISTRICT SPORTS VILLAGE ECOSYSTEMS → DISTRICT SPORTS PROGRAMMES → INTER-DISTRICT NETWORK → India SPORTS NETWORK"
         ]
       },
       {
@@ -2915,7 +2936,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "39",
         "heading": "DESIRED OUTPUTS",
         "paragraphs": [
-          "38 DISTRICT SPORTS VILLAGE ECOSYSTEMS + UNIVERSAL GUARD CRICKET CLUB network."
+          "NATIONWIDE DISTRICT SPORTS VILLAGE ECOSYSTEMS + UNIVERSAL GUARD CRICKET CLUB network."
         ]
       },
       {
@@ -2929,15 +2950,15 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "41",
         "heading": "THE LARGER VISION",
         "paragraphs": [
-          "38 CENTRES OF OPPORTUNITY: PLAY → DISCOVER → TRAIN → DEVELOP → COMPETE → BUILD CONFIDENCE → FIND OPPORTUNITY"
+          "NATIONWIDE CENTRES OF OPPORTUNITY: PLAY → DISCOVER → TRAIN → DEVELOP → COMPETE → BUILD CONFIDENCE → FIND OPPORTUNITY"
         ]
       },
       {
         "number": "42",
         "heading": "FINAL VISION",
         "paragraphs": [
-          "SPORTS VILLAGE TAMILNADU — A Sports Village in Every District — PLAY • DEVELOP • COMPETE • BELONG",
-          "HEALTHIER PEOPLE! STRONGER COMMUNITIES! CONFIDENT YOUTH! A STRONGER TAMIL NADU!"
+          "SPORTS VILLAGE India — A Sports Village in Every District — PLAY • DEVELOP • COMPETE • BELONG",
+          "HEALTHIER PEOPLE! STRONGER COMMUNITIES! CONFIDENT YOUTH! A STRONGER India!"
         ]
       }
     ]
@@ -2945,9 +2966,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 7,
     "causeId": "cause-water-security",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Tamil Nadu Water Security Mission",
-    "subtitle": "PROTECT • RESTORE • STORE • REUSE • SHARE — Securing the Life Source of Tamil Nadu",
+    "series": "LIVING INDIA",
+    "officialTitle": "India Water Security Mission",
+    "subtitle": "PROTECT • RESTORE • STORE • REUSE • SHARE — Securing the Life Source of India",
     "pillars": [
       "Protect",
       "Restore",
@@ -2955,23 +2976,26 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Reuse",
       "Share"
     ],
-    "accent": "#60a5fa",
-    "readMinutes": 4,
+    "accent": "#00d4ff",
+    "accentSecondary": "#3b82f6",
+    "gradient": "from-[#00d4ff] via-[#0ea5e9] to-[#3b82f6]",
+    "imageUrl": "/missions/mission-07.jpg",
+    "readMinutes": 3,
     "sectionCount": 34,
     "sections": [
       {
         "number": "00",
         "heading": "THE OPENING",
         "paragraphs": [
-          "Water is the one resource humanity cannot manufacture at the scale required to sustain civilisation. Rainfall, Rivers, Lakes, Tanks, Wetlands, Aquifers, Forests, Catchments — these are not merely natural resources. They are the life-support systems of Tamil Nadu.",
-          "The question before Tamil Nadu is not simply: \"How do we find more water?\" It is: \"How do we protect the water systems that keep life possible?\""
+          "Water is the one resource humanity cannot manufacture at the scale required to sustain civilisation. Rainfall, Rivers, Lakes, Tanks, Wetlands, Aquifers, Forests, Catchments — these are not merely natural resources. They are the life-support systems of India.",
+          "The question before India is not simply: \"How do we find more water?\" It is: \"How do we protect the water systems that keep life possible?\""
         ]
       },
       {
         "number": "01",
         "heading": "THE VISION",
         "paragraphs": [
-          "Tamil Nadu should become a state where water security is designed into development itself: ANTICIPATE → PROTECT → PREPARE → ADAPT."
+          "India should become a nation where water security is designed into development itself: ANTICIPATE → PROTECT → PREPARE → ADAPT."
         ]
       },
       {
@@ -2988,7 +3012,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "03",
-        "heading": "THE TAMIL NADU WATER PRINCIPLE",
+        "heading": "THE India WATER PRINCIPLE",
         "paragraphs": [
           "Every drop of water should be treated as part of a larger ecological cycle: Rainwater → Catchments → Rivers → Lakes & Tanks → Groundwater → People + Agriculture + Cities + Ecosystems, while Wastewater returns safely into productive use."
         ]
@@ -3025,16 +3049,16 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "05",
-        "heading": "THE 38-DISTRICT WATER SECURITY GRID",
+        "heading": "THE NATIONWIDE DISTRICT WATER SECURITY GRID",
         "paragraphs": [
-          "38 DISTRICTS → 38 WATER SECURITY PLANS → ONE STATEWIDE WATER SECURITY VISION — living district water-management instruments tracking Water Sources, Demand, Quality, Groundwater, Rainfall, Water Bodies, Flood Risk, and Drought Risk."
+          "ALL DISTRICTS OF INDIA → DISTRICT WATER SECURITY PLANS → ONE NATIONWIDE WATER SECURITY VISION — living district water-management instruments tracking Water Sources, Demand, Quality, Groundwater, Rainfall, Water Bodies, Flood Risk, and Drought Risk."
         ]
       },
       {
         "number": "06",
         "heading": "NO ONE-SIZE-FITS-ALL WATER SOLUTION",
         "paragraphs": [
-          "One Tamil Nadu water vision, with district-specific strategies for Coastal, Delta, Hill, Arid, Urbanising, and Industrial districts."
+          "One India water vision, with district-specific strategies for Coastal, Delta, Hill, Arid, Urbanising, and Industrial districts."
         ]
       },
       {
@@ -3110,9 +3134,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "17",
-        "heading": "THE DIGITAL WATER TWIN OF TAMIL NADU",
+        "heading": "THE DIGITAL WATER TWIN OF India",
         "paragraphs": [
-          "DIGITAL WATER MAP OF TAMIL NADU integrating Rainfall, Water Bodies, Groundwater, Reservoirs, River Systems, Water Quality, Demand, Wastewater, and Flood/Drought Vulnerability."
+          "DIGITAL WATER MAP OF India integrating Rainfall, Water Bodies, Groundwater, Reservoirs, River Systems, Water Quality, Demand, Wastewater, and Flood/Drought Vulnerability."
         ]
       },
       {
@@ -3140,7 +3164,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "21",
         "heading": "IMPLEMENTATION",
         "paragraphs": [
-          "PHASE 1: Water Mapping • PHASE 2: District Water Security Plans • PHASE 3: Pilot Projects • PHASE 4: Restoration & Conservation • PHASE 5: Digital Water Network • PHASE 6: Statewide Scale."
+          "PHASE 1: Water Mapping • PHASE 2: District Water Security Plans • PHASE 3: Pilot Projects • PHASE 4: Restoration & Conservation • PHASE 5: Digital Water Network • PHASE 6: Nationwide Scale."
         ]
       },
       {
@@ -3176,14 +3200,14 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "26",
         "heading": "DESIRED OUTPUT",
         "paragraphs": [
-          "A RESILIENT TAMIL NADU WATER SYSTEM where natural resources, infrastructure, technology, agriculture, cities and communities work together."
+          "A RESILIENT India WATER SYSTEM where natural resources, infrastructure, technology, agriculture, cities and communities work together."
         ]
       },
       {
         "number": "27",
         "heading": "THE GREAT MEASURE OF SUCCESS",
         "paragraphs": [
-          "Can future generations depend on the water systems we leave behind? Did Tamil Nadu become more water-secure?"
+          "Can future generations depend on the water systems we leave behind? Did India become more water-secure?"
         ]
       },
       {
@@ -3192,7 +3216,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "paragraphs": [
           "A generation is not remembered only for what it built. It is remembered for what it protected.",
           "We cannot manufacture a natural river basin, an aquifer, a living wetland, or the natural water cycle.",
-          "LET TAMIL NADU BECOME A WATER-SECURE TAMIL NADU.",
+          "LET India BECOME A WATER-SECURE India.",
           "PROTECT THE SOURCE! PROTECT THE CYCLE! PROTECT LIFE."
         ]
       }
@@ -3201,9 +3225,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
   {
     "projectNumber": 8,
     "causeId": "cause-living-culture",
-    "series": "LIVING TAMILAGAM",
-    "officialTitle": "Tamil Nadu Living Culture Mission",
-    "subtitle": "Preserve • Practice • Create • Evolve • Share — Keeping Tamil Culture Alive & Future-Ready",
+    "series": "LIVING INDIA",
+    "officialTitle": "India Living Culture Mission",
+    "subtitle": "Preserve • Practice • Create • Evolve • Share — Keeping Living Heritage Alive & Future-Ready",
     "pillars": [
       "Preserve",
       "Practice",
@@ -3211,7 +3235,10 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       "Evolve",
       "Share"
     ],
-    "accent": "#e5c158",
+    "accent": "#f59e0b",
+    "accentSecondary": "#d946ef",
+    "gradient": "from-[#f59e0b] via-[#ec4899] to-[#d946ef]",
+    "imageUrl": "/missions/mission-08.jpg",
     "readMinutes": 4,
     "sectionCount": 27,
     "sections": [
@@ -3219,8 +3246,8 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "01",
         "heading": "EXECUTIVE SUMMARY",
         "paragraphs": [
-          "Tamil Nadu possesses a rich and continuously evolving cultural inheritance expressed through its language, literature, knowledge traditions, arts, architecture, crafts, food, festivals, community practices, local histories and creative expressions.",
-          "The Tamil Nadu Living Culture Mission ensures that Tamil culture remains alive in everyday life, accessible to younger generations, economically meaningful to cultural practitioners, strengthened through responsible technology, and capable of evolving naturally into the future.",
+          "India possesses a rich and continuously evolving cultural inheritance expressed through its language, literature, knowledge traditions, arts, architecture, crafts, food, festivals, community practices, local histories and creative expressions.",
+          "The India Living Culture Mission ensures that India's living culture remains alive in everyday life, accessible to younger generations, economically meaningful to cultural practitioners, strengthened through responsible technology, and capable of evolving naturally into the future.",
           "Core philosophy: Culture is not something to be frozen in the past. It is something to understand, live, create, evolve and carry forward."
         ]
       },
@@ -3228,7 +3255,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "02",
         "heading": "VISION",
         "paragraphs": [
-          "To build a Tamil Nadu where its language, heritage, knowledge, arts, traditions and creativity remain living forces in society while continuously evolving with contemporary life and contributing to India and the world."
+          "To build a India where its language, heritage, knowledge, arts, traditions and creativity remain living forces in society while continuously evolving with contemporary life and contributing to India and the world."
         ]
       },
       {
@@ -3241,7 +3268,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
           "PRACTICE — Keep traditions connected to living communities.",
           "CREATE — Enable new cultural expression.",
           "EVOLVE — Allow culture to adapt naturally to changing generations.",
-          "SHARE — Present Tamil culture to India and the world while remaining open to learning from others."
+          "SHARE — Present India's living culture to India and the world while remaining open to learning from others."
         ]
       },
       {
@@ -3253,9 +3280,9 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
       },
       {
         "number": "05",
-        "heading": "LANGUAGE — KEEPING TAMIL ALIVE",
+        "heading": "LANGUAGE — KEEPING LIVING LANGUAGES ALIVE",
         "paragraphs": [
-          "Tamil Language Learning, Literature, Children's Content, Contemporary Tamil, Translation, Digital Tamil, Accessibility, Publishing, Language Technology, and Wider Access To Tamil Literary Works."
+          "Indian and regional languages Learning, Literature, Children's Content, Contemporary Indian Expression, Translation, Digital Indian Languages, Accessibility, Publishing, Language Technology, and Wider Access To Indian literary heritage."
         ]
       },
       {
@@ -3322,7 +3349,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "14",
         "heading": "DIGITAL CULTURAL ARCHIVE",
         "paragraphs": [
-          "Tamil Nadu Living Culture Digital Archive preserving Manuscripts, Photographs, Recordings, Music, Stories, Craft Documentation, Local Histories, Architecture, and Contemporary Works — respecting Consent, Copyright, Attribution, Privacy, IP, and Community Rights."
+          "India Living Culture Digital Archive preserving Manuscripts, Photographs, Recordings, Music, Stories, Craft Documentation, Local Histories, Architecture, and Contemporary Works — respecting Consent, Copyright, Attribution, Privacy, IP, and Community Rights."
         ]
       },
       {
@@ -3407,16 +3434,16 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "26",
         "heading": "DESIRED OUTCOME",
         "paragraphs": [
-          "A LIVING CULTURAL ECOSYSTEM where heritage is protected, knowledge is transmitted, traditions are practised, young people participate, creators innovate, practitioners prosper, technology expands access, and Tamil culture continues to evolve."
+          "A LIVING CULTURAL ECOSYSTEM where heritage is protected, knowledge is transmitted, traditions are practised, young people participate, creators innovate, practitioners prosper, technology expands access, and India's living culture continues to evolve."
         ]
       },
       {
         "number": "27",
         "heading": "THE FINAL CULTURAL VISION",
         "paragraphs": [
-          "Tamil Nadu should not merely preserve its past. It should carry its past intelligently into the future.",
+          "India should not merely preserve its past. It should carry its past intelligently into the future.",
           "Rooted in history. Alive in the present. Open to the future.",
-          "TAMIL NADU LIVING CULTURE MISSION — Preserve • Practice • Create • Evolve • Share"
+          "India LIVING CULTURE MISSION — Preserve • Practice • Create • Evolve • Share"
         ]
       }
     ]

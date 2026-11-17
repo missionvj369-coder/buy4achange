@@ -11,6 +11,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Product, Cause, UnlockedDigitalItem } from '../types.ts';
+import { Tilt3DCard } from './Tilt3DCard.tsx';
 
 export const EPRODUCT_SUBCATEGORIES = [
   'eBooks',
@@ -75,9 +76,11 @@ const EProductCard: React.FC<EProductCardProps> = ({
   };
 
   return (
-    <div
+    <Tilt3DCard
+      maxTilt={6}
+      glowColor="rgba(0, 240, 255, 0.28)"
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="group bg-[#0e1628] hover:bg-[#131e36] border border-cyan-500/20 hover:border-cyan-400/50 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-sm cursor-pointer relative"
+      className="group luxury-card rounded-3xl overflow-hidden transition-all duration-300 flex flex-col justify-between cursor-pointer relative"
     >
       {/* Top Cover Media */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
@@ -221,7 +224,7 @@ const EProductCard: React.FC<EProductCardProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </Tilt3DCard>
   );
 };
 
@@ -253,43 +256,38 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   return (
     <section
       id="eproducts-section"
-      className="relative bg-[#070a10] border-t border-white/[0.07] py-20 sm:py-24"
+      className="relative bg-gradient-to-b from-[#060416] via-[#0d0829] to-[#060416] border-t border-white/15 py-20 sm:py-24 overflow-hidden"
     >
-      {/* Subtle Champagne & Cyan Ambient Glow */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-56 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 65% 55% at 50% 0%, rgba(212,175,55,0.08) 0%, rgba(34,211,238,0.04) 55%, transparent 80%)',
-        }}
-      />
+      {/* Colourful Ambient Glow */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-[#00f0ff]/15 blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-[#ff2e97]/15 blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-7">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-white/[0.08]">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-white/15">
           <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-champagne-500/10 border border-champagne-500/30 text-champagne-300 font-mono text-[10px] font-semibold uppercase tracking-[0.24em]">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full glass-3d text-[#00f0ff] font-mono text-[10px] font-bold uppercase tracking-[0.24em]">
               <BookOpen className="w-3.5 h-3.5" />
               <span>Digital Editions · Zero Shipping</span>
             </div>
             <h2
-              className="font-display text-3xl sm:text-5xl font-medium text-ivory-50 tracking-tight flex flex-wrap items-center gap-3"
+              className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight flex flex-wrap items-center gap-3"
             >
-              <span>E-Products &amp; <span className="italic gold-gradient-text font-normal">eBooks</span></span>
-              <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] text-champagne-300 border border-champagne-500/30 font-semibold">
+              <span>E-Products &amp; <span className="prism-gradient-text">eBooks</span></span>
+              <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#ff2e97]/15 text-[#ff2e97] border border-[#ff2e97]/40 font-bold">
                 {filtered.length} Available
               </span>
             </h2>
-            <p className="font-editorial text-sm sm:text-base text-ivory-300/75 max-w-2xl leading-relaxed">
-              Interactive HTML eBooks, AI guides, templates, and digital toolkits — strictly locked on the server until verified purchase, unlocking instantly in your Library while funding your chosen mission.
+            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+              Interactive HTML eBooks, AI guides, templates, and digital toolkits — strictly locked on the server until verified purchase, unlocking instantly in your Library while funding your chosen Living India mission.
             </p>
           </div>
 
           <button
             onClick={onOpenLibrary}
-            className="px-5 py-2.5 rounded-full bg-white/[0.03] hover:bg-champagne-500/10 border border-champagne-500/40 text-champagne-200 font-mono font-semibold text-xs uppercase tracking-wider flex items-center space-x-2 transition shrink-0"
+            className="px-5 py-2.5 rounded-full glass-3d hover:border-[#00f0ff]/60 text-[#00f0ff] font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 transition shrink-0"
           >
-            <Unlock className="w-3.5 h-3.5 text-champagne-400" />
+            <Unlock className="w-3.5 h-3.5" />
             <span>
               My Library{unlockedLibrary.length > 0 ? ` (${unlockedLibrary.length})` : ''}
             </span>
