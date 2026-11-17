@@ -25,8 +25,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 }) => {
   // Auth state
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('buy4achange_admin_token'));
-  const [loginEmail, setLoginEmail] = useState('admin@ugtindia.space');
-  const [loginPassword, setLoginPassword] = useState('Admin@UGT2026!');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
 
@@ -601,9 +601,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <input
                 type="email"
                 required
+                placeholder="admin@ugtindia.space"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-[#166534]"
+                className="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#166534]"
               />
             </div>
 
@@ -612,9 +613,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <input
                 type="password"
                 required
+                placeholder="Enter administrator password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-[#166534]"
+                className="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#166534]"
               />
             </div>
 

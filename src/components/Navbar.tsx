@@ -178,11 +178,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Simple Mobile Section Links */}
-        <div className="md:hidden flex items-center space-x-4 border-t border-gray-100 py-2 text-xs font-medium text-gray-600 overflow-x-auto scrollbar-thin">
+        {/* Simple Mobile Section Links — Fits Cleanly on 320px+ Phones */}
+        <div className="md:hidden flex items-center justify-between gap-2 border-t border-gray-100 py-2 text-xs font-medium text-gray-700">
           {onScrollToCatalog && (
             <button type="button" onClick={onScrollToCatalog} className="whitespace-nowrap hover:text-[#166534]">
-              Shop Catalog
+              Shop
             </button>
           )}
           {onScrollToEProducts && (
@@ -192,7 +192,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
           {onScrollToMissions && (
             <button type="button" onClick={onScrollToMissions} className="whitespace-nowrap hover:text-[#166534]">
-              8 National Missions
+              8 Missions
             </button>
           )}
         </div>
