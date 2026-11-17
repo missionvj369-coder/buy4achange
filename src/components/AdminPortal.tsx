@@ -546,18 +546,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --- VIEW 1: ADMIN LOGIN SCREEN ---
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#070b14] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-[#0f1728] border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-          
+      <div className="min-h-screen bg-[#060416] relative overflow-hidden flex items-center justify-center p-4">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#00f0ff]/20 blur-[130px] pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-[#ff2e97]/22 blur-[130px] pointer-events-none" />
+
+        <div className="relative z-10 w-full max-w-md glass-3d rounded-3xl p-8 space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <Lock className="w-6 h-6" />
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-[#00f0ff] via-[#8b5cf6] to-[#ff2e97] p-[2px] shadow-[0_0_24px_rgba(0,240,255,0.35)]">
+              <div className="w-full h-full bg-[#090620] rounded-[14px] flex items-center justify-center text-[#00f0ff]">
+                <Lock className="w-5 h-5" />
+              </div>
             </div>
             <h2 className="text-2xl font-extrabold text-white font-display">
-              UGT Operations Console
+              Living India <span className="prism-gradient-text">Console</span>
             </h2>
-            <p className="text-xs text-slate-400">
-              Secure administration portal for Buy4AChange & UGT India
+            <p className="text-xs text-slate-300">
+              Operations &amp; Mission Control for Buy4AChange · UGT India
             </p>
           </div>
 
@@ -570,37 +574,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <form onSubmit={handleLogin} className="space-y-4 text-xs">
             <div>
-              <label className="block text-slate-400 mb-1 font-medium">Administrator Email</label>
+              <label className="block text-slate-300 mb-1 font-semibold">Administrator Email</label>
               <input
                 type="email"
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#00f0ff]"
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1 font-medium">Password</label>
+              <label className="block text-slate-300 mb-1 font-semibold">Password</label>
               <input
                 type="password"
                 required
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#00f0ff]"
               />
-            </div>
-
-            {/* Quick credentials hint */}
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400">
-              <span className="text-slate-300 font-semibold">Configured Login: </span>
-              <span className="font-mono text-emerald-400">admin@ugtindia.space</span> / <span className="font-mono text-amber-300">Admin@UGT2026!</span>
             </div>
 
             <button
               type="submit"
               disabled={loggingIn}
-              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-sm flex items-center justify-center space-x-2 transition-all active:scale-95"
+              className="w-full py-3 rounded-full prism-button text-white font-bold text-xs tracking-wider uppercase flex items-center justify-center space-x-2 transition-all active:scale-95"
             >
               {loggingIn ? (
                 <>
@@ -613,16 +611,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </form>
 
-          <div className="pt-2 border-t border-slate-800/80 text-center">
+          <div className="pt-2 border-t border-white/10 text-center">
             <button
               onClick={onNavigateStore}
-              className="text-xs text-slate-400 hover:text-emerald-400 transition-colors inline-flex items-center space-x-1"
+              className="text-xs text-slate-300 hover:text-[#00f0ff] transition-colors inline-flex items-center space-x-1"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to Public Storefront</span>
             </button>
           </div>
-
         </div>
       </div>
     );
@@ -630,29 +627,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // --- VIEW 2: AUTHENTICATED ADMIN CONSOLE ---
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-200">
-      
+    <div className="min-h-screen bg-[#060416] text-slate-100 relative overflow-x-hidden">
+      <div className="fixed top-0 left-0 w-96 h-96 rounded-full bg-[#00f0ff]/10 blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-96 h-96 rounded-full bg-[#ff2e97]/12 blur-[140px] pointer-events-none" />
+
       {/* Top Console Navigation Bar */}
-      <header className="bg-[#0f1728] border-b border-slate-800 sticky top-0 z-30">
+      <header className="bg-[#090620]/85 backdrop-blur-2xl border-b border-white/15 sticky top-0 z-30">
+        <div className="h-[2px] w-full bg-gradient-to-r from-[#00f0ff] via-[#ff2e97] to-[#ffb800]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
           <div className="flex items-center space-x-3">
             <button
               onClick={onNavigateStore}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs flex items-center space-x-1.5"
+              className="px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/15 border border-white/15 text-slate-200 transition-all text-xs flex items-center space-x-1.5"
               title="Return to Storefront"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Store</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-[#00f0ff]" />
+              <span className="hidden sm:inline font-semibold">Store</span>
             </button>
-            <div className="h-5 w-px bg-slate-700" />
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-display font-extrabold text-sm sm:text-base text-white">
-                  Buy4AChange Console
+                  BUY<span className="text-[#00f0ff]">4</span>A<span className="text-[#ff2e97]">CHANGE</span>
                 </span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                  UGT INDIA
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#00f0ff]/15 text-[#00f0ff] border border-[#00f0ff]/35">
+                  LIVING INDIA OPS
                 </span>
               </div>
             </div>
@@ -662,10 +661,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <nav className="flex items-center space-x-1 overflow-x-auto text-xs">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
                 activeTab === 'orders'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'prism-button text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
               Daily Orders ({orders.length})
@@ -673,21 +672,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
                 activeTab === 'products'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'prism-button text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              Products ({products.length})
+              Products ({adminProducts.length})
             </button>
 
             <button
               onClick={() => setActiveTab('missions')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
                 activeTab === 'missions'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'prism-button text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
               8 Missions
@@ -695,10 +694,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('transactions')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
                 activeTab === 'transactions'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'prism-button text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
               Transactions
@@ -706,10 +705,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('gateway')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center space-x-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap flex items-center space-x-1.5 ${
                 activeTab === 'gateway'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'prism-button text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
               <CreditCard className="w-3.5 h-3.5" />
@@ -719,12 +718,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           {/* User Profile & Logout */}
           <div className="flex items-center space-x-2">
-            <span className="hidden md:inline text-xs text-slate-400 font-mono">
+            <span className="hidden md:inline text-xs text-slate-300 font-mono">
               admin@ugtindia.space
             </span>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 hover:text-rose-300 text-slate-400 transition-all text-xs"
+              className="p-2 rounded-full bg-white/[0.06] hover:bg-rose-500/20 hover:text-rose-300 border border-white/10 text-slate-300 transition-all text-xs"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
@@ -735,23 +734,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       </header>
 
       {/* Main Body */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
         
         {/* Top Metric Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-[#0f1728] p-4 rounded-2xl border border-slate-800">
-            <span className="text-xs text-slate-400 font-medium">Total Gross Revenue</span>
+          <div className="glass-3d p-4 rounded-2xl border-t-2 border-t-[#00f0ff]">
+            <span className="text-xs text-slate-300 font-medium">Total Gross Revenue</span>
             <div className="text-xl sm:text-2xl font-black text-white font-display mt-1">
               ₹{(metrics?.totalRevenue || 0).toLocaleString()}
             </div>
-            <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">
+            <div className="text-[11px] text-[#00f0ff] font-semibold mt-0.5">
               Today: ₹{(metrics?.todayRevenue || 0).toLocaleString()}
             </div>
           </div>
 
-          <div className="bg-[#0f1728] p-4 rounded-2xl border border-emerald-900/40">
-            <span className="text-xs text-emerald-300 font-medium flex items-center space-x-1">
-              <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+          <div className="glass-3d p-4 rounded-2xl border-t-2 border-t-[#ff2e97]">
+            <span className="text-xs text-[#ff2e97] font-semibold flex items-center space-x-1">
+              <Heart className="w-3.5 h-3.5 text-[#ff2e97] fill-[#ff2e97]" />
               <span>Total Cause Funds Raised</span>
             </span>
             <div className="text-xl sm:text-2xl font-black text-amber-300 font-display mt-1">
