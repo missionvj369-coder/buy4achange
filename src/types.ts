@@ -99,11 +99,57 @@ export interface Order {
   payment_id: string;
   order_status: string;
   tracking_number?: string;
+  courier_name?: string;
   guardian_id?: string;
   created_at: string;
   items?: OrderItem[];
   cause_title?: string;
   digital_items?: UnlockedDigitalItem[];
+}
+
+export interface PublicLedgerEntry {
+  order_number: string;
+  supporter_initials: string;
+  cause_id: string;
+  cause_title: string;
+  cause_donation_amount: number;
+  total_amount: number;
+  payment_status: string;
+  created_at: string;
+}
+
+export interface SiteIntegrations {
+  umami_script_url: string;
+  umami_website_id: string;
+  chatwoot_base_url: string;
+  chatwoot_website_token: string;
+  whatsapp_support_number: string;
+  support_email: string;
+  karrio_api_url: string;
+  karrio_api_key: string;
+  smtp_webhook_url: string;
+  smtp_from_email: string;
+  r2_public_base_url: string;
+}
+
+export interface EmailNotificationLog {
+  id: string;
+  order_number: string;
+  recipient_email: string;
+  event_type: string;
+  subject: string;
+  status: string;
+  created_at: string;
+}
+
+export interface AnalyticsSummary {
+  totalEvents: number;
+  pageViews: number;
+  missionReads: number;
+  productViews: number;
+  pdfDownloads: number;
+  topMissions: { target_id: string; count: number }[];
+  recentEmails: EmailNotificationLog[];
 }
 
 export interface PaymentTransaction {

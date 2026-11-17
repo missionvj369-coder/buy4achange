@@ -1,0 +1,24 @@
+{
+  "name": "Buy4AChange — Universal Guard Trust & UGT India",
+  "short_name": "Buy4AChange",
+  "description": "Conscious commerce turning everyday purchases and digital eBooks into verified impact across 8 Living India national missions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF9F6",
+  "theme_color": "#166534",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23166534'/%3E%3Cpath d='M96 146l-10.5-9.6C48 102.6 24 80.8 24 54c0-21.8 17.2-39 39-39 12.4 0 24.3 5.8 33 14.9C104.7 20.8 116.6 15 129 15c21.8 0 39 17.2 39 39 0 26.8-24 48.6-61.5 82.4L96 146z' fill='%23ffffff' transform='translate(0 18) scale(0.88)' transform-origin='96 96'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23166534'/%3E%3Cpath d='M256 392l-28-25.6C128 276 64 218 64 146c0-58 46-104 104-104 33 0 65 15.4 88 39.8C279 57.4 311 42 344 42c58 0 104 46 104 104 0 72-64 130-164 220.4L256 392z' fill='%23ffffff' transform='translate(0 36) scale(0.84)' transform-origin='256 256'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

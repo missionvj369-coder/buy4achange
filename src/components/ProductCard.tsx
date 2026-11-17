@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Plus, Check } from 'lucide-react';
 import { Product, Cause } from '../types.ts';
+import { useLanguage } from '../i18n/LanguageContext.tsx';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onOpenDetails,
 }) => {
+  const { t } = useLanguage();
   const [selectedCauseId, setSelectedCauseId] = useState<string>(
     preferredCauseId || product.cause_id || causes[0]?.id || 'cause-everyday-essentials'
   );
@@ -42,7 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="bg-white border border-gray-200 hover:border-gray-300 rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-colors"
+      className="card-editorial rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer"
     >
       {/* Product Photo */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
@@ -138,14 +140,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {justAdded ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>Added</span>
+                <span>{t.addedBtn}</span>
               </>
             ) : product.stock <= 0 ? (
               <span>Sold Out</span>
             ) : (
               <>
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add</span>
+                <span>{t.addBtn}</span>
               </>
             )}
           </button>

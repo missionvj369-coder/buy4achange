@@ -2,6 +2,7 @@ import React from 'react';
 import { Cause } from '../types.ts';
 import { BookOpen, Check } from 'lucide-react';
 import { MISSION_DOCUMENTS } from '../data/missionDocuments.ts';
+import { useLanguage } from '../i18n/LanguageContext.tsx';
 
 interface MissionsCinematicProps {
   causes: Cause[];
@@ -18,6 +19,7 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
   onScrollToCatalog,
   onOpenDocument,
 }) => {
+  const { t } = useLanguage();
   return (
     <section
       id="missions-showcase"
@@ -28,14 +30,12 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div className="space-y-1.5 max-w-2xl">
             <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
-              Living India · 8 National Missions
+              {t.missionsEyebrow}
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
-              Choose a Mission to Support
+              {t.missionsHeading}
             </h2>
-            <p className="text-sm text-gray-600">
-              Read the complete official proposal document for any mission, or select one to fund with your purchase.
-            </p>
+            <p className="text-sm text-gray-600">{t.missionsSubtext}</p>
           </div>
 
           {selectedCauseId && (
@@ -61,10 +61,8 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
             return (
               <article
                 key={doc.causeId}
-                className={`bg-white rounded-xl overflow-hidden border flex flex-col justify-between transition-colors ${
-                  isSelected
-                    ? 'border-[#166534] ring-2 ring-[#166534]/20'
-                    : 'border-gray-200 hover:border-gray-300'
+                className={`card-editorial rounded-xl overflow-hidden flex flex-col justify-between ${
+                  isSelected ? 'border-[#166534] ring-2 ring-[#166534]/20' : ''
                 }`}
               >
                 <div>
@@ -106,7 +104,7 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
                       </div>
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-semibold text-[#166534]">
-                          ₹{Math.round(raised).toLocaleString('en-IN')} raised
+                          ₹{Math.round(raised).toLocaleString('en-IN')} {t.raisedLabel}
                         </span>
                         <span className="text-gray-500">{pct}%</span>
                       </div>
@@ -122,7 +120,7 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
                     className="flex-1 py-2 px-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-[#14171A] text-xs font-semibold flex items-center justify-center space-x-1"
                   >
                     <BookOpen className="w-3.5 h-3.5 text-[#166534]" />
-                    <span>Read</span>
+                    <span>{t.readBtn}</span>
                   </button>
                   <button
                     type="button"
@@ -136,7 +134,7 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
                         : 'bg-[#166534] hover:bg-[#14532D] text-white'
                     }`}
                   >
-                    {isSelected ? 'Supporting' : 'Support'}
+                    {isSelected ? t.supportingBtn : t.supportBtn}
                   </button>
                 </div>
               </article>

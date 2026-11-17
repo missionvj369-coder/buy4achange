@@ -32,6 +32,37 @@ export function initDatabase() {
     db.exec("ALTER TABLE products ADD COLUMN digital_access_note TEXT DEFAULT ''");
   }
 
+  // Ensure courier_name exists on orders for real shipping dispatch tracking
+  const orderCols = (db.prepare('PRAGMA table_info(orders)').all() as any[]).map((c) => c.name);
+  if (!orderCols.includes('courier_name')) {
+    db.exec("ALTER TABLE orders ADD COLUMN courier_name TEXT DEFAULT ''");
+  }
+
+  // Open-source integrations config, cookie-free analytics, and transactional email outbox
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS site_integrations (
+      key TEXT PRIMARY KEY,
+      value TEXT DEFAULT ''
+    );
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      target_id TEXT DEFAULT '',
+      lang TEXT DEFAULT 'en',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS email_outbox (
+      id TEXT PRIMARY KEY,
+      order_number TEXT DEFAULT '',
+      recipient_email TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body_preview TEXT DEFAULT '',
+      status TEXT DEFAULT 'queued',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   console.log('✓ Database schema verified and active at:', dbPath);
 }
 
@@ -728,4 +759,236 @@ export function saveGatewayConfig(updates: Partial<PaymentGatewayConfig>): Payme
   }
 
   return getGatewayConfig();
+}
+
+// --- Self-Service Order Tracking (Order # + Email) ---
+export function trackOrderByNumberAndEmail(orderNumber: string, email: string): Order | undefined {
+  const cleanOrder = String(orderNumber || '').trim().toUpperCase();
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!cleanOrder || !cleanEmail) return undefined;
+
+  const order = db
+    .prepare(
+      `SELECT o.*, c.title as cause_title
+       FROM orders o
+       LEFT JOIN causes c ON o.cause_id = c.id
+       WHERE UPPER(o.order_number) = ? AND LOWER(o.customer_email) = ?
+       LIMIT 1`
+    )
+    .get(cleanOrder, cleanEmail) as Order | undefined;
+
+  if (!order) return undefined;
+
+  const items = db
+    .prepare(
+      `SELECT oi.*, c.title as cause_title
+       FROM order_items oi
+       LEFT JOIN causes c ON oi.cause_id = c.id
+       WHERE oi.order_id = ?`
+    )
+    .all(order.id) as OrderItem[];
+
+  return { ...order, items };
+}
+
+// --- Real Shipping Dispatch (Courier Name + AWB Tracking Number) ---
+export function updateOrderDispatch(
+  orderId: string,
+  courierName: string,
+  trackingNumber: string,
+  status?: string
+): Order | undefined {
+  const order = getOrderById(orderId);
+  if (!order) return undefined;
+  const nextStatus = status || (trackingNumber.trim() ? 'Shipped' : order.order_status);
+  db.prepare(
+    'UPDATE orders SET courier_name = ?, tracking_number = ?, order_status = ? WHERE id = ?'
+  ).run(courierName.trim(), trackingNumber.trim(), nextStatus, orderId);
+  return getOrderById(orderId);
+}
+
+// --- Public Anonymized Transparency Audit Ledger ---
+export function getPublicImpactLedger(limit = 30) {
+  const rows = db
+    .prepare(
+      `SELECT o.order_number, o.customer_name, o.cause_id, COALESCE(c.title, 'Living India Mission') as cause_title,
+              o.cause_donation_amount, o.total_amount, o.payment_status, o.created_at
+       FROM orders o
+       LEFT JOIN causes c ON o.cause_id = c.id
+       WHERE o.payment_status = 'paid'
+       ORDER BY o.created_at DESC
+       LIMIT ?`
+    )
+    .all(limit) as any[];
+
+  return rows.map((r) => {
+    const parts = String(r.customer_name || 'Supporter').trim().split(/\s+/);
+    const initials = parts
+      .map((p: string) => (p[0] ? p[0].toUpperCase() + '.' : ''))
+      .join(' ')
+      .slice(0, 8);
+    return {
+      order_number: r.order_number,
+      supporter_initials: initials || 'S.',
+      cause_id: r.cause_id,
+      cause_title: r.cause_title,
+      cause_donation_amount: r.cause_donation_amount,
+      total_amount: r.total_amount,
+      payment_status: r.payment_status,
+      created_at: r.created_at,
+    };
+  });
+}
+
+// --- Open-Source Integrations Configuration ---
+export interface SiteIntegrationsConfig {
+  umami_script_url: string;
+  umami_website_id: string;
+  chatwoot_base_url: string;
+  chatwoot_website_token: string;
+  whatsapp_support_number: string;
+  support_email: string;
+  karrio_api_url: string;
+  karrio_api_key: string;
+  smtp_webhook_url: string;
+  smtp_from_email: string;
+  r2_public_base_url: string;
+}
+
+const DEFAULT_INTEGRATIONS: SiteIntegrationsConfig = {
+  umami_script_url: '',
+  umami_website_id: '',
+  chatwoot_base_url: '',
+  chatwoot_website_token: '',
+  whatsapp_support_number: '',
+  support_email: 'support@ugtindia.space',
+  karrio_api_url: '',
+  karrio_api_key: '',
+  smtp_webhook_url: '',
+  smtp_from_email: 'orders@ugtindia.space',
+  r2_public_base_url: '',
+};
+
+export function getSiteIntegrations(): SiteIntegrationsConfig {
+  const rows = db.prepare('SELECT key, value FROM site_integrations').all() as { key: string; value: string }[];
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.key] = r.value;
+  return {
+    umami_script_url: map.umami_script_url ?? DEFAULT_INTEGRATIONS.umami_script_url,
+    umami_website_id: map.umami_website_id ?? DEFAULT_INTEGRATIONS.umami_website_id,
+    chatwoot_base_url: map.chatwoot_base_url ?? DEFAULT_INTEGRATIONS.chatwoot_base_url,
+    chatwoot_website_token: map.chatwoot_website_token ?? DEFAULT_INTEGRATIONS.chatwoot_website_token,
+    whatsapp_support_number: map.whatsapp_support_number ?? DEFAULT_INTEGRATIONS.whatsapp_support_number,
+    support_email: map.support_email ?? DEFAULT_INTEGRATIONS.support_email,
+    karrio_api_url: map.karrio_api_url ?? DEFAULT_INTEGRATIONS.karrio_api_url,
+    karrio_api_key: map.karrio_api_key ?? DEFAULT_INTEGRATIONS.karrio_api_key,
+    smtp_webhook_url: map.smtp_webhook_url ?? DEFAULT_INTEGRATIONS.smtp_webhook_url,
+    smtp_from_email: map.smtp_from_email ?? DEFAULT_INTEGRATIONS.smtp_from_email,
+    r2_public_base_url: map.r2_public_base_url ?? DEFAULT_INTEGRATIONS.r2_public_base_url,
+  };
+}
+
+export function saveSiteIntegrations(updates: Partial<SiteIntegrationsConfig>): SiteIntegrationsConfig {
+  const current = getSiteIntegrations();
+  const merged: SiteIntegrationsConfig = {
+    ...current,
+    ...updates,
+    karrio_api_key:
+      updates.karrio_api_key && !updates.karrio_api_key.startsWith('••••')
+        ? updates.karrio_api_key.trim()
+        : updates.karrio_api_key === ''
+        ? ''
+        : current.karrio_api_key,
+  };
+  const upsert = db.prepare('INSERT OR REPLACE INTO site_integrations (key, value) VALUES (?, ?)');
+  for (const [k, v] of Object.entries(merged)) {
+    upsert.run(k, String(v ?? '').trim());
+  }
+  return getSiteIntegrations();
+}
+
+// --- Privacy-First Zero-Cookie Analytics ---
+export function logAnalyticsEvent(eventType: string, targetId = '', lang = 'en') {
+  const id = `ev_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+  db.prepare('INSERT INTO analytics_events (id, event_type, target_id, lang) VALUES (?, ?, ?, ?)').run(
+    id,
+    String(eventType || 'page_view').slice(0, 40),
+    String(targetId || '').slice(0, 120),
+    String(lang || 'en').slice(0, 12)
+  );
+}
+
+export function getAnalyticsSummary() {
+  const totalEvents = (db.prepare('SELECT COUNT(*) as c FROM analytics_events').get() as any)?.c || 0;
+  const pageViews =
+    (db.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'page_view'").get() as any)?.c || 0;
+  const missionReads =
+    (db.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'mission_read'").get() as any)?.c || 0;
+  const productViews =
+    (db.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'product_view'").get() as any)?.c || 0;
+  const pdfDownloads =
+    (db.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'pdf_download'").get() as any)?.c || 0;
+  const topMissions = db
+    .prepare(
+      `SELECT target_id, COUNT(*) as count
+       FROM analytics_events
+       WHERE event_type = 'mission_read' AND target_id != ''
+       GROUP BY target_id
+       ORDER BY count DESC
+       LIMIT 8`
+    )
+    .all() as { target_id: string; count: number }[];
+
+  const recentEmails = db
+    .prepare('SELECT * FROM email_outbox ORDER BY created_at DESC LIMIT 20')
+    .all() as any[];
+
+  return {
+    totalEvents,
+    pageViews,
+    missionReads,
+    productViews,
+    pdfDownloads,
+    topMissions,
+    recentEmails,
+  };
+}
+
+// --- Transactional Email Outbox & Optional Webhook Relay (Listmonk / SMTP Relay) ---
+export async function queueEmailNotification(params: {
+  orderNumber: string;
+  recipientEmail: string;
+  eventType: 'order_received' | 'payment_verified' | 'order_dispatched';
+  subject: string;
+  bodyPreview: string;
+}) {
+  if (!params.recipientEmail) return;
+  const id = `mail_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+  let status = 'recorded';
+
+  const cfg = getSiteIntegrations();
+  if (cfg.smtp_webhook_url) {
+    try {
+      const resp = await fetch(cfg.smtp_webhook_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: cfg.smtp_from_email || 'orders@ugtindia.space',
+          to: params.recipientEmail,
+          subject: params.subject,
+          event_type: params.eventType,
+          order_number: params.orderNumber,
+          text: params.bodyPreview,
+        }),
+      });
+      status = resp.ok ? 'dispatched' : `webhook_http_${resp.status}`;
+    } catch {
+      status = 'webhook_failed';
+    }
+  }
+
+  db.prepare(
+    `INSERT INTO email_outbox (id, order_number, recipient_email, event_type, subject, body_preview, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, params.orderNumber, params.recipientEmail, params.eventType, params.subject, params.bodyPreview, status);
 }

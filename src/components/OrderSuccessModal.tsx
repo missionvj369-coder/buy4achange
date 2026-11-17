@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -10,23 +10,39 @@ import {
   BookOpen,
   Download,
   ShieldCheck,
+  FileDown,
 } from 'lucide-react';
 import { Order, UnlockedDigitalItem } from '../types.ts';
+import { generateOrderReceiptPdf } from '../utils/pdfCertificate.ts';
 
 interface OrderSuccessModalProps {
   order: Order | null;
   onClose: () => void;
   onLaunchDigital?: (item: UnlockedDigitalItem) => void;
+  onLogPdfDownload?: (orderNumber: string) => void;
 }
 
 export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   order,
   onClose,
   onLaunchDigital,
+  onLogPdfDownload,
 }) => {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
   if (!order) return null;
 
   const isVerifiedPaid = order.payment_status === 'paid';
+
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      await generateOrderReceiptPdf(order);
+      onLogPdfDownload?.(order.order_number);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto">
@@ -193,23 +209,33 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           )}
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <button
+              type="button"
+              disabled={downloadingPdf}
+              onClick={handleDownloadPdf}
+              className="py-2.5 px-3 rounded-lg bg-[#F0FDF4] hover:bg-green-100 border border-[#BBF7D0] text-[#166534] font-semibold text-xs flex items-center justify-center space-x-1.5"
+            >
+              <FileDown className="w-4 h-4 shrink-0" />
+              <span>{downloadingPdf ? 'Creating PDF...' : 'PDF Certificate'}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => window.print()}
-              className="w-full sm:w-1/2 py-2.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 font-semibold text-xs flex items-center justify-center space-x-2"
+              className="py-2.5 px-3 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 font-semibold text-xs flex items-center justify-center space-x-1.5"
             >
-              <Printer className="w-4 h-4" />
-              <span>Print Order Receipt</span>
+              <Printer className="w-4 h-4 shrink-0" />
+              <span>Print Receipt</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-1/2 py-2.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center justify-center space-x-2"
+              className="py-2.5 px-3 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center justify-center space-x-1.5"
             >
               <span>Continue Shopping</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </button>
           </div>
         </div>

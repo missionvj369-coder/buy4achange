@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Navbar } from './components/Navbar.tsx';
 import { HeroBanner } from './components/HeroBanner.tsx';
 import { MissionsCinematic } from './components/MissionsCinematic.tsx';
@@ -12,12 +12,16 @@ import { EProductsSection } from './components/EProductsSection.tsx';
 import { DigitalLibraryModal } from './components/DigitalLibraryModal.tsx';
 import { DigitalReaderModal } from './components/DigitalReaderModal.tsx';
 import { MissionDocumentModal } from './components/MissionDocumentModal.tsx';
+import { OrderTrackLedgerModal } from './components/OrderTrackLedgerModal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { Cause, Product, CartItem, Order, UnlockedDigitalItem } from './types.ts';
-import { Package, RefreshCw } from 'lucide-react';
+import { buildUnifiedSearchIndex } from './utils/fuzzySearch.ts';
+import { useLanguage } from './i18n/LanguageContext.tsx';
+import { Package, RefreshCw, BookOpen } from 'lucide-react';
 
 export function App() {
+  const { lang, t } = useLanguage();
   const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname);
   const [currentHash, setCurrentHash] = useState<string>(() => window.location.hash);
 
@@ -51,6 +55,15 @@ export function App() {
   const [selectedCauseId, setSelectedCauseId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
+  // PWA Install Prompt
+  const [deferredPwaPrompt, setDeferredPwaPrompt] = useState<any>(null);
+
+  // Public Open-Source Integrations (Umami / Chatwoot / WhatsApp / Support Email)
+  const [publicIntegrations, setPublicIntegrations] = useState<{
+    whatsappSupportNumber?: string;
+    supportEmail?: string;
+  }>({ supportEmail: 'support@ugtindia.space' });
+
   // Bag
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
@@ -69,6 +82,12 @@ export function App() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [orderDraft, setOrderDraft] = useState<any | null>(null);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [isTrackLedgerOpen, setIsTrackLedgerOpen] = useState<boolean>(
+    () => /^\/(track|ledger|impact)\b/i.test(window.location.pathname)
+  );
+  const [trackLedgerTab, setTrackLedgerTab] = useState<'track' | 'ledger'>(() =>
+    /^\/(ledger|impact)\b/i.test(window.location.pathname) ? 'ledger' : 'track'
+  );
 
   // Digital Library (strictly populated ONLY after verified paid orders)
   const [unlockedLibrary, setUnlockedLibrary] = useState<UnlockedDigitalItem[]>(() => {
@@ -82,6 +101,75 @@ export function App() {
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [activeDigitalReader, setActiveDigitalReader] = useState<UnlockedDigitalItem | null>(null);
   const [readingMissionCauseId, setReadingMissionCauseId] = useState<string | null>(null);
+
+  // Cookie-Free Analytics Helper
+  const logTelemetry = (eventType: string, targetId = '') => {
+    fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventType, targetId, lang }),
+    }).catch(() => {});
+  };
+
+  // Capture PWA Install Event
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPwaPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (!deferredPwaPrompt) return;
+    deferredPwaPrompt.prompt();
+    await deferredPwaPrompt.userChoice.catch(() => {});
+    setDeferredPwaPrompt(null);
+  };
+
+  // Load Safe Open-Source Public Integrations (Umami / Chatwoot / WhatsApp) & Log Anonymous View
+  useEffect(() => {
+    if (/^\/admin(\/.*)?$/i.test(currentPath)) return;
+    logTelemetry('page_view', currentPath || '/');
+
+    fetch('/api/integrations/public', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((cfg) => {
+        if (!cfg) return;
+        setPublicIntegrations({
+          whatsappSupportNumber: cfg.whatsappSupportNumber || '',
+          supportEmail: cfg.supportEmail || 'support@ugtindia.space',
+        });
+
+        // Dynamically attach Umami / Plausible ONLY if configured by Admin
+        if (cfg.umamiScriptUrl && cfg.umamiWebsiteId && !document.querySelector('script[data-ugt-analytics]')) {
+          const s = document.createElement('script');
+          s.defer = true;
+          s.src = cfg.umamiScriptUrl;
+          s.setAttribute('data-website-id', cfg.umamiWebsiteId);
+          s.setAttribute('data-domain', cfg.umamiWebsiteId);
+          s.setAttribute('data-ugt-analytics', 'true');
+          document.head.appendChild(s);
+        }
+
+        // Dynamically attach Chatwoot ONLY if configured by Admin
+        if (cfg.chatwootBaseUrl && cfg.chatwootWebsiteToken && !document.querySelector('script[data-ugt-chatwoot]')) {
+          const s = document.createElement('script');
+          s.async = true;
+          s.src = `${cfg.chatwootBaseUrl.replace(/\/+$/, '')}/packs/js/sdk.js`;
+          s.setAttribute('data-ugt-chatwoot', 'true');
+          s.onload = () => {
+            (window as any).chatwootSDK?.run({
+              websiteToken: cfg.chatwootWebsiteToken,
+              baseUrl: cfg.chatwootBaseUrl.replace(/\/+$/, ''),
+            });
+          };
+          document.head.appendChild(s);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -126,6 +214,22 @@ export function App() {
   useEffect(() => {
     fetchData();
   }, [currentPath]);
+
+  // Open-Source MiniSearch Typo-Tolerant Search Index (Products + eBooks + All 8 Mission Dossiers)
+  const searchIndex = useMemo(() => buildUnifiedSearchIndex(products, causes), [products, causes]);
+
+  const fuzzyMatches = useMemo(() => {
+    const q = searchTerm.trim();
+    if (!q) return null;
+    const results = searchIndex.search(q);
+    const productIds = new Set<string>();
+    const missionIds = new Set<string>();
+    for (const r of results) {
+      if (r.kind === 'mission') missionIds.add(String(r.refId));
+      else productIds.add(String(r.refId));
+    }
+    return { productIds, missionIds };
+  }, [searchTerm, searchIndex]);
 
   const handleAddToCart = (product: Product, selectedCause: string, quantity: number = 1) => {
     const causeObj = causes.find((c) => c.id === selectedCause);
@@ -208,24 +312,19 @@ export function App() {
   const physicalProducts = products.filter((p) => p.product_type !== 'digital');
   const digitalProducts = products.filter((p) => {
     if (p.product_type !== 'digital') return false;
-    if (!searchTerm.trim()) return true;
-    const q = searchTerm.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      (p.description || '').toLowerCase().includes(q) ||
-      (p.subcategory || '').toLowerCase().includes(q)
-    );
+    if (!fuzzyMatches) return true;
+    return fuzzyMatches.productIds.has(p.id);
   });
 
   const filteredProducts = physicalProducts.filter((p) => {
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-    const matchesSearch =
-      !searchTerm.trim() ||
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.category || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !fuzzyMatches || fuzzyMatches.productIds.has(p.id);
     return matchesCategory && matchesSearch;
   });
+
+  const matchingMissions = fuzzyMatches
+    ? causes.filter((c) => fuzzyMatches.missionIds.has(c.id))
+    : [];
 
   const activeMission = selectedCauseId ? causes.find((c) => c.id === selectedCauseId) : null;
   const dynamicCategories = Array.from(
@@ -249,7 +348,7 @@ export function App() {
     );
   }
 
-  // PUBLIC STOREFRONT — Fast, Clean, Universal Compatibility (No Blocking Intro!)
+  // PUBLIC STOREFRONT — Clean Futuristic Warm-Paper & Forest-Green Editorial UI
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#14171A] flex flex-col font-sans w-full">
       <Navbar
@@ -257,6 +356,10 @@ export function App() {
         libraryCount={unlockedLibrary.length}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenLibrary={() => setIsLibraryOpen(true)}
+        onOpenTrack={() => {
+          setTrackLedgerTab('track');
+          setIsTrackLedgerOpen(true);
+        }}
         onScrollToMissions={() => {
           document.getElementById('missions-showcase')?.scrollIntoView({ behavior: 'smooth' });
         }}
@@ -268,15 +371,18 @@ export function App() {
         }}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        canInstallPwa={Boolean(deferredPwaPrompt)}
+        onInstallPwa={handleInstallPwa}
         onNavigateHome={() => {
           setSelectedCauseId(null);
           setSelectedCategory('All');
+          setSearchTerm('');
           window.scrollTo(0, 0);
         }}
       />
 
       <main className="flex-1 w-full">
-        {/* 1. Calm, Dignified Hero */}
+        {/* 1. Clean Futuristic Editorial Hero */}
         <HeroBanner
           causes={causes}
           selectedCauseId={selectedCauseId}
@@ -287,23 +393,57 @@ export function App() {
           onScrollToShop={() => {
             document.getElementById('catalog-grid')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          onOpenMissionDoc={(cId) => setReadingMissionCauseId(cId)}
+          onOpenMissionDoc={(cId) => {
+            setReadingMissionCauseId(cId);
+            logTelemetry('mission_read', cId);
+          }}
+          onOpenLedger={() => {
+            setTrackLedgerTab('ledger');
+            setIsTrackLedgerOpen(true);
+          }}
         />
+
+        {/* Instant Fuzzy Search Hits Across 8 Living India Mission Dossiers */}
+        {matchingMissions.length > 0 && (
+          <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+            <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] space-y-2.5">
+              <div className="text-xs font-semibold text-[#166534] flex items-center space-x-1.5">
+                <BookOpen className="w-4 h-4" />
+                <span>Matching Living India Mission Dossiers ({matchingMissions.length})</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {matchingMissions.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      setReadingMissionCauseId(m.id);
+                      logTelemetry('mission_read', m.id);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-green-50 border border-[#BBF7D0] text-xs font-semibold text-[#14171A]"
+                  >
+                    {m.title} →
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* 2. Shop Catalog First for Instant Visitor Clarity */}
         <section id="catalog-grid" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-gray-200">
             <div className="space-y-1">
               <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
-                Shop &amp; Fund
+                {t.shopEyebrow}
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
-                Conscious Catalog
+                {t.shopHeading}
               </h2>
               <p className="text-xs sm:text-sm text-gray-600">
                 {activeMission
                   ? `Supporting "${activeMission.title}" — you can change the mission on any item.`
-                  : 'Select your preferred Living India mission on any product before adding to bag.'}
+                  : t.shopSubtext}
               </p>
             </div>
 
@@ -320,7 +460,7 @@ export function App() {
                         : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {cat}
+                    {cat === 'All' ? t.allCategories : cat}
                   </button>
                 ))}
               </div>
@@ -370,6 +510,7 @@ export function App() {
                   onOpenDetails={(p, cId) => {
                     setSelectedProduct(p);
                     setModalInitialCauseId(cId);
+                    logTelemetry('product_view', p.id);
                   }}
                 />
               ))}
@@ -387,6 +528,7 @@ export function App() {
           onOpenDetails={(p, cId) => {
             setSelectedProduct(p);
             setModalInitialCauseId(cId);
+            logTelemetry('product_view', p.id);
           }}
           onLaunchUnlocked={(item) => setActiveDigitalReader(item)}
           onOpenLibrary={() => setIsLibraryOpen(true)}
@@ -400,7 +542,10 @@ export function App() {
           onScrollToCatalog={() => {
             document.getElementById('catalog-grid')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          onOpenDocument={(causeId) => setReadingMissionCauseId(causeId)}
+          onOpenDocument={(causeId) => {
+            setReadingMissionCauseId(causeId);
+            logTelemetry('mission_read', causeId);
+          }}
         />
       </main>
 
@@ -455,6 +600,20 @@ export function App() {
           setCompletedOrder(null);
           setActiveDigitalReader(item);
         }}
+        onLogPdfDownload={(ordNum) => logTelemetry('pdf_download', ordNum)}
+      />
+
+      <OrderTrackLedgerModal
+        isOpen={isTrackLedgerOpen}
+        initialTab={trackLedgerTab}
+        onClose={() => setIsTrackLedgerOpen(false)}
+        causes={causes}
+        onAddUnlockedItems={mergeUnlockedItems}
+        onLaunchDigital={(item) => {
+          setIsTrackLedgerOpen(false);
+          setActiveDigitalReader(item);
+        }}
+        onLogPdfDownload={(ordNum) => logTelemetry('pdf_download', ordNum)}
       />
 
       <DigitalLibraryModal
@@ -477,7 +636,10 @@ export function App() {
         causeId={readingMissionCauseId}
         causes={causes}
         onClose={() => setReadingMissionCauseId(null)}
-        onSelectMission={(cId) => setReadingMissionCauseId(cId)}
+        onSelectMission={(cId) => {
+          setReadingMissionCauseId(cId);
+          logTelemetry('mission_read', cId);
+        }}
         onFundMission={(cId) => {
           setSelectedCauseId(cId);
           setReadingMissionCauseId(null);
@@ -487,7 +649,20 @@ export function App() {
         }}
       />
 
-      <Footer onOpenMissionDoc={(cId) => setReadingMissionCauseId(cId)} />
+      <Footer
+        onOpenMissionDoc={(cId) => {
+          setReadingMissionCauseId(cId);
+          logTelemetry('mission_read', cId);
+        }}
+        onOpenTrack={(tab) => {
+          setTrackLedgerTab(tab);
+          setIsTrackLedgerOpen(true);
+        }}
+        canInstallPwa={Boolean(deferredPwaPrompt)}
+        onInstallPwa={handleInstallPwa}
+        whatsappSupportNumber={publicIntegrations.whatsappSupportNumber}
+        supportEmail={publicIntegrations.supportEmail}
+      />
     </div>
   );
 }

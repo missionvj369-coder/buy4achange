@@ -890,6 +890,153 @@ export default {
         return json({ success: true, items: unlocked });
       }
 
+      // Self-Service Order Tracking (Order Number + Email)
+      if (pathname === '/api/orders/track' && request.method === 'POST') {
+        const body: any = await request.json();
+        const orderNumber = String(body?.orderNumber || '').trim();
+        const email = String(body?.email || '').trim();
+        if (!orderNumber || !email) {
+          return json({ error: 'Order number and checkout email are required.' }, 400);
+        }
+        const row: any = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT o.*, c.title as cause_title
+           FROM orders o
+           LEFT JOIN causes c ON o.cause_id = c.id
+           WHERE UPPER(o.order_number) = UPPER(?) AND LOWER(o.customer_email) = LOWER(?)
+           LIMIT 1`
+        )
+          .bind(orderNumber, email)
+          .first();
+        if (!row) {
+          return json(
+            { error: 'No order found matching that Order Number and Email. Please double-check both fields.' },
+            404
+          );
+        }
+        const { results: items } = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT oi.*, c.title as cause_title
+           FROM order_items oi
+           LEFT JOIN causes c ON oi.cause_id = c.id
+           WHERE oi.order_id = ?`
+        )
+          .bind(row.id)
+          .all();
+
+        let digitalItems: any[] = [];
+        if (row.payment_status === 'paid') {
+          const { results: digi } = await env.BUY4ACHANGE_DB.prepare(
+            `SELECT p.id as product_id, p.name as product_name, COALESCE(p.subcategory, '') as subcategory,
+                    p.category, p.image_url, p.digital_html_content,
+                    COALESCE(p.digital_access_note, '') as digital_access_note,
+                    o.order_number, o.customer_email, o.created_at as purchased_at
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             INNER JOIN products p ON p.id = oi.product_id
+             WHERE o.id = ? AND o.payment_status = 'paid' AND COALESCE(p.product_type, 'physical') = 'digital'`
+          )
+            .bind(row.id)
+            .all();
+          digitalItems = (digi as any[]) || [];
+        }
+        return json({ success: true, order: { ...row, items: items || [], digital_items: digitalItems } });
+      }
+
+      // Public Anonymized Living India Impact Transparency Ledger
+      if (pathname === '/api/ledger/public' && request.method === 'GET') {
+        const { results: rows } = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT o.order_number, o.customer_name, o.cause_id, COALESCE(c.title, 'Living India Mission') as cause_title,
+                  o.cause_donation_amount, o.total_amount, o.payment_status, o.created_at
+           FROM orders o
+           LEFT JOIN causes c ON o.cause_id = c.id
+           WHERE o.payment_status = 'paid'
+           ORDER BY o.created_at DESC
+           LIMIT 40`
+        ).all();
+        const { results: causes } = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM causes ORDER BY id ASC').all();
+        const entries = ((rows as any[]) || []).map((r) => {
+          const initials = String(r.customer_name || 'Supporter')
+            .trim()
+            .split(/\s+/)
+            .map((p: string) => (p[0] ? p[0].toUpperCase() + '.' : ''))
+            .join(' ')
+            .slice(0, 8);
+          return {
+            order_number: r.order_number,
+            supporter_initials: initials || 'S.',
+            cause_id: r.cause_id,
+            cause_title: r.cause_title,
+            cause_donation_amount: r.cause_donation_amount,
+            total_amount: r.total_amount,
+            payment_status: r.payment_status,
+            created_at: r.created_at,
+          };
+        });
+        const totalRaised = ((causes as any[]) || []).reduce((s, c) => s + (c.raised_amount || 0), 0);
+        return json({
+          totalRaised: Math.round(totalRaised),
+          verifiedContributionsCount: entries.length,
+          causes: causes || [],
+          entries,
+        });
+      }
+
+      // Privacy-First Cookie-Free Analytics Collector
+      if (pathname === '/api/analytics/event' && request.method === 'POST') {
+        try {
+          await env.BUY4ACHANGE_DB.prepare(
+            `CREATE TABLE IF NOT EXISTS analytics_events (
+              id TEXT PRIMARY KEY,
+              event_type TEXT NOT NULL,
+              target_id TEXT DEFAULT '',
+              lang TEXT DEFAULT 'en',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+          ).run();
+          const body: any = await request.json().catch(() => ({}));
+          const id = `ev_${Date.now()}_${randomHex(4)}`;
+          await env.BUY4ACHANGE_DB.prepare(
+            'INSERT INTO analytics_events (id, event_type, target_id, lang) VALUES (?, ?, ?, ?)'
+          )
+            .bind(
+              id,
+              String(body?.eventType || 'page_view').slice(0, 40),
+              String(body?.targetId || '').slice(0, 120),
+              String(body?.lang || 'en').slice(0, 12)
+            )
+            .run();
+        } catch {}
+        return json({ ok: true });
+      }
+
+      // Safe Public Integrations Config
+      if (pathname === '/api/integrations/public' && request.method === 'GET') {
+        try {
+          await env.BUY4ACHANGE_DB.prepare(
+            'CREATE TABLE IF NOT EXISTS site_integrations (key TEXT PRIMARY KEY, value TEXT DEFAULT \'\')'
+          ).run();
+          const { results } = await env.BUY4ACHANGE_DB.prepare('SELECT key, value FROM site_integrations').all();
+          const map: Record<string, string> = {};
+          for (const r of (results as any[]) || []) map[r.key] = r.value;
+          return json({
+            umamiScriptUrl: map.umami_script_url || '',
+            umamiWebsiteId: map.umami_website_id || '',
+            chatwootBaseUrl: map.chatwoot_base_url || '',
+            chatwootWebsiteToken: map.chatwoot_website_token || '',
+            whatsappSupportNumber: map.whatsapp_support_number || '',
+            supportEmail: map.support_email || 'support@ugtindia.space',
+          });
+        } catch {
+          return json({
+            umamiScriptUrl: '',
+            umamiWebsiteId: '',
+            chatwootBaseUrl: '',
+            chatwootWebsiteToken: '',
+            whatsappSupportNumber: '',
+            supportEmail: 'support@ugtindia.space',
+          });
+        }
+      }
+
       // ============================================================
       // ADMIN AUTHENTICATION
       // ============================================================
@@ -1300,6 +1447,123 @@ export default {
               mode: cfg.mode,
               latencyMs: Date.now() - startedAt,
               message: `Could not reach ${baseUrl}: ${err?.message || 'Network error'}`,
+            });
+          }
+        }
+
+        // Admin Real Shipping Dispatch (Courier + AWB Tracking)
+        const dispatchMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/dispatch$/);
+        if (dispatchMatch && request.method === 'PATCH') {
+          const orderId = decodeURIComponent(dispatchMatch[1]);
+          const body: any = await request.json().catch(() => ({}));
+          try {
+            await env.BUY4ACHANGE_DB.prepare("ALTER TABLE orders ADD COLUMN courier_name TEXT DEFAULT ''").run();
+          } catch {}
+          const courierName = String(body?.courierName || '').trim();
+          const trackingNumber = String(body?.trackingNumber || '').trim();
+          const status = String(body?.status || (trackingNumber ? 'Shipped' : 'Processing'));
+          await env.BUY4ACHANGE_DB.prepare(
+            'UPDATE orders SET courier_name = ?, tracking_number = ?, order_status = ? WHERE id = ?'
+          )
+            .bind(courierName, trackingNumber, status, orderId)
+            .run();
+          const updated = await getOrderWithItems(env, orderId);
+          return json({ success: true, order: updated });
+        }
+
+        // Admin Open-Source Integrations
+        if (pathname === '/api/admin/integrations' && request.method === 'GET') {
+          await env.BUY4ACHANGE_DB.prepare(
+            "CREATE TABLE IF NOT EXISTS site_integrations (key TEXT PRIMARY KEY, value TEXT DEFAULT '')"
+          ).run();
+          const { results } = await env.BUY4ACHANGE_DB.prepare('SELECT key, value FROM site_integrations').all();
+          const map: Record<string, string> = {};
+          for (const r of (results as any[]) || []) map[r.key] = r.value;
+          return json({
+            umami_script_url: map.umami_script_url || '',
+            umami_website_id: map.umami_website_id || '',
+            chatwoot_base_url: map.chatwoot_base_url || '',
+            chatwoot_website_token: map.chatwoot_website_token || '',
+            whatsapp_support_number: map.whatsapp_support_number || '',
+            support_email: map.support_email || 'support@ugtindia.space',
+            karrio_api_url: map.karrio_api_url || '',
+            karrio_api_key: maskSecret(map.karrio_api_key || ''),
+            smtp_webhook_url: map.smtp_webhook_url || '',
+            smtp_from_email: map.smtp_from_email || 'orders@ugtindia.space',
+            r2_public_base_url: map.r2_public_base_url || '',
+          });
+        }
+
+        if (pathname === '/api/admin/integrations' && request.method === 'PUT') {
+          await env.BUY4ACHANGE_DB.prepare(
+            "CREATE TABLE IF NOT EXISTS site_integrations (key TEXT PRIMARY KEY, value TEXT DEFAULT '')"
+          ).run();
+          const body: any = await request.json().catch(() => ({}));
+          const keys = [
+            'umami_script_url',
+            'umami_website_id',
+            'chatwoot_base_url',
+            'chatwoot_website_token',
+            'whatsapp_support_number',
+            'support_email',
+            'karrio_api_url',
+            'karrio_api_key',
+            'smtp_webhook_url',
+            'smtp_from_email',
+            'r2_public_base_url',
+          ];
+          const batch: D1PreparedStatement[] = [];
+          for (const k of keys) {
+            if (body[k] === undefined) continue;
+            const val = String(body[k] ?? '').trim();
+            if (k === 'karrio_api_key' && val.startsWith('••••')) continue;
+            batch.push(
+              env.BUY4ACHANGE_DB.prepare(
+                'INSERT OR REPLACE INTO site_integrations (key, value) VALUES (?, ?)'
+              ).bind(k, val)
+            );
+          }
+          if (batch.length > 0) await env.BUY4ACHANGE_DB.batch(batch);
+          return json({ success: true });
+        }
+
+        // Admin Cookie-Free Analytics Summary
+        if (pathname === '/api/admin/analytics' && request.method === 'GET') {
+          try {
+            await env.BUY4ACHANGE_DB.prepare(
+              `CREATE TABLE IF NOT EXISTS analytics_events (
+                id TEXT PRIMARY KEY, event_type TEXT NOT NULL, target_id TEXT DEFAULT '',
+                lang TEXT DEFAULT 'en', created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+              )`
+            ).run();
+            const tot: any = await env.BUY4ACHANGE_DB.prepare('SELECT COUNT(*) as c FROM analytics_events').first();
+            const pv: any = await env.BUY4ACHANGE_DB.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'page_view'").first();
+            const mr: any = await env.BUY4ACHANGE_DB.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'mission_read'").first();
+            const prv: any = await env.BUY4ACHANGE_DB.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'product_view'").first();
+            const pd: any = await env.BUY4ACHANGE_DB.prepare("SELECT COUNT(*) as c FROM analytics_events WHERE event_type = 'pdf_download'").first();
+            const { results: topMissions } = await env.BUY4ACHANGE_DB.prepare(
+              `SELECT target_id, COUNT(*) as count FROM analytics_events
+               WHERE event_type = 'mission_read' AND target_id != ''
+               GROUP BY target_id ORDER BY count DESC LIMIT 8`
+            ).all();
+            return json({
+              totalEvents: tot?.c || 0,
+              pageViews: pv?.c || 0,
+              missionReads: mr?.c || 0,
+              productViews: prv?.c || 0,
+              pdfDownloads: pd?.c || 0,
+              topMissions: topMissions || [],
+              recentEmails: [],
+            });
+          } catch {
+            return json({
+              totalEvents: 0,
+              pageViews: 0,
+              missionReads: 0,
+              productViews: 0,
+              pdfDownloads: 0,
+              topMissions: [],
+              recentEmails: [],
             });
           }
         }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Lock, Unlock, Heart, Plus, Check } from 'lucide-react';
 import { Product, Cause, UnlockedDigitalItem } from '../types.ts';
+import { useLanguage } from '../i18n/LanguageContext.tsx';
 
 export const EPRODUCT_SUBCATEGORIES = [
   'eBooks',
@@ -65,7 +66,7 @@ const EProductCard: React.FC<{
   return (
     <div
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="bg-white border border-gray-200 hover:border-[#166534] rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-colors"
+      className="card-editorial rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F0FDF4]">
         {product.image_url ? (
@@ -195,6 +196,7 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   onLaunchUnlocked,
   onOpenLibrary,
 }) => {
+  const { t } = useLanguage();
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('All');
 
   const liveSubcats = Array.from(
@@ -218,14 +220,12 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-1.5">
             <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
-              Digital Library · ₹0 Shipping
+              {t.eproductsEyebrow} · ₹0 Shipping
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
-              E-Products &amp; eBooks
+              {t.eproductsHeading}
             </h2>
-            <p className="text-sm text-gray-600 max-w-2xl">
-              Interactive HTML eBooks and digital guides that unlock in your Library once payment is verified.
-            </p>
+            <p className="text-sm text-gray-600 max-w-2xl">{t.eproductsSubtext}</p>
           </div>
 
           <button

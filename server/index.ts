@@ -28,6 +28,14 @@ import {
   updateOrderPaymentStatusByPaymentId,
   getGatewayConfig,
   saveGatewayConfig,
+  trackOrderByNumberAndEmail,
+  updateOrderDispatch,
+  getPublicImpactLedger,
+  getSiteIntegrations,
+  saveSiteIntegrations,
+  logAnalyticsEvent,
+  getAnalyticsSummary,
+  queueEmailNotification,
   verifyAdminLogin,
   validateAdminToken
 } from './db.ts';
@@ -517,9 +525,87 @@ app.post('/api/orders', (req, res) => {
       verifiedPaymentStatus === 'paid'
         ? getUnlockedDigitalItemsByOrder(orderNumber, customerEmail)
         : [];
+    void queueEmailNotification({
+      orderNumber,
+      recipientEmail: customerEmail || '',
+      eventType: verifiedPaymentStatus === 'paid' ? 'payment_verified' : 'order_received',
+      subject:
+        verifiedPaymentStatus === 'paid'
+          ? `Buy4AChange Order ${orderNumber} Confirmed & Mission Credited`
+          : `Buy4AChange Order ${orderNumber} Received — Payment Verification Pending`,
+      bodyPreview: `Order ${orderNumber} for INR ${totalAmount}. Mission allocation INR ${orderData.cause_donation_amount}.`,
+    });
     res.status(201).json({ ...created, digital_items: digitalItems });
   } catch (err: any) {
     console.error('Error creating order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Self-Service Order Tracking (Order Number + Email)
+app.post('/api/orders/track', (req, res) => {
+  try {
+    const { orderNumber, email } = req.body || {};
+    if (!orderNumber || !email) {
+      return res.status(400).json({ error: 'Order number and checkout email are required.' });
+    }
+    const order = trackOrderByNumberAndEmail(orderNumber, email);
+    if (!order) {
+      return res.status(404).json({
+        error: 'No order found matching that Order Number and Email. Please double-check both fields.',
+      });
+    }
+    const digitalItems =
+      order.payment_status === 'paid'
+        ? getUnlockedDigitalItemsByOrder(order.order_number, order.customer_email)
+        : [];
+    res.json({ success: true, order: { ...order, digital_items: digitalItems } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Public Anonymized Living India Impact Transparency Ledger
+app.get('/api/ledger/public', (_req, res) => {
+  try {
+    const entries = getPublicImpactLedger(40);
+    const causes = getAllCauses();
+    const totalRaised = causes.reduce((sum, c) => sum + (c.raised_amount || 0), 0);
+    res.json({
+      totalRaised: Math.round(totalRaised),
+      verifiedContributionsCount: entries.length,
+      causes,
+      entries,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Privacy-First Zero-Cookie Analytics Event Collector
+app.post('/api/analytics/event', (req, res) => {
+  try {
+    const { eventType, targetId, lang } = req.body || {};
+    logAnalyticsEvent(eventType || 'page_view', targetId || '', lang || 'en');
+    res.json({ ok: true });
+  } catch {
+    res.json({ ok: false });
+  }
+});
+
+// Safe Public Integrations Config (Umami / Chatwoot / WhatsApp — never exposes API secrets)
+app.get('/api/integrations/public', (_req, res) => {
+  try {
+    const cfg = getSiteIntegrations();
+    res.json({
+      umamiScriptUrl: cfg.umami_script_url || '',
+      umamiWebsiteId: cfg.umami_website_id || '',
+      chatwootBaseUrl: cfg.chatwoot_base_url || '',
+      chatwootWebsiteToken: cfg.chatwoot_website_token || '',
+      whatsappSupportNumber: cfg.whatsapp_support_number || '',
+      supportEmail: cfg.support_email || 'support@ugtindia.space',
+    });
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -624,7 +710,73 @@ app.post('/api/admin/orders/:id/verify-payment', requireAdminAuth, (req, res) =>
     const action = req.body?.action === 'reject' ? 'reject' : 'approve';
     const updated = verifyOrderPayment(req.params.id, action);
     if (!updated) return res.status(404).json({ error: 'Order not found' });
+    if (action === 'approve') {
+      void queueEmailNotification({
+        orderNumber: updated.order_number,
+        recipientEmail: updated.customer_email,
+        eventType: 'payment_verified',
+        subject: `Payment Verified — Buy4AChange Order ${updated.order_number}`,
+        bodyPreview: `Your payment has been verified. INR ${updated.cause_donation_amount} is now credited to your selected Living India mission.`,
+      });
+    }
     res.json({ success: true, order: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin Real Shipping Dispatch (Courier Name + AWB Tracking Number — Zero Fake IDs)
+app.patch('/api/admin/orders/:id/dispatch', requireAdminAuth, (req, res) => {
+  try {
+    const { courierName = '', trackingNumber = '', status } = req.body || {};
+    const updated = updateOrderDispatch(req.params.id, courierName, trackingNumber, status);
+    if (!updated) return res.status(404).json({ error: 'Order not found' });
+    if (trackingNumber.trim()) {
+      void queueEmailNotification({
+        orderNumber: updated.order_number,
+        recipientEmail: updated.customer_email,
+        eventType: 'order_dispatched',
+        subject: `Order ${updated.order_number} Dispatched via ${courierName || 'Courier'}`,
+        bodyPreview: `Tracking AWB: ${trackingNumber.trim()} (${courierName || 'Courier'}). Track live on Buy4AChange.`,
+      });
+    }
+    res.json({ success: true, order: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin Open-Source Integrations & Cookie-Free Analytics
+app.get('/api/admin/integrations', requireAdminAuth, (_req, res) => {
+  try {
+    const cfg = getSiteIntegrations();
+    res.json({
+      ...cfg,
+      karrio_api_key: maskSecret(cfg.karrio_api_key),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/integrations', requireAdminAuth, (req, res) => {
+  try {
+    const saved = saveSiteIntegrations(req.body || {});
+    res.json({
+      success: true,
+      config: {
+        ...saved,
+        karrio_api_key: maskSecret(saved.karrio_api_key),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/analytics', requireAdminAuth, (_req, res) => {
+  try {
+    res.json(getAnalyticsSummary());
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

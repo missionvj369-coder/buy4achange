@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   Package, ShoppingCart, Plus, Edit, Trash2, Printer, ShieldCheck,
-  Heart, Database, RefreshCw, Lock, LogOut, ArrowLeft, ExternalLink,
-  ChevronRight, Calendar, CheckCircle2, AlertCircle, CreditCard, Key,
+  Heart, RefreshCw, Lock, LogOut, ArrowLeft, ExternalLink,
+  CheckCircle2, AlertCircle, CreditCard, Key,
   Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw,
-  BookOpen, Code2, Eye, FileCode
+  BookOpen, Code2, Eye, FileCode, Truck, FileDown, Activity, Mail, Sliders
 } from 'lucide-react';
-import { Product, Order, Cause, AdminMetrics, PaymentTransaction, UnlockedDigitalItem } from '../types.ts';
+import {
+  Product, Order, Cause, AdminMetrics, PaymentTransaction,
+  UnlockedDigitalItem, SiteIntegrations, AnalyticsSummary
+} from '../types.ts';
 import { EPRODUCT_SUBCATEGORIES } from './EProductsSection.tsx';
 import { DigitalReaderModal } from './DigitalReaderModal.tsx';
+import { generateOrderReceiptPdf } from '../utils/pdfCertificate.ts';
 
 interface AdminPortalProps {
   causes: Cause[];
@@ -31,7 +35,33 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [loggingIn, setLoggingIn] = useState(false);
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'missions' | 'transactions' | 'gateway'>('orders');
+  const [activeTab, setActiveTab] = useState<
+    'orders' | 'products' | 'missions' | 'transactions' | 'gateway' | 'integrations'
+  >('orders');
+
+  // Real Dispatch Modal state (Courier + AWB Tracking)
+  const [dispatchOrder, setDispatchOrder] = useState<Order | null>(null);
+  const [dispatchCourier, setDispatchCourier] = useState('India Post');
+  const [dispatchAwb, setDispatchAwb] = useState('');
+  const [savingDispatch, setSavingDispatch] = useState(false);
+
+  // Open-Source Integrations & Cookie-Free Analytics state
+  const [integrations, setIntegrations] = useState<SiteIntegrations>({
+    umami_script_url: '',
+    umami_website_id: '',
+    chatwoot_base_url: '',
+    chatwoot_website_token: '',
+    whatsapp_support_number: '',
+    support_email: 'support@ugtindia.space',
+    karrio_api_url: '',
+    karrio_api_key: '',
+    smtp_webhook_url: '',
+    smtp_from_email: 'orders@ugtindia.space',
+    r2_public_base_url: '',
+  });
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [savingIntegrations, setSavingIntegrations] = useState(false);
+  const [integrationsNotice, setIntegrationsNotice] = useState<{ ok: boolean; text: string } | null>(null);
   
   // Data states
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
@@ -260,6 +290,71 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setAdminProducts((prev) => (prev.length === 0 ? products : prev));
   }, [products]);
 
+  const fetchIntegrationsAndAnalytics = async () => {
+    if (!token) return;
+    try {
+      const [intRes, anaRes] = await Promise.all([
+        fetch('/api/admin/integrations', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/admin/analytics', { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (intRes.ok) {
+        const intData = await intRes.json();
+        setIntegrations((prev) => ({ ...prev, ...intData }));
+      }
+      if (anaRes.ok) {
+        const anaData = await anaRes.json();
+        setAnalytics(anaData);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveIntegrations = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSavingIntegrations(true);
+    setIntegrationsNotice(null);
+    try {
+      const res = await fetch('/api/admin/integrations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(integrations),
+      });
+      if (!res.ok) throw new Error('Could not save integrations.');
+      setIntegrationsNotice({ ok: true, text: 'Open-source integrations saved and active immediately.' });
+      fetchIntegrationsAndAnalytics();
+    } catch (err: any) {
+      setIntegrationsNotice({ ok: false, text: err.message || 'Save failed' });
+    } finally {
+      setSavingIntegrations(false);
+    }
+  };
+
+  const handleSaveDispatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !dispatchOrder) return;
+    setSavingDispatch(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${dispatchOrder.id}/dispatch`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          courierName: dispatchCourier,
+          trackingNumber: dispatchAwb,
+          status: dispatchAwb.trim() ? 'Shipped' : dispatchOrder.order_status,
+        }),
+      });
+      if (res.ok) {
+        setDispatchOrder(null);
+        fetchOrders(orderDateFilter);
+        fetchIntegrationsAndAnalytics();
+      }
+    } finally {
+      setSavingDispatch(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchMetrics();
@@ -267,6 +362,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       fetchTransactions();
       fetchGatewayConfig();
       fetchAdminProducts();
+      fetchIntegrationsAndAnalytics();
     }
   }, [token, orderDateFilter]);
 
@@ -739,6 +835,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <CreditCard className="w-3.5 h-3.5" />
               <span>Payment Gateway</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('integrations')}
+              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+                activeTab === 'integrations'
+                  ? 'bg-[#166534] text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Integrations &amp; Analytics</span>
+            </button>
           </nav>
 
           {/* User Profile & Logout */}
@@ -970,14 +1079,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </td>
 
                           <td className="px-5 py-3.5 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setPrintOrders([ord])}
-                              className="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-semibold text-xs inline-flex items-center space-x-1.5"
-                            >
-                              <Printer className="w-3.5 h-3.5 text-[#166534]" />
-                              <span>Print Slip</span>
-                            </button>
+                            <div className="flex flex-wrap items-center justify-end gap-1.5">
+                              {ord.payment_status === 'paid' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setDispatchOrder(ord);
+                                    setDispatchCourier(ord.courier_name || 'India Post');
+                                    setDispatchAwb(ord.tracking_number || '');
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] hover:bg-green-100 text-[#166534] border border-[#BBF7D0] font-semibold text-xs inline-flex items-center space-x-1"
+                                  title="Enter real courier & AWB tracking"
+                                >
+                                  <Truck className="w-3.5 h-3.5" />
+                                  <span>{ord.tracking_number ? 'AWB' : 'Dispatch'}</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => void generateOrderReceiptPdf(ord)}
+                                className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-semibold text-xs inline-flex items-center space-x-1"
+                                title="Download Official PDF Receipt & Certificate"
+                              >
+                                <FileDown className="w-3.5 h-3.5 text-[#166534]" />
+                                <span>PDF</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPrintOrders([ord])}
+                                className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-semibold text-xs inline-flex items-center space-x-1"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-[#166534]" />
+                                <span>Slip</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1663,7 +1798,335 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
         )}
+
+        {/* TAB 6: OPEN-SOURCE INTEGRATIONS & COOKIE-FREE ANALYTICS */}
+        {activeTab === 'integrations' && (
+          <div className="space-y-5">
+            {/* Cookie-Free Telemetry Cards */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 flex items-center space-x-2">
+                    <Activity className="w-4 h-4 text-[#166534]" />
+                    <span>Privacy-First Zero-Cookie Analytics</span>
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Anonymous DPDP-friendly engagement metrics recorded directly in your database (zero tracking cookies).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchIntegrationsAndAnalytics}
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-xs font-semibold text-gray-700 inline-flex items-center space-x-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-[#166534]" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200">
+                  <div className="text-[11px] text-gray-500">Storefront Views</div>
+                  <div className="text-xl font-bold font-mono text-gray-900 mt-0.5">
+                    {analytics?.pageViews || 0}
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200">
+                  <div className="text-[11px] text-gray-500">Mission Dossiers Read</div>
+                  <div className="text-xl font-bold font-mono text-[#166534] mt-0.5">
+                    {analytics?.missionReads || 0}
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200">
+                  <div className="text-[11px] text-gray-500">Product Views</div>
+                  <div className="text-xl font-bold font-mono text-gray-900 mt-0.5">
+                    {analytics?.productViews || 0}
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200">
+                  <div className="text-[11px] text-gray-500">PDF Certificates Issued</div>
+                  <div className="text-xl font-bold font-mono text-[#166534] mt-0.5">
+                    {analytics?.pdfDownloads || 0}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Open-Source Integrations Form */}
+            <form
+              onSubmit={handleSaveIntegrations}
+              className="bg-white p-6 rounded-xl border border-gray-200 space-y-5"
+            >
+              <div>
+                <h3 className="text-base font-bold text-gray-900">
+                  Open-Source Ecosystem Connectors
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Plug in self-hosted Umami/Plausible analytics, Listmonk/SMTP transactional email webhook, Chatwoot/WhatsApp support, Karrio shipping, or Cloudflare R2/MinIO storage.
+                </p>
+              </div>
+
+              {integrationsNotice && (
+                <div
+                  className={`p-3 rounded-lg border text-xs flex items-center space-x-2 ${
+                    integrationsNotice.ok
+                      ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
+                      : 'bg-rose-50 border-rose-200 text-rose-700'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{integrationsNotice.text}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Umami / Plausible Script URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={integrations.umami_script_url}
+                    onChange={(e) => setIntegrations({ ...integrations, umami_script_url: e.target.value })}
+                    placeholder="https://analytics.ugtindia.space/script.js"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Umami Website ID / Plausible Domain
+                  </label>
+                  <input
+                    type="text"
+                    value={integrations.umami_website_id}
+                    onChange={(e) => setIntegrations({ ...integrations, umami_website_id: e.target.value })}
+                    placeholder="website-uuid-or-domain"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Transactional Email Webhook (Listmonk / Nodemailer / SMTP Relay)
+                  </label>
+                  <input
+                    type="url"
+                    value={integrations.smtp_webhook_url}
+                    onChange={(e) => setIntegrations({ ...integrations, smtp_webhook_url: e.target.value })}
+                    placeholder="https://mail.ugtindia.space/api/tx"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Sender Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={integrations.smtp_from_email}
+                    onChange={(e) => setIntegrations({ ...integrations, smtp_from_email: e.target.value })}
+                    placeholder="orders@ugtindia.space"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    WhatsApp Support Number (with country code, e.g. 9198XXXXXXXX)
+                  </label>
+                  <input
+                    type="text"
+                    value={integrations.whatsapp_support_number}
+                    onChange={(e) => setIntegrations({ ...integrations, whatsapp_support_number: e.target.value })}
+                    placeholder="9198XXXXXXXX"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Public Support Email (shown in Footer)
+                  </label>
+                  <input
+                    type="email"
+                    value={integrations.support_email}
+                    onChange={(e) => setIntegrations({ ...integrations, support_email: e.target.value })}
+                    placeholder="support@ugtindia.space"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Chatwoot Base URL (Open-Source Helpdesk)
+                  </label>
+                  <input
+                    type="url"
+                    value={integrations.chatwoot_base_url}
+                    onChange={(e) => setIntegrations({ ...integrations, chatwoot_base_url: e.target.value })}
+                    placeholder="https://chat.ugtindia.space"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Chatwoot Website Token
+                  </label>
+                  <input
+                    type="text"
+                    value={integrations.chatwoot_website_token}
+                    onChange={(e) => setIntegrations({ ...integrations, chatwoot_website_token: e.target.value })}
+                    placeholder="chatwoot_inbox_token"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Karrio Open-Source Shipping API URL
+                  </label>
+                  <input
+                    type="url"
+                    value={integrations.karrio_api_url}
+                    onChange={(e) => setIntegrations({ ...integrations, karrio_api_url: e.target.value })}
+                    placeholder="https://shipping.ugtindia.space/v1"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Cloudflare R2 / MinIO Public Asset CDN URL
+                  </label>
+                  <input
+                    type="url"
+                    value={integrations.r2_public_base_url}
+                    onChange={(e) => setIntegrations({ ...integrations, r2_public_base_url: e.target.value })}
+                    placeholder="https://cdn.ugtindia.space"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={savingIntegrations}
+                  className="px-5 py-2.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center space-x-2"
+                >
+                  {savingIntegrations ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  <span>{savingIntegrations ? 'Saving...' : 'Save Integrations'}</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Transactional Email Notification Log */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-3">
+              <div className="flex items-center space-x-2 text-sm font-bold text-gray-900">
+                <Mail className="w-4 h-4 text-[#166534]" />
+                <span>Transactional Email Notification Log</span>
+              </div>
+              {!analytics?.recentEmails || analytics.recentEmails.length === 0 ? (
+                <p className="text-xs text-gray-500">
+                  Order confirmations, payment verifications, and dispatch emails are logged here automatically.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-gray-700">
+                    <thead className="bg-[#FAF9F6] text-[11px] uppercase text-gray-500 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 py-2">Order</th>
+                        <th className="px-3 py-2">Recipient</th>
+                        <th className="px-3 py-2">Subject</th>
+                        <th className="px-3 py-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {analytics.recentEmails.map((em) => (
+                        <tr key={em.id}>
+                          <td className="px-3 py-2 font-mono font-semibold">{em.order_number}</td>
+                          <td className="px-3 py-2">{em.recipient_email}</td>
+                          <td className="px-3 py-2">{em.subject}</td>
+                          <td className="px-3 py-2">
+                            <span className="px-2 py-0.5 rounded bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0] text-[10px] font-semibold">
+                              {em.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* MODAL: REAL SHIPPING DISPATCH (COURIER + AWB TRACKING NUMBER) */}
+      {dispatchOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+            <div className="px-5 py-4 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                <Truck className="w-4 h-4 text-[#166534]" />
+                <span>Dispatch Order {dispatchOrder.order_number}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setDispatchOrder(null)}
+                className="p-1 rounded hover:bg-gray-100 text-gray-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveDispatch} className="p-5 space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Courier Partner</label>
+                <select
+                  value={dispatchCourier}
+                  onChange={(e) => setDispatchCourier(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                >
+                  <option value="India Post">India Post (Speed Post / Registered)</option>
+                  <option value="Delhivery">Delhivery</option>
+                  <option value="BlueDart">BlueDart</option>
+                  <option value="DTDC">DTDC</option>
+                  <option value="Karrio Carrier">Karrio Open-Source Carrier</option>
+                  <option value="Local Hand Delivery">Local Hand Delivery</option>
+                </select>
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">
+                  Real AWB / Consignment Tracking Number
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={dispatchAwb}
+                  onChange={(e) => setDispatchAwb(e.target.value)}
+                  placeholder="Enter real courier AWB number"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-gray-900 focus:border-[#166534] focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDispatchOrder(null)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingDispatch}
+                  className="px-4 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold"
+                >
+                  {savingDispatch ? 'Saving...' : 'Save & Mark Shipped'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: ADD / EDIT PRODUCT OR E-PRODUCT */}
       {showProductModal && (
