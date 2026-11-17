@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 interface Tilt3DCardProps {
   children: React.ReactNode;
@@ -18,16 +18,22 @@ export const Tilt3DCard: React.FC<Tilt3DCardProps> = ({
   style,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState(
-    'perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'
-  );
+  const [canHover, setCanHover] = useState(false);
+  const [transform, setTransform] = useState('');
   const [glare, setGlare] = useState<{ x: number; y: number; opacity: number }>({
     x: 50,
     y: 50,
     opacity: 0,
   });
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      setCanHover(window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    }
+  }, []);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!canHover) return;
     const el = cardRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -37,13 +43,14 @@ export const Tilt3DCard: React.FC<Tilt3DCardProps> = ({
     const rotateX = (0.5 - py) * maxTilt * 2;
 
     setTransform(
-      `perspective(1200px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.018, 1.018, 1.018)`
+      `perspective(1200px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.015, 1.015, 1.015)`
     );
     setGlare({ x: px * 100, y: py * 100, opacity: 1 });
   };
 
   const handleMouseLeave = () => {
-    setTransform('perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)');
+    if (!canHover) return;
+    setTransform('');
     setGlare((prev) => ({ ...prev, opacity: 0 }));
   };
 
@@ -51,27 +58,31 @@ export const Tilt3DCard: React.FC<Tilt3DCardProps> = ({
     <div
       ref={cardRef}
       onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={canHover ? handleMouseMove : undefined}
+      onMouseLeave={canHover ? handleMouseLeave : undefined}
       style={{
         ...style,
-        transform,
-        transformStyle: 'preserve-3d',
-        transition:
-          glare.opacity > 0
-            ? 'transform 120ms ease-out, box-shadow 250ms ease'
-            : 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 350ms ease',
+        ...(canHover && transform ? { transform } : {}),
+        ...(canHover
+          ? {
+              transition:
+                glare.opacity > 0
+                  ? 'transform 120ms ease-out, box-shadow 250ms ease'
+                  : 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 350ms ease',
+            }
+          : {}),
       }}
-      className={`relative will-change-transform ${className}`}
+      className={`relative ${className}`}
     >
-      {/* Dynamic Holographic 3D Specular Sheen */}
-      <div
-        className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] transition-opacity duration-300"
-        style={{
-          opacity: glare.opacity,
-          background: `radial-gradient(circle 280px at ${glare.x}% ${glare.y}%, ${glowColor}, transparent 72%)`,
-        }}
-      />
+      {canHover && (
+        <div
+          className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] transition-opacity duration-300"
+          style={{
+            opacity: glare.opacity,
+            background: `radial-gradient(circle 280px at ${glare.x}% ${glare.y}%, ${glowColor}, transparent 72%)`,
+          }}
+        />
+      )}
       {children}
     </div>
   );

@@ -18,6 +18,9 @@ import {
   getOrderById,
   createOrder,
   updateOrderStatus,
+  verifyOrderPayment,
+  getTransactionById,
+  getTransactionByUtr,
   getMetrics,
   recordTransaction,
   getTransactions,
@@ -287,10 +290,10 @@ app.post('/api/payment/confirm', async (req, res) => {
   }
 });
 
-// Direct UPI / Card / NetBanking Processing Endpoint
+// Direct UPI Payment Submission Endpoint (Strict Real Verification — NO fake auto-paid approvals!)
 app.post('/api/payment/process', async (req, res) => {
   try {
-    const { amount, currency = 'INR', method, cardDetails, upiId, utrNumber, bankName, transactionRef: clientRef, orderDetails } = req.body;
+    const { amount, currency = 'INR', method, upiId, utrNumber, orderDetails } = req.body;
     const numericAmount = parseFloat(amount);
 
     if (!numericAmount || numericAmount <= 0) {
@@ -299,49 +302,59 @@ app.post('/api/payment/process', async (req, res) => {
 
     const cfg = getGatewayConfig();
 
-    if (method === 'card') {
-      const num = (cardDetails?.number || '').replace(/\s+/g, '');
-      if (!validateLuhn(num)) {
-        return res.status(400).json({ error: 'Please enter a valid card number (Luhn check failed).' });
-      }
-      if (!cardDetails?.expiry || !/^\d{2}\/\d{2}$/.test(cardDetails.expiry.trim())) {
-        return res.status(400).json({ error: 'Expiry date must be in MM/YY format.' });
-      }
-      if (!cardDetails?.cvv || !/^\d{3,4}$/.test(cardDetails.cvv.trim())) {
-        return res.status(400).json({ error: 'Please enter a valid 3 or 4 digit CVV.' });
-      }
+    // NEVER fake-approve Card or NetBanking when no live Hyperswitch processor is connected
+    if (method === 'card' || method === 'netbanking') {
+      return res.status(400).json({
+        error:
+          'Card and NetBanking require a live payment gateway (Hyperswitch) configured in Admin → Payment Gateway. Please pay via Direct UPI and submit your 12-digit UTR reference.',
+      });
     }
 
-    if (method === 'upi' && upiId && !validateUpiVpa(upiId)) {
+    if (method !== 'upi') {
+      return res.status(400).json({ error: 'Unsupported payment method. Please use Direct UPI.' });
+    }
+
+    const cleanUtr = String(utrNumber || '').replace(/\s+/g, '');
+    if (!/^\d{12}$/.test(cleanUtr)) {
+      return res.status(400).json({
+        error: 'Please complete your UPI payment first and enter the exact 12-digit UTR / Reference Number from your UPI app receipt.',
+      });
+    }
+
+    if (upiId && !validateUpiVpa(upiId)) {
       return res.status(400).json({ error: 'Please enter a valid UPI ID (e.g. name@okhdfcbank).' });
     }
 
-    const transactionId = `pay_b4c_${crypto.randomBytes(8).toString('hex')}`;
-    const transactionRef = clientRef || `REF_${Date.now()}_${Math.floor(Math.random() * 9000 + 1000)}`;
-    const gatewayLabel = method === 'upi' ? 'NPCI_DIRECT_UPI' : 'OPEN_CHECKOUT_GATEWAY';
+    const utrRef = `UTR_${cleanUtr}`;
+    const existingUtr = getTransactionByUtr(utrRef);
+    if (existingUtr) {
+      return res.status(409).json({
+        error: 'This 12-digit UTR reference number has already been submitted for an order.',
+      });
+    }
 
-    // Record in Payment Ledger
+    const transactionId = `upi_${crypto.randomBytes(8).toString('hex')}`;
+
+    // Record in Payment Ledger as PENDING VERIFICATION (admin verifies actual bank credit)
     recordTransaction({
       id: transactionId,
       order_id: orderDetails?.orderNumber || 'PENDING',
       amount: numericAmount,
       currency,
-      gateway: gatewayLabel,
-      transaction_ref: utrNumber ? `UTR_${utrNumber.trim()}` : transactionRef,
-      status: 'succeeded',
+      gateway: 'NPCI_DIRECT_UPI',
+      transaction_ref: utrRef,
+      status: 'pending_verification',
       method_details: JSON.stringify({
-        method,
-        cardLast4: method === 'card' ? (cardDetails?.number || '4242').replace(/\D/g, '').slice(-4) : undefined,
-        upiId: method === 'upi' ? upiId : undefined,
-        utrNumber: method === 'upi' && utrNumber ? utrNumber.trim() : undefined,
-        merchantVpa: method === 'upi' ? cfg.merchant_upi_vpa : undefined,
-        bankName: method === 'netbanking' ? bankName : undefined,
+        method: 'upi',
+        upiId: upiId || undefined,
+        utrNumber: cleanUtr,
+        merchantVpa: cfg.merchant_upi_vpa,
         timestamp: new Date().toISOString()
       }),
       webhook_payload: JSON.stringify({
-        event: 'payment.captured',
+        event: 'upi.utr_submitted',
         transactionId,
-        gateway: gatewayLabel,
+        utrNumber: cleanUtr,
         amount: numericAmount
       })
     });
@@ -349,17 +362,13 @@ app.post('/api/payment/process', async (req, res) => {
     res.json({
       success: true,
       transactionId,
-      transactionRef: utrNumber ? `UTR_${utrNumber.trim()}` : transactionRef,
+      transactionRef: utrRef,
+      utrNumber: cleanUtr,
       amount: numericAmount,
       currency,
-      status: 'paid',
-      gateway: gatewayLabel,
-      paymentMethod:
-        method === 'upi'
-          ? 'UPI Direct'
-          : method === 'netbanking'
-          ? `NetBanking (${bankName || 'Bank'})`
-          : 'Card Payment',
+      status: 'pending_verification',
+      gateway: 'NPCI_DIRECT_UPI',
+      paymentMethod: `Direct UPI (UTR: ${cleanUtr})`,
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
@@ -438,6 +447,17 @@ app.post('/api/orders', (req, res) => {
       return res.status(400).json({ error: 'Order must contain at least one item' });
     }
 
+    // STRICT SERVER-SIDE PAYMENT VERIFICATION: Never trust client-supplied paymentStatus!
+    if (!paymentId) {
+      return res.status(402).json({ error: 'Payment transaction reference is required before creating an order.' });
+    }
+    const tx = getTransactionById(paymentId);
+    if (!tx) {
+      return res.status(402).json({ error: 'Payment record not found. Please complete payment first.' });
+    }
+    const verifiedPaymentStatus = tx.status === 'succeeded' ? 'paid' : 'pending_verification';
+    const initialOrderStatus = verifiedPaymentStatus === 'paid' ? 'Confirmed' : 'Pending Payment Verification';
+
     const subtotal = items.reduce((sum: number, it: any) => sum + (it.price || 0) * (it.quantity || 1), 0);
     const isDigitalOnly = items.every((it: any) => it.productType === 'digital');
     const shippingFee = isDigitalOnly || subtotal >= 1000 ? 0 : 70;
@@ -445,35 +465,31 @@ app.post('/api/orders', (req, res) => {
 
     const orderId = `ord-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`;
     const orderNumber = `B4C-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
-    const trackingNumber = isDigitalOnly
-      ? `DIGI-INSTANT-${Math.floor(Math.random() * 9000 + 1000)}`
-      : `UGT-EXP-${(city || 'IND').slice(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-
     const resolvedCauseId = causeId || items[0]?.causeId || 'cause-everyday-essentials';
 
     const orderData = {
       id: orderId,
       order_number: orderNumber,
-      customer_name: customerName || 'Valued Guardian Buyer',
-      customer_email: customerEmail || 'customer@example.com',
+      customer_name: customerName || 'Customer',
+      customer_email: customerEmail || '',
       customer_phone: customerPhone || '',
       shipping_address: shippingAddress || '',
-      city: city || 'City',
-      state: state || 'State',
-      pincode: pincode || '000000',
+      city: city || '',
+      state: state || '',
+      pincode: pincode || '',
       country: country || 'India',
       subtotal,
       shipping_fee: shippingFee,
       total_amount: totalAmount,
       cause_id: resolvedCauseId,
-      cause_donation_amount: causeDonationAmount || Math.round(subtotal * 0.18),
-      cause_impact_delivered: causeImpactDelivered || 'Direct allocation to UGT National Mission',
-      payment_method: paymentMethod || 'Secure Card Payment Switch',
-      payment_status: paymentStatus || 'paid',
-      payment_id: paymentId || `pay_osm_${crypto.randomBytes(6).toString('hex')}`,
-      order_status: 'Processing',
-      tracking_number: trackingNumber,
-      guardian_id: guardianId || `UGT-IND-${pincode?.slice(0, 3) || '999'}-${Math.floor(Math.random() * 9000 + 1000)}`
+      cause_donation_amount: causeDonationAmount || Math.round(subtotal * 0.15),
+      cause_impact_delivered: causeImpactDelivered || 'Direct allocation to Living India Mission',
+      payment_method: paymentMethod || 'Direct UPI',
+      payment_status: verifiedPaymentStatus,
+      payment_id: tx.transaction_ref || paymentId,
+      order_status: initialOrderStatus,
+      tracking_number: '',
+      guardian_id: ''
     };
 
     const orderItems = items.map((it: any, index: number) => {
@@ -498,7 +514,7 @@ app.post('/api/orders', (req, res) => {
 
     const created = createOrder(orderData, orderItems);
     const digitalItems =
-      (paymentStatus || 'paid') === 'paid'
+      verifiedPaymentStatus === 'paid'
         ? getUnlockedDigitalItemsByOrder(orderNumber, customerEmail)
         : [];
     res.status(201).json({ ...created, digital_items: digitalItems });
@@ -597,6 +613,18 @@ app.patch('/api/admin/orders/:id/status', requireAdminAuth, (req, res) => {
     if (!updated) return res.status(404).json({ error: 'Order not found' });
 
     res.json(updated);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin Verify / Reject Pending Direct UPI Payment
+app.post('/api/admin/orders/:id/verify-payment', requireAdminAuth, (req, res) => {
+  try {
+    const action = req.body?.action === 'reject' ? 'reject' : 'approve';
+    const updated = verifyOrderPayment(req.params.id, action);
+    if (!updated) return res.status(404).json({ error: 'Order not found' });
+    res.json({ success: true, order: updated });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

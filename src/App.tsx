@@ -212,13 +212,21 @@ export function App() {
         body: JSON.stringify({
           ...orderDraft,
           paymentId: paymentResult.transactionId,
-          paymentMethod: paymentResult.paymentMethod || 'Card Payment',
-          paymentStatus: 'paid',
+          paymentMethod: paymentResult.paymentMethod || 'Direct UPI',
+          paymentStatus: paymentResult.status || 'pending_verification',
         }),
       });
 
       const orderData = await res.json();
-      if (Array.isArray(orderData?.digital_items) && orderData.digital_items.length > 0) {
+      if (!res.ok) {
+        alert(orderData.error || 'Could not create order. Please verify payment first.');
+        return;
+      }
+      if (
+        orderData.payment_status === 'paid' &&
+        Array.isArray(orderData?.digital_items) &&
+        orderData.digital_items.length > 0
+      ) {
         mergeUnlockedItems(orderData.digital_items);
       }
       setCompletedOrder(orderData);

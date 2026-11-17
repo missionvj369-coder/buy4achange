@@ -555,11 +555,8 @@ export default {
           amount,
           currency = 'INR',
           method,
-          cardDetails,
           upiId,
           utrNumber,
-          bankName,
-          transactionRef: clientRef,
           orderDetails,
         } = body;
 
@@ -570,28 +567,50 @@ export default {
 
         const cfg = await getGatewayConfig(env);
 
-        if (method === 'card') {
-          const num = (cardDetails?.number || '').replace(/\s+/g, '');
-          if (!validateLuhn(num)) {
-            return json({ error: 'Please enter a valid card number (Luhn check failed).' }, 400);
-          }
-          if (!cardDetails?.expiry || !/^\d{2}\/\d{2}$/.test(cardDetails.expiry.trim())) {
-            return json({ error: 'Expiry date must be in MM/YY format.' }, 400);
-          }
-          if (!cardDetails?.cvv || !/^\d{3,4}$/.test(cardDetails.cvv.trim())) {
-            return json({ error: 'Please enter a valid 3 or 4 digit CVV.' }, 400);
-          }
+        // NEVER fake-approve Card or NetBanking without a real live payment processor (Hyperswitch)
+        if (method === 'card' || method === 'netbanking') {
+          return json(
+            {
+              error:
+                'Card and NetBanking require a live payment gateway (Hyperswitch) configured in Admin → Payment Gateway. Please pay via Direct UPI and submit your 12-digit UTR reference.',
+            },
+            400
+          );
         }
 
-        if (method === 'upi' && upiId && !validateUpiVpa(upiId)) {
+        if (method !== 'upi') {
+          return json({ error: 'Unsupported payment method. Please use Direct UPI.' }, 400);
+        }
+
+        const cleanUtr = String(utrNumber || '').replace(/\s+/g, '');
+        if (!/^\d{12}$/.test(cleanUtr)) {
+          return json(
+            {
+              error:
+                'Please complete your UPI payment first and enter the exact 12-digit UTR / Reference Number from your UPI app receipt.',
+            },
+            400
+          );
+        }
+
+        if (upiId && !validateUpiVpa(upiId)) {
           return json({ error: 'Please enter a valid UPI ID (e.g. name@okhdfcbank).' }, 400);
         }
 
-        const transactionId = `pay_b4c_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
-        const transactionRef = utrNumber
-          ? `UTR_${String(utrNumber).trim()}`
-          : clientRef || `REF_${Date.now()}_${Math.floor(Math.random() * 9000 + 1000)}`;
-        const gatewayLabel = method === 'upi' ? 'NPCI_DIRECT_UPI' : 'OPEN_CHECKOUT_GATEWAY';
+        const utrRef = `UTR_${cleanUtr}`;
+        const dup = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id FROM payment_transactions WHERE transaction_ref = ?'
+        )
+          .bind(utrRef)
+          .first();
+        if (dup) {
+          return json(
+            { error: 'This 12-digit UTR reference number has already been submitted for an order.' },
+            409
+          );
+        }
+
+        const transactionId = `upi_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
 
         await env.BUY4ACHANGE_DB.prepare(
           `INSERT INTO payment_transactions (id, order_id, amount, currency, gateway, transaction_ref, status, method_details, webhook_payload)
@@ -602,36 +621,30 @@ export default {
             orderDetails?.orderNumber || 'PENDING',
             numericAmount,
             currency,
-            gatewayLabel,
-            transactionRef,
-            'succeeded',
+            'NPCI_DIRECT_UPI',
+            utrRef,
+            'pending_verification',
             JSON.stringify({
-              method,
-              cardLast4: method === 'card' ? (cardDetails?.number || '4242').replace(/\D/g, '').slice(-4) : undefined,
-              upiId: method === 'upi' ? upiId : undefined,
-              utrNumber: method === 'upi' && utrNumber ? String(utrNumber).trim() : undefined,
-              merchantVpa: method === 'upi' ? cfg.merchant_upi_vpa : undefined,
-              bankName: method === 'netbanking' ? bankName : undefined,
+              method: 'upi',
+              upiId: upiId || undefined,
+              utrNumber: cleanUtr,
+              merchantVpa: cfg.merchant_upi_vpa,
               timestamp: new Date().toISOString(),
             }),
-            JSON.stringify({ event: 'payment.captured', transactionId, gateway: gatewayLabel, amount: numericAmount })
+            JSON.stringify({ event: 'upi.utr_submitted', transactionId, utrNumber: cleanUtr, amount: numericAmount })
           )
           .run();
 
         return json({
           success: true,
           transactionId,
-          transactionRef,
+          transactionRef: utrRef,
+          utrNumber: cleanUtr,
           amount: numericAmount,
           currency,
-          status: 'paid',
-          gateway: gatewayLabel,
-          paymentMethod:
-            method === 'upi'
-              ? 'UPI Direct'
-              : method === 'netbanking'
-              ? `NetBanking (${bankName || 'Bank'})`
-              : 'Card Payment',
+          status: 'pending_verification',
+          gateway: 'NPCI_DIRECT_UPI',
+          paymentMethod: `Direct UPI (UTR: ${cleanUtr})`,
           timestamp: new Date().toISOString(),
         });
       }
@@ -689,6 +702,24 @@ export default {
         const items = body.items || [];
         if (!items.length) return json({ error: 'Order must contain at least one item' }, 400);
 
+        // STRICT SERVER-SIDE PAYMENT CHECK: Never trust client paymentStatus!
+        const incomingPaymentId = String(body.paymentId || '').trim();
+        if (!incomingPaymentId) {
+          return json({ error: 'Payment transaction reference is required before creating an order.' }, 402);
+        }
+        const tx: any = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT * FROM payment_transactions WHERE id = ? OR transaction_ref = ?'
+        )
+          .bind(incomingPaymentId, incomingPaymentId)
+          .first();
+        if (!tx) {
+          return json({ error: 'Payment record not found. Please complete payment first.' }, 402);
+        }
+
+        const verifiedPaymentStatus = tx.status === 'succeeded' ? 'paid' : 'pending_verification';
+        const initialOrderStatus =
+          verifiedPaymentStatus === 'paid' ? 'Confirmed' : 'Pending Payment Verification';
+
         const subtotal = items.reduce((sum: number, it: any) => sum + (parseFloat(it.price) || 0) * (parseInt(it.quantity) || 1), 0);
         const isDigitalOnly = items.every((it: any) => it.productType === 'digital');
         const shippingFee = isDigitalOnly || subtotal >= 1000 ? 0 : 70;
@@ -696,13 +727,8 @@ export default {
 
         const orderId = `ord-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`;
         const orderNumber = `B4C-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
-        const trackingNumber = isDigitalOnly
-          ? `DIGI-INSTANT-${Math.floor(Math.random() * 9000 + 1000)}`
-          : `UGT-EXP-${(body.city || 'IND').slice(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
         const resolvedCauseId = body.causeId || items[0]?.causeId || 'cause-everyday-essentials';
-        const donationAmount = parseFloat(body.causeDonationAmount) || Math.round(subtotal * 0.18);
-        const paymentId = body.paymentId || `pay_b4c_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
-        const guardianId = body.guardianId || `UGT-IND-${String(body.pincode || '999').slice(0, 3)}-${Math.floor(Math.random() * 9000 + 1000)}`;
+        const donationAmount = parseFloat(body.causeDonationAmount) || Math.round(subtotal * 0.15);
 
         const statements: D1PreparedStatement[] = [
           env.BUY4ACHANGE_DB.prepare(`
@@ -716,27 +742,30 @@ export default {
           `).bind(
             orderId,
             orderNumber,
-            body.customerName || 'Valued Guardian Buyer',
-            body.customerEmail || 'customer@example.com',
+            body.customerName || 'Customer',
+            body.customerEmail || '',
             body.customerPhone || '',
             body.shippingAddress || '',
-            body.city || 'City',
-            body.state || 'State',
-            body.pincode || '000000',
+            body.city || '',
+            body.state || '',
+            body.pincode || '',
             body.country || 'India',
             subtotal,
             shippingFee,
             totalAmount,
             resolvedCauseId,
             donationAmount,
-            body.causeImpactDelivered || 'Direct allocation to UGT National Mission',
-            body.paymentMethod || 'Card Payment',
-            body.paymentStatus || 'paid',
-            paymentId,
-            'Processing',
-            trackingNumber,
-            guardianId
+            body.causeImpactDelivered || 'Direct allocation to Living India Mission',
+            body.paymentMethod || 'Direct UPI',
+            verifiedPaymentStatus,
+            tx.transaction_ref || incomingPaymentId,
+            initialOrderStatus,
+            '',
+            ''
           ),
+          env.BUY4ACHANGE_DB.prepare(
+            'UPDATE payment_transactions SET order_id = ? WHERE id = ?'
+          ).bind(orderNumber, tx.id),
         ];
 
         const causeDonations: Record<string, number> = {};
@@ -781,19 +810,22 @@ export default {
           }
         }
 
-        for (const [cId, amt] of Object.entries(causeDonations)) {
-          statements.push(
-            env.BUY4ACHANGE_DB.prepare(
-              'UPDATE causes SET raised_amount = raised_amount + ?, impact_count = impact_count + 1 WHERE id = ?'
-            ).bind(amt, cId)
-          );
+        // ONLY increment live mission totals when payment is verified PAID
+        if (verifiedPaymentStatus === 'paid') {
+          for (const [cId, amt] of Object.entries(causeDonations)) {
+            statements.push(
+              env.BUY4ACHANGE_DB.prepare(
+                'UPDATE causes SET raised_amount = raised_amount + ?, impact_count = impact_count + 1 WHERE id = ?'
+              ).bind(amt, cId)
+            );
+          }
         }
 
         await env.BUY4ACHANGE_DB.batch(statements);
         const created = await getOrderWithItems(env, orderId);
 
         let digitalItems: any[] = [];
-        if ((body.paymentStatus || 'paid') === 'paid') {
+        if (verifiedPaymentStatus === 'paid') {
           const { results: digi } = await env.BUY4ACHANGE_DB.prepare(`
             SELECT
               p.id as product_id,
@@ -954,7 +986,7 @@ export default {
           const body: any = await request.json();
           if (!body.status) return json({ error: 'Status is required' }, 400);
 
-          if (body.trackingNumber) {
+          if (body.trackingNumber !== undefined) {
             await env.BUY4ACHANGE_DB.prepare(
               'UPDATE orders SET order_status = ?, tracking_number = ? WHERE id = ?'
             ).bind(body.status, body.trackingNumber, id).run();
@@ -966,6 +998,62 @@ export default {
           const updated = await getOrderWithItems(env, id);
           if (!updated) return json({ error: 'Order not found' }, 404);
           return json(updated);
+        }
+
+        const verifyPayMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/verify-payment$/);
+        if (verifyPayMatch && request.method === 'POST') {
+          const id = decodeURIComponent(verifyPayMatch[1]);
+          const body: any = await request.json().catch(() => ({}));
+          const action = body?.action === 'reject' ? 'reject' : 'approve';
+
+          const existing: any = await getOrderWithItems(env, id);
+          if (!existing) return json({ error: 'Order not found' }, 404);
+
+          if (action === 'approve') {
+            if (existing.payment_status === 'paid') {
+              return json({ success: true, order: existing });
+            }
+            const batch: D1PreparedStatement[] = [
+              env.BUY4ACHANGE_DB.prepare(
+                "UPDATE orders SET payment_status = 'paid', order_status = 'Confirmed' WHERE id = ?"
+              ).bind(id),
+            ];
+            if (existing.payment_id) {
+              batch.push(
+                env.BUY4ACHANGE_DB.prepare(
+                  "UPDATE payment_transactions SET status = 'succeeded', order_id = ? WHERE id = ? OR transaction_ref = ?"
+                ).bind(existing.order_number, existing.payment_id, existing.payment_id)
+              );
+            }
+            for (const it of existing.items || []) {
+              const cId = it.cause_id || existing.cause_id;
+              if (cId && it.cause_contribution) {
+                batch.push(
+                  env.BUY4ACHANGE_DB.prepare(
+                    'UPDATE causes SET raised_amount = raised_amount + ?, impact_count = impact_count + 1 WHERE id = ?'
+                  ).bind(it.cause_contribution, cId)
+                );
+              }
+            }
+            await env.BUY4ACHANGE_DB.batch(batch);
+          } else {
+            const batch: D1PreparedStatement[] = [
+              env.BUY4ACHANGE_DB.prepare(
+                "UPDATE orders SET payment_status = 'failed', order_status = 'Payment Rejected' WHERE id = ?"
+              ).bind(id),
+            ];
+            if (existing.payment_id) {
+              batch.push(
+                env.BUY4ACHANGE_DB.prepare(
+                  "UPDATE payment_transactions SET status = 'failed', order_id = ? WHERE id = ? OR transaction_ref = ?"
+                ).bind(existing.order_number, existing.payment_id, existing.payment_id)
+              );
+            }
+            await env.BUY4ACHANGE_DB.batch(batch);
+          }
+
+          const updated = await getOrderWithItems(env, id);
+          return json({ success: true, order: updated });
         }
 
         const singleOrderMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)$/);

@@ -1,7 +1,16 @@
 import React, { useEffect } from 'react';
 import {
-  CheckCircle2, Heart, Printer, ArrowRight, ShieldCheck, Sparkles, MapPin, Package,
-  Unlock, BookOpen, Download
+  CheckCircle2,
+  Clock,
+  Heart,
+  Printer,
+  ArrowRight,
+  Sparkles,
+  MapPin,
+  Unlock,
+  BookOpen,
+  Download,
+  ShieldCheck,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Order, UnlockedDigitalItem } from '../types.ts';
@@ -17,107 +26,131 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   onClose,
   onLaunchDigital,
 }) => {
-  if (!order) return null;
+  const isVerifiedPaid = order?.payment_status === 'paid';
 
   useEffect(() => {
-    // Fire celebratory confetti!
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#059669', '#10b981', '#f59e0b', '#3b82f6'],
-    });
-  }, []);
+    if (order && isVerifiedPaid) {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#00f0ff', '#ff2e97', '#ffb800', '#00e5a0'],
+      });
+    }
+  }, [order, isVerifiedPaid]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  if (!order) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-[#0d1424] border border-emerald-500/40 rounded-3xl overflow-hidden shadow-2xl my-8">
-        
-        {/* Top Celebration Banner */}
-        <div className="p-6 sm:p-8 text-center bg-gradient-to-b from-emerald-950 via-[#101c2e] to-[#0d1424] border-b border-emerald-800/40 space-y-3">
-          <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-glow">
-            <div className="w-full h-full bg-[#0d1424] rounded-[22px] flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#04030e]/92 backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-2xl glass-3d rounded-3xl overflow-hidden shadow-2xl my-6">
+        {/* Top Status Banner — Honest Distinction Between Verified Paid vs Pending Verification */}
+        <div
+          className={`p-6 sm:p-8 text-center border-b border-white/10 space-y-3 ${
+            isVerifiedPaid
+              ? 'bg-gradient-to-b from-[#00e5a0]/15 via-[#0d0929] to-transparent'
+              : 'bg-gradient-to-b from-[#ffb800]/15 via-[#0d0929] to-transparent'
+          }`}
+        >
+          <div
+            className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center border ${
+              isVerifiedPaid
+                ? 'bg-[#00e5a0]/15 border-[#00e5a0]/40 text-[#00e5a0]'
+                : 'bg-[#ffb800]/15 border-[#ffb800]/40 text-[#ffb800]'
+            }`}
+          >
+            {isVerifiedPaid ? <CheckCircle2 className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-              Order Confirmed & Impact Created!
+            <h2 className="text-xl sm:text-3xl font-extrabold font-display text-white">
+              {isVerifiedPaid
+                ? 'Payment Verified & Order Confirmed!'
+                : 'Order Received — Payment Verification Pending'}
             </h2>
-            <p className="text-xs sm:text-sm text-emerald-300 font-medium">
-              Order #{order.order_number} • Transaction: {order.payment_id}
+            <p className="text-xs sm:text-sm font-mono text-[#00f0ff]">
+              Order #{order.order_number} · Ref: {order.payment_id}
             </p>
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 space-y-6">
-          
-          {/* Official Guardian Impact Certificate Card */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-amber-950/40 border border-emerald-500/50 shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="p-5 sm:p-7 space-y-5 max-h-[72vh] overflow-y-auto">
+          {!isVerifiedPaid && (
+            <div className="p-4 rounded-2xl bg-[#ffb800]/10 border border-[#ffb800]/35 space-y-2 text-xs text-slate-200 leading-relaxed">
+              <div className="font-bold text-[#ffb800] flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>Real Payment Verification In Progress</span>
+              </div>
+              <p>
+                We have recorded your order and submitted UPI reference <strong className="font-mono text-white">{order.payment_id}</strong> for ₹{order.total_amount.toLocaleString('en-IN')}.
+              </p>
+              <p className="text-slate-300">
+                Once our team confirms your payment credit in the bank ledger, your chosen Living India mission total will be credited and any digital eBooks / eProducts in this order will unlock automatically inside <strong>My Library</strong> using Order <strong className="font-mono text-white">{order.order_number}</strong> and <strong className="text-white">{order.customer_email}</strong>.
+              </p>
+            </div>
+          )}
 
-            <div className="flex items-center justify-between mb-3 border-b border-emerald-800/40 pb-2">
+          {/* Mission Contribution Card */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.04] border border-white/15 space-y-3">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                  Universal Guard Trust • Impact Certificate
+                <Sparkles className="w-4 h-4 text-[#ffb800]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#ffb800]">
+                  Universal Guard Trust · Mission Allocation
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-700/60">
-                ID: {order.guardian_id || 'UGT-GUARDIAN'}
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                  isVerifiedPaid
+                    ? 'bg-[#00e5a0]/15 text-[#00e5a0]'
+                    : 'bg-[#ffb800]/15 text-[#ffb800]'
+                }`}
+              >
+                {isVerifiedPaid ? 'CREDITED' : 'PENDING CREDIT'}
               </span>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-xs text-slate-300 leading-relaxed">
-                This certificate gratefully acknowledges <strong className="text-white">{order.customer_name}</strong> for their conscious purchase. 
-                A direct contribution of <strong className="text-amber-300 font-bold">₹{order.cause_donation_amount}</strong> has been allocated to:
-              </p>
+            <p className="text-xs text-slate-200 leading-relaxed">
+              Order by <strong className="text-white">{order.customer_name}</strong> allocates{' '}
+              <strong className="text-[#00f0ff] font-bold">₹{order.cause_donation_amount}</strong> toward:
+            </p>
 
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs flex items-center space-x-3">
-                <Heart className="w-5 h-5 text-rose-400 fill-rose-400 shrink-0" />
-                <div>
-                  <div className="font-bold text-white text-sm">
-                    {order.cause_title || 'UGT National Action Mission'}
-                  </div>
-                  <div className="text-emerald-300 text-[11px] font-medium">
-                    {order.cause_impact_delivered}
-                  </div>
+            <div className="p-3 rounded-xl bg-[#07051a] border border-white/10 text-xs flex items-center space-x-3">
+              <Heart className="w-5 h-5 text-[#ff2e97] fill-[#ff2e97] shrink-0" />
+              <div>
+                <div className="font-bold text-white text-sm">
+                  {order.cause_title || 'Living India National Mission'}
+                </div>
+                <div className="text-[#00f0ff] text-[11px] font-medium">
+                  {order.cause_impact_delivered}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* UNLOCKED DIGITAL E-PRODUCTS & EBOOKS */}
-          {order.digital_items && order.digital_items.length > 0 && (
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-950/80 via-slate-900 to-emerald-950/60 border border-cyan-400/50 space-y-3">
+          {/* UNLOCKED DIGITAL E-PRODUCTS (ONLY WHEN VERIFIED PAID) */}
+          {isVerifiedPaid && order.digital_items && order.digital_items.length > 0 && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#00f0ff]/10 border border-[#00f0ff]/40 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-cyan-300 font-bold text-xs uppercase tracking-wider">
-                  <Unlock className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center space-x-2 text-[#00f0ff] font-bold text-xs uppercase tracking-wider">
+                  <Unlock className="w-4 h-4" />
                   <span>Unlocked eProducts &amp; eBooks Ready!</span>
                 </div>
-                <span className="text-[10px] font-mono text-cyan-200 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-700/60">
-                  Saved to My Library
-                </span>
+                <span className="text-[10px] font-mono text-white/80">Saved to Library</span>
               </div>
 
               <div className="space-y-2">
                 {order.digital_items.map((digi) => (
                   <div
                     key={digi.product_id}
-                    className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="p-3 rounded-xl bg-[#07051a] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
-                      <BookOpen className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <BookOpen className="w-4 h-4 text-[#00f0ff] shrink-0" />
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-white truncate">{digi.product_name}</div>
-                        <div className="text-[10px] text-cyan-300">
-                          {digi.subcategory || 'Digital HTML Access'} · Instant Interactive Reader
+                        <div className="text-[10px] text-[#00f0ff]">
+                          {digi.subcategory || 'Digital HTML Access'}
                         </div>
                       </div>
                     </div>
@@ -126,7 +159,9 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          const blob = new Blob([digi.digital_html_content], { type: 'text/html;charset=utf-8' });
+                          const blob = new Blob([digi.digital_html_content], {
+                            type: 'text/html;charset=utf-8',
+                          });
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
                           a.href = url;
@@ -136,7 +171,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                           document.body.removeChild(a);
                           URL.revokeObjectURL(url);
                         }}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold flex items-center space-x-1"
+                        className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold flex items-center space-x-1"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>HTML</span>
@@ -145,10 +180,10 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                         <button
                           type="button"
                           onClick={() => onLaunchDigital(digi)}
-                          className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 text-[11px] font-extrabold flex items-center space-x-1 transition"
+                          className="px-3.5 py-1.5 rounded-lg prism-button text-white text-[11px] font-bold flex items-center space-x-1"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Open &amp; Launch</span>
+                          <span>Open Now</span>
                         </button>
                       )}
                     </div>
@@ -158,53 +193,39 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             </div>
           )}
 
-          {/* Delivery & Logistics Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <div className="text-slate-400 flex items-center space-x-1.5 font-semibold">
-                <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>Shipping Address</span>
+          {/* Clean Real Delivery Details (No Fake Tracking IDs or Fake Courier Names) */}
+          {order.shipping_address && order.shipping_address !== 'Digital Delivery' && (
+            <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs space-y-1">
+              <div className="text-slate-300 flex items-center space-x-1.5 font-semibold">
+                <MapPin className="w-3.5 h-3.5 text-[#ffb800]" />
+                <span>Delivery Address</span>
               </div>
-              <div className="text-slate-200 font-medium">
-                {order.shipping_address}, {order.city}, {order.state} - <strong className="text-emerald-300">{order.pincode}</strong>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <div className="text-slate-400 flex items-center space-x-1.5 font-semibold">
-                <Package className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Logistics & Tracking</span>
-              </div>
-              <div className="text-slate-200 font-mono font-bold">
-                {order.tracking_number}
-              </div>
-              <div className="text-[11px] text-emerald-400">
-                Dispatched via UGT Community Express
+              <div className="text-white font-medium">
+                {order.shipping_address}, {order.city}, {order.state}
+                {order.pincode ? ` - ${order.pincode}` : ''}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Action Row */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
             <button
-              onClick={handlePrint}
-              className="w-full sm:w-1/2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-2 border border-slate-700 transition-all"
+              onClick={() => window.print()}
+              className="w-full sm:w-1/2 py-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs flex items-center justify-center space-x-2 transition"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Invoice & Impact Certificate</span>
+              <span>Print Order Receipt</span>
             </button>
 
             <button
               onClick={onClose}
-              className="w-full sm:w-1/2 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs flex items-center justify-center space-x-2 shadow-glow transition-all active:scale-95"
+              className="w-full sm:w-1/2 py-3 rounded-full prism-button text-white font-bold text-xs flex items-center justify-center space-x-2 transition active:scale-95"
             >
-              <span>Continue Conscious Shopping</span>
+              <span>Continue Shopping</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-
         </div>
-
       </div>
     </div>
   );

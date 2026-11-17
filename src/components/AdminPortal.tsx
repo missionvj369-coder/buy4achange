@@ -291,6 +291,34 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
+  // Verify or Reject Pending Direct UPI Payment
+  const handleVerifyPayment = async (orderId: string, action: 'approve' | 'reject') => {
+    if (!token) return;
+    const msg =
+      action === 'approve'
+        ? 'Confirm you have received this exact UPI payment in your bank account? This will credit the chosen Living India mission and unlock any digital eBooks.'
+        : 'Reject this payment submission and mark the order as Payment Rejected?';
+    if (!confirm(msg)) return;
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/verify-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        fetchOrders(orderDateFilter);
+        fetchTransactions();
+        fetchMetrics();
+        onRefreshData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Resize & compress uploaded photo into an optimized JPEG Data URL (fast in D1 & instant on storefront)
   const compressImageToDataUrl = (file: File): Promise<{ dataUrl: string; sizeKb: number }> =>
     new Promise((resolve, reject) => {
@@ -878,20 +906,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             <div className="font-mono font-bold text-white text-xs">
                               {ord.order_number}
                             </div>
-                            <div className="text-[11px] text-slate-500">
+                            <div className="text-[11px] text-slate-400">
                               {new Date(ord.created_at).toLocaleString()}
                             </div>
-                            <div className="text-[10px] text-emerald-400 font-mono mt-0.5">
-                              {ord.tracking_number}
-                            </div>
+                            {ord.payment_id && (
+                              <div className="text-[10px] text-[#00f0ff] font-mono mt-0.5">
+                                Ref: {ord.payment_id}
+                              </div>
+                            )}
                           </td>
 
                           <td className="px-5 py-3.5">
                             <div className="font-bold text-slate-100">{ord.customer_name}</div>
                             <div className="text-slate-400 text-[11px]">{ord.customer_phone}</div>
-                            <div className="inline-block mt-0.5 font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px]">
-                              PIN: {ord.pincode}
-                            </div>
+                            {ord.pincode && (
+                              <div className="inline-block mt-0.5 font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px]">
+                                PIN: {ord.pincode}
+                              </div>
+                            )}
                           </td>
 
                           <td className="px-5 py-3.5">
@@ -901,6 +933,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             <div className="text-[11px] text-slate-400">
                               {ord.items?.length || 1} product(s)
                             </div>
+                            <span
+                              className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
+                                ord.payment_status === 'paid'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  : ord.payment_status === 'failed'
+                                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                              }`}
+                            >
+                              {ord.payment_status === 'paid'
+                                ? 'Verified Paid'
+                                : ord.payment_status === 'failed'
+                                ? 'Payment Rejected'
+                                : 'Pending UTR Check'}
+                            </span>
                           </td>
 
                           <td className="px-5 py-3.5">
@@ -908,30 +955,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               ₹{ord.cause_donation_amount}
                             </div>
                             <div className="text-[11px] text-emerald-300 line-clamp-1">
-                              {ord.cause_title || 'UGT National Mission'}
+                              {ord.cause_title || 'Living India Mission'}
                             </div>
                           </td>
 
-                          <td className="px-5 py-3.5">
-                            <select
-                              value={ord.order_status}
-                              onChange={(e) => handleUpdateStatus(ord.id, e.target.value)}
-                              className={`px-2 py-1 rounded-lg text-xs font-bold border focus:outline-none cursor-pointer ${
-                                ord.order_status === 'Delivered'
-                                  ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
-                                  : ord.order_status === 'Shipped'
-                                  ? 'bg-blue-950 text-blue-300 border-blue-700'
-                                  : ord.order_status === 'Packed'
-                                  ? 'bg-purple-950 text-purple-300 border-purple-700'
-                                  : 'bg-amber-950 text-amber-300 border-amber-700'
-                              }`}
-                            >
-                              <option value="Processing">Processing</option>
-                              <option value="Packed">Packed</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Delivered">Delivered</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
+                          <td className="px-5 py-3.5 space-y-1.5">
+                            {ord.payment_status === 'pending_verification' ? (
+                              <div className="flex items-center space-x-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleVerifyPayment(ord.id, 'approve')}
+                                  className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] transition"
+                                >
+                                  Confirm Paid
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleVerifyPayment(ord.id, 'reject')}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-950/70 hover:bg-rose-900 border border-rose-700/50 text-rose-200 font-bold text-[11px] transition"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <select
+                                value={ord.order_status}
+                                onChange={(e) => handleUpdateStatus(ord.id, e.target.value)}
+                                className={`px-2 py-1 rounded-lg text-xs font-bold border focus:outline-none cursor-pointer ${
+                                  ord.order_status === 'Delivered'
+                                    ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
+                                    : ord.order_status === 'Shipped'
+                                    ? 'bg-blue-950 text-blue-300 border-blue-700'
+                                    : ord.order_status === 'Packed'
+                                    ? 'bg-purple-950 text-purple-300 border-purple-700'
+                                    : 'bg-amber-950 text-amber-300 border-amber-700'
+                                }`}
+                              >
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Packed">Packed</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            )}
                           </td>
 
                           <td className="px-5 py-3.5 text-right">
@@ -2072,33 +2139,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   key={ord.id}
                   className="border-2 border-black p-5 rounded-lg text-slate-950 bg-white font-sans break-inside-avoid space-y-3"
                 >
-                  {/* Top Barcode Header */}
+                  {/* Top Order Header */}
                   <div className="flex justify-between items-start border-b-2 border-black pb-2">
                     <div>
-                      <div className="font-black text-lg tracking-tight">BUY4ACHANGE EXPRESS</div>
+                      <div className="font-black text-lg tracking-tight">BUY4ACHANGE</div>
                       <div className="text-[10px] font-bold uppercase text-slate-700">
-                        Universal Guard Trust • PIN-Code Community Network
+                        Universal Guard Trust · UGT India Initiative
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono font-black text-xs">{ord.tracking_number}</div>
-                      <div className="text-[10px] font-bold">Standard Priority</div>
-                    </div>
-                  </div>
-
-                  {/* Simulated High-Res Barcode */}
-                  <div className="py-1 text-center border-b border-slate-300">
-                    <div className="h-8 w-full flex items-center justify-center space-x-0.5 overflow-hidden">
-                      {Array.from({ length: 65 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="bg-black h-full"
-                          style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 2 : 1)}px` }}
-                        />
-                      ))}
-                    </div>
-                    <div className="font-mono text-[9px] tracking-[0.3em] font-bold mt-1">
-                      *{ord.order_number}*
+                      <div className="font-mono font-black text-xs">{ord.order_number}</div>
+                      <div className="text-[10px] font-bold uppercase">
+                        {ord.payment_status === 'paid' ? 'Verified Paid' : 'Pending Payment Verification'}
+                      </div>
                     </div>
                   </div>
 
@@ -2106,9 +2159,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div className="grid grid-cols-2 gap-4 border-b-2 border-black pb-3 text-xs">
                     <div className="border-r border-slate-300 pr-3 space-y-0.5">
                       <div className="text-[9px] font-bold uppercase text-slate-500">DISPATCH FROM:</div>
-                      <div className="font-bold">Buy4AChange Central Fulfillment</div>
-                      <div className="text-[11px] text-slate-700">UGT Community Hub #12</div>
-                      <div className="text-[11px] text-slate-700">Bengaluru, KA - 560001</div>
+                      <div className="font-bold">Buy4AChange Fulfillment</div>
+                      <div className="text-[11px] text-slate-700">Universal Guard Trust (UGT India)</div>
+                      <div className="text-[11px] text-slate-700">ugtindia.space</div>
                     </div>
 
                     <div className="space-y-0.5">
@@ -2118,21 +2171,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <div className="text-[11px] font-bold text-slate-900">
                         {ord.city}, {ord.state}
                       </div>
-                      <div className="inline-block mt-1 font-mono font-black text-base bg-black text-white px-2 py-0.5 rounded">
-                        PIN: {ord.pincode}
-                      </div>
+                      {ord.pincode && (
+                        <div className="inline-block mt-1 font-mono font-black text-base bg-black text-white px-2 py-0.5 rounded">
+                          PIN: {ord.pincode}
+                        </div>
+                      )}
                       <div className="text-[11px] text-slate-700 pt-0.5">
                         Phone: {ord.customer_phone}
                       </div>
                     </div>
                   </div>
 
-                  {/* Parcel Details & Printed Cause Declaration */}
+                  {/* Parcel Details & Mission Declaration */}
                   <div className="flex justify-between items-center text-xs pt-1">
                     <div>
                       <div className="font-bold">Order: {ord.order_number}</div>
-                      <div className="text-[10px] text-slate-600">
-                        Paid • Weight: 0.85 kg
+                      <div className="text-[10px] text-slate-600 font-mono">
+                        Payment Ref: {ord.payment_id}
                       </div>
                     </div>
 

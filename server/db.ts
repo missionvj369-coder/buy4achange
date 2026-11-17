@@ -501,13 +501,51 @@ export function createOrder(
     const stockStmt = db.prepare('UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?');
     stockStmt.run(item.quantity, item.product_id);
 
-    // Update cause raised funds
-    if (itemCause && item.cause_contribution) {
+    // ONLY credit mission funds when payment is verified PAID (never for pending_verification)
+    if (order.payment_status === 'paid' && itemCause && item.cause_contribution) {
       updateCauseRaised(itemCause, item.cause_contribution, 1);
     }
   }
 
   return getOrderById(order.id)!;
+}
+
+export function getTransactionById(id: string): any | undefined {
+  return db.prepare('SELECT * FROM payment_transactions WHERE id = ? OR transaction_ref = ?').get(id, id);
+}
+
+export function getTransactionByUtr(utrRef: string): any | undefined {
+  return db.prepare('SELECT * FROM payment_transactions WHERE transaction_ref = ?').get(utrRef);
+}
+
+export function verifyOrderPayment(orderId: string, action: 'approve' | 'reject'): Order | undefined {
+  const order = getOrderById(orderId);
+  if (!order) return undefined;
+
+  if (action === 'approve') {
+    if (order.payment_status === 'paid') {
+      return order; // Idempotent: never double-count mission funds
+    }
+    db.prepare("UPDATE orders SET payment_status = 'paid', order_status = 'Confirmed' WHERE id = ?").run(orderId);
+    if (order.payment_id) {
+      db.prepare("UPDATE payment_transactions SET status = 'succeeded', order_id = ? WHERE id = ? OR transaction_ref = ?")
+        .run(order.order_number, order.payment_id, order.payment_id);
+    }
+    for (const item of order.items || []) {
+      const cId = item.cause_id || order.cause_id;
+      if (cId && item.cause_contribution) {
+        updateCauseRaised(cId, item.cause_contribution, 1);
+      }
+    }
+    return getOrderById(orderId);
+  } else {
+    db.prepare("UPDATE orders SET payment_status = 'failed', order_status = 'Payment Rejected' WHERE id = ?").run(orderId);
+    if (order.payment_id) {
+      db.prepare("UPDATE payment_transactions SET status = 'failed', order_id = ? WHERE id = ? OR transaction_ref = ?")
+        .run(order.order_number, order.payment_id, order.payment_id);
+    }
+    return getOrderById(orderId);
+  }
 }
 
 export function updateOrderStatus(id: string, status: string, trackingNumber?: string): Order | undefined {

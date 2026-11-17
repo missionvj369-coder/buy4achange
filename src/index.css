@@ -4,9 +4,9 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
     background-color: #060416;
     color: #ffffff;
+    overflow-x: clip;
   }
 
   body {
@@ -15,7 +15,9 @@
     font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
