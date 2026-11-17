@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, BookOpen, Compass, Sparkles, X } from 'lucide-react';
+import { ShoppingBag, Search, BookOpen, X } from 'lucide-react';
 
 interface NavbarProps {
   cartCount: number;
@@ -29,77 +29,71 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-[#07051a]/92 backdrop-blur-2xl border-b border-white/[0.12] w-full">
-      {/* Prismatic top hairline */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-[#00f0ff] via-[#ff2e97] to-[#ffb800]" />
-
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-2">
-          {/* Compact Mobile-Safe Brand Wordmark */}
-          <div
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 w-full">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 gap-2">
+          {/* Clean Brand Wordmark */}
+          <button
+            type="button"
             onClick={onNavigateHome}
-            className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group select-none min-w-0 shrink"
+            className="text-left focus:outline-none min-w-0 shrink"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#00f0ff] via-[#8b5cf6] to-[#ff2e97] p-[2px] shadow-[0_0_20px_rgba(0,240,255,0.3)] shrink-0">
-              <div className="w-full h-full bg-[#090620] rounded-[10px] flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[#00f0ff]" />
-              </div>
+            <div className="font-display font-bold text-lg sm:text-xl tracking-tight text-[#14171A] leading-none">
+              Buy<span className="text-[#166534]">4</span>AChange
             </div>
-            <div className="min-w-0">
-              <div className="font-display font-extrabold text-base sm:text-xl lg:text-2xl tracking-tight text-white leading-none truncate">
-                BUY<span className="text-[#00f0ff]">4</span>A<span className="text-[#ff2e97]">CHANGE</span>
-              </div>
-              <div className="font-mono text-[8px] sm:text-[9px] tracking-[0.16em] uppercase text-[#ffb800] mt-0.5 font-semibold truncate">
-                Universal Guard Trust · UGT India
-              </div>
+            <div className="text-[10px] text-gray-500 mt-0.5 truncate">
+              Universal Guard Trust · UGT India
             </div>
-          </div>
+          </button>
 
-          {/* Desktop Center Navigation Pills */}
-          <nav className="hidden lg:flex items-center space-x-1.5 p-1 rounded-full bg-white/[0.04] border border-white/10 text-xs font-semibold shrink-0">
-            {onScrollToMissions && (
-              <button
-                onClick={onScrollToMissions}
-                className="px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5"
-              >
-                <Compass className="w-3.5 h-3.5 text-[#00f0ff]" />
-                <span>8 Missions</span>
-              </button>
-            )}
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-600">
             {onScrollToCatalog && (
               <button
+                type="button"
                 onClick={onScrollToCatalog}
-                className="px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition"
+                className="hover:text-[#166534] transition-colors"
               >
-                Catalog
+                Shop
               </button>
             )}
             {onScrollToEProducts && (
               <button
+                type="button"
                 onClick={onScrollToEProducts}
-                className="px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition"
+                className="hover:text-[#166534] transition-colors"
               >
                 E-Products &amp; eBooks
               </button>
             )}
+            {onScrollToMissions && (
+              <button
+                type="button"
+                onClick={onScrollToMissions}
+                className="hover:text-[#166534] transition-colors"
+              >
+                8 Missions
+              </button>
+            )}
           </nav>
 
-          {/* Right Controls: ALWAYS visible Search + Library + Bag on Mobile & Desktop */}
+          {/* Right Action Controls — Always Visible on Any Phone */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-            {/* Desktop inline search */}
-            <div className="hidden md:flex relative w-44 xl:w-56">
-              <Search className="w-3.5 h-3.5 text-[#00f0ff] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            {/* Desktop Inline Search */}
+            <div className="hidden lg:flex relative w-48">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-white/[0.06] border border-white/15 rounded-full pl-9 pr-7 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#00f0ff] transition-all"
+                className="w-full bg-[#FAF9F6] border border-gray-300 rounded-lg pl-9 pr-7 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#166534]"
               />
               {searchTerm && (
                 <button
+                  type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-700"
                   aria-label="Clear search"
                 >
                   ✕
@@ -107,50 +101,50 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Mobile Search Toggle Button (Always visible on < md) */}
+            {/* Mobile / Tablet Search Button */}
             <button
               type="button"
               onClick={() => setMobileSearchOpen((v) => !v)}
-              aria-label="Search products"
-              className={`md:hidden p-2 rounded-full border transition-all ${
+              aria-label="Search"
+              className={`lg:hidden p-2 rounded-lg border text-gray-700 ${
                 mobileSearchOpen || searchTerm
-                  ? 'border-[#00f0ff] bg-[#00f0ff]/20 text-[#00f0ff]'
-                  : 'border-white/15 bg-white/[0.06] text-white'
+                  ? 'border-[#166534] bg-[#F0FDF4] text-[#166534]'
+                  : 'border-gray-200 bg-[#FAF9F6]'
               }`}
             >
               {mobileSearchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
             </button>
 
-            {/* Library Button */}
+            {/* Digital Library Button */}
             {onOpenLibrary && (
               <button
                 type="button"
                 onClick={onOpenLibrary}
-                aria-label="My Digital Library"
-                className="relative flex items-center space-x-1.5 p-2 sm:px-3.5 sm:py-2 rounded-full border border-[#00f0ff]/40 bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-white font-semibold text-xs transition-all"
-                title="My Digital Library"
+                aria-label="My Library"
+                title="My Purchased eBooks & eProducts"
+                className="relative flex items-center space-x-1.5 p-2 sm:px-3 sm:py-2 rounded-lg border border-gray-200 bg-[#FAF9F6] hover:border-[#166534] text-gray-700 text-xs font-medium"
               >
-                <BookOpen className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#00f0ff]" />
+                <BookOpen className="w-4 h-4 text-[#166534]" />
                 <span className="hidden sm:inline">Library</span>
                 {libraryCount > 0 && (
-                  <span className="flex items-center justify-center bg-[#ffb800] text-[#060416] text-[10px] font-black h-4 min-w-4 px-1 rounded-full">
+                  <span className="bg-[#166534] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                     {libraryCount}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Bag Button (Always visible & prominent on Mobile + Desktop) */}
+            {/* Bag Button — Guaranteed Visible */}
             <button
               type="button"
               onClick={onOpenCart}
               aria-label="Shopping Bag"
-              className="relative flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-full prism-button text-white font-bold text-xs tracking-wider uppercase transition-all active:scale-95 shrink-0"
+              className="flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold shrink-0"
             >
-              <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+              <ShoppingBag className="w-4 h-4 shrink-0" />
               <span>Bag</span>
               {cartCount > 0 && (
-                <span className="flex items-center justify-center bg-white text-[#060416] text-[10px] font-black h-4 min-w-4 px-1 rounded-full">
+                <span className="bg-white text-[#166534] text-[10px] font-bold px-1.5 rounded-full">
                   {cartCount}
                 </span>
               )}
@@ -158,29 +152,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Mobile Expandable Search Drawer */}
+        {/* Expandable Search Bar on Mobile/Tablet */}
         {mobileSearchOpen && (
-          <div className="md:hidden pb-3 pt-1">
-            <div className="relative w-full">
-              <Search className="w-4 h-4 text-[#00f0ff] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="lg:hidden pb-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 autoFocus
-                placeholder="Search products, eBooks, or missions..."
+                placeholder="Search products, eBooks, or causes..."
                 value={searchTerm}
-                onChange={(e) => {
-                  onSearchChange(e.target.value);
-                  if (e.target.value.trim()) {
-                    document.getElementById('catalog-grid')?.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="w-full bg-white/[0.08] border border-[#00f0ff]/50 rounded-full pl-10 pr-9 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#00f0ff]"
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#166534]"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-300 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500"
                 >
                   ✕
                 </button>
@@ -189,33 +178,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Compact Mobile Section Quick-Jump Bar */}
-        <div className="lg:hidden flex items-center justify-center space-x-2 pb-2.5 pt-0.5 text-[11px] font-semibold overflow-x-auto scrollbar-thin">
-          {onScrollToMissions && (
-            <button
-              type="button"
-              onClick={onScrollToMissions}
-              className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-slate-200 whitespace-nowrap"
-            >
-              8 Missions
-            </button>
-          )}
+        {/* Simple Mobile Section Links */}
+        <div className="md:hidden flex items-center space-x-4 border-t border-gray-100 py-2 text-xs font-medium text-gray-600 overflow-x-auto scrollbar-thin">
           {onScrollToCatalog && (
-            <button
-              type="button"
-              onClick={onScrollToCatalog}
-              className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-slate-200 whitespace-nowrap"
-            >
-              Catalog
+            <button type="button" onClick={onScrollToCatalog} className="whitespace-nowrap hover:text-[#166534]">
+              Shop Catalog
             </button>
           )}
           {onScrollToEProducts && (
-            <button
-              type="button"
-              onClick={onScrollToEProducts}
-              className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[#00f0ff] whitespace-nowrap"
-            >
+            <button type="button" onClick={onScrollToEProducts} className="whitespace-nowrap hover:text-[#166534]">
               E-Products &amp; eBooks
+            </button>
+          )}
+          {onScrollToMissions && (
+            <button type="button" onClick={onScrollToMissions} className="whitespace-nowrap hover:text-[#166534]">
+              8 National Missions
             </button>
           )}
         </div>

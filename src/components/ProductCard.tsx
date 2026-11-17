@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Plus, Check } from 'lucide-react';
 import { Product, Cause } from '../types.ts';
-import { Tilt3DCard } from './Tilt3DCard.tsx';
 
 interface ProductCardProps {
   product: Product;
@@ -41,76 +40,66 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <Tilt3DCard
-      maxTilt={6}
-      glowColor="rgba(0, 240, 255, 0.25)"
+    <div
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="group luxury-card rounded-3xl overflow-hidden transition-all duration-400 flex flex-col justify-between cursor-pointer relative"
+      className="bg-white border border-gray-200 hover:border-gray-300 rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-colors"
     >
-      {/* Top Media Container */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#080c13]">
+      {/* Product Photo */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0c111b] to-[#080c13] text-slate-500 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-medium">
             {product.category}
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#05070b]/80 via-transparent to-transparent" />
-
         {product.badge && (
-          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full font-mono text-[9px] font-semibold uppercase tracking-[0.18em] bg-[#05070b]/80 backdrop-blur text-champagne-300 border border-champagne-500/30">
+          <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-white/95 text-[#14171A] text-[10px] font-semibold border border-gray-200">
             {product.badge}
           </div>
         )}
 
-        {/* Cause Allocation Pill */}
-        <div className="absolute bottom-3 left-3 right-3 bg-[#05070b]/85 backdrop-blur-md border border-champagne-500/25 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs">
-          <div className="flex items-center space-x-1.5 text-ivory-200 font-medium text-[11px]">
-            <Heart className="w-3 h-3 text-champagne-400 fill-champagne-400" />
+        <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 flex items-center justify-between text-[11px]">
+          <span className="flex items-center space-x-1 text-[#166534] font-semibold">
+            <Heart className="w-3 h-3 text-[#166534] fill-[#166534]" />
             <span>{product.cause_allocation_pct}% to Mission</span>
-          </div>
-          <span className="font-mono text-[11px] font-semibold text-champagne-300">
-            ₹{donationAmount}
           </span>
+          <span className="font-mono font-bold text-[#14171A]">₹{donationAmount}</span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+      {/* Details */}
+      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
         <div className="space-y-2">
-          <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.16em] uppercase">
-            <span className="text-slate-400 truncate">{product.category}</span>
-            <span className={product.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}>
-              {product.stock > 0 ? `${product.stock} left` : 'Sold out'}
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-gray-500 font-medium truncate">{product.category}</span>
+            <span className={product.stock > 0 ? 'text-[#166534] font-medium' : 'text-red-600 font-medium'}>
+              {product.stock > 0 ? `${product.stock} in stock` : 'Sold out'}
             </span>
           </div>
 
-          <h3 className="font-display font-medium text-ivory-50 text-xl leading-snug line-clamp-2 group-hover:text-champagne-300 transition-colors">
+          <h3 className="font-display font-bold text-[#14171A] text-base leading-snug line-clamp-2">
             {product.name}
           </h3>
 
-          {/* Buyer Choose Mission Dropdown */}
-          <div
-            className="pt-2 space-y-1.5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <label className="block font-mono text-[9px] font-semibold text-champagne-400 uppercase tracking-[0.2em]">
-              Direct Donation To:
+          {/* Buyer Mission Selector */}
+          <div className="pt-1 space-y-1" onClick={(e) => e.stopPropagation()}>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              Mission to Support
             </label>
             <select
               value={selectedCauseId}
               onChange={(e) => setSelectedCauseId(e.target.value)}
-              className="w-full bg-[#06090f] border border-white/10 hover:border-champagne-500/50 rounded-xl px-2.5 py-2 text-xs text-ivory-100 focus:outline-none focus:border-champagne-400 font-medium cursor-pointer transition"
+              className="w-full bg-[#FAF9F6] border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-[#14171A] focus:outline-none focus:border-[#166534]"
             >
               {causes.map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#080c13] text-ivory-100">
+                <option key={c.id} value={c.id}>
                   {c.title}
                 </option>
               ))}
@@ -118,38 +107,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
 
-        {/* Price & Action */}
-        <div className="pt-3 border-t border-white/[0.07] flex items-center justify-between">
+        {/* Price + Add Button */}
+        <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
           <div>
-            <div className="flex items-baseline space-x-2">
-              <span className="font-display text-2xl font-semibold text-ivory-50">
+            <div className="flex items-baseline space-x-1.5">
+              <span className="text-lg font-bold text-[#14171A]">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {product.compare_at_price && (
-                <span className="text-xs text-slate-500 line-through font-mono">
+                <span className="text-xs text-gray-400 line-through">
                   ₹{product.compare_at_price.toLocaleString('en-IN')}
                 </span>
               )}
             </div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500">
-              All inclusive
-            </div>
+            <div className="text-[10px] text-gray-500">Incl. all taxes</div>
           </div>
 
           <button
+            type="button"
             onClick={handleAdd}
             disabled={product.stock <= 0}
-            className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase flex items-center space-x-1.5 transition-all ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1 ${
               justAdded
-                ? 'bg-[#00e5a0] text-[#060416] scale-105'
+                ? 'bg-[#14532D] text-white'
                 : product.stock <= 0
-                ? 'bg-white/5 text-slate-500 cursor-not-allowed'
-                : 'prism-button text-white active:scale-95'
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-[#166534] hover:bg-[#14532D] text-white'
             }`}
           >
             {justAdded ? (
               <>
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <Check className="w-3.5 h-3.5" />
                 <span>Added</span>
               </>
             ) : product.stock <= 0 ? (
@@ -163,6 +151,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
       </div>
-    </Tilt3DCard>
+    </div>
   );
 };

@@ -1,17 +1,6 @@
-import React, { useState } from 'react';
-import {
-  BookOpen,
-  Lock,
-  Unlock,
-  Sparkles,
-  Heart,
-  Plus,
-  Check,
-  Code2,
-  Zap,
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Lock, Unlock, Heart, Plus, Check } from 'lucide-react';
 import { Product, Cause, UnlockedDigitalItem } from '../types.ts';
-import { Tilt3DCard } from './Tilt3DCard.tsx';
 
 export const EPRODUCT_SUBCATEGORIES = [
   'eBooks',
@@ -34,7 +23,7 @@ interface EProductsSectionProps {
   onOpenLibrary: () => void;
 }
 
-interface EProductCardProps {
+const EProductCard: React.FC<{
   product: Product;
   causes: Cause[];
   preferredCauseId?: string | null;
@@ -42,9 +31,7 @@ interface EProductCardProps {
   onAddToCart: (product: Product, selectedCauseId: string) => void;
   onOpenDetails: (product: Product, initialCauseId?: string) => void;
   onLaunchUnlocked: (item: UnlockedDigitalItem) => void;
-}
-
-const EProductCard: React.FC<EProductCardProps> = ({
+}> = ({
   product,
   causes,
   preferredCauseId,
@@ -58,7 +45,7 @@ const EProductCard: React.FC<EProductCardProps> = ({
   );
   const [justAdded, setJustAdded] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (preferredCauseId) {
       setSelectedCauseId(preferredCauseId);
     } else if (product.cause_id) {
@@ -76,96 +63,77 @@ const EProductCard: React.FC<EProductCardProps> = ({
   };
 
   return (
-    <Tilt3DCard
-      maxTilt={6}
-      glowColor="rgba(0, 240, 255, 0.28)"
+    <div
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="group luxury-card rounded-3xl overflow-hidden transition-all duration-300 flex flex-col justify-between cursor-pointer relative"
+      className="bg-white border border-gray-200 hover:border-[#166534] rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-colors"
     >
-      {/* Top Cover Media */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F0FDF4]">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-950/80 via-slate-900 to-emerald-950/60 text-cyan-300 space-y-2">
-            <BookOpen className="w-10 h-10 opacity-80" />
-            <span className="text-[11px] font-bold uppercase tracking-widest">
-              {product.subcategory || 'eBook / eProduct'}
-            </span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-[#166534] space-y-1.5">
+            <BookOpen className="w-8 h-8" />
+            <span className="text-xs font-semibold">{product.subcategory || 'eBook'}</span>
           </div>
         )}
 
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-950/85 backdrop-blur text-cyan-300 border border-cyan-400/40 inline-flex items-center space-x-1">
-            <Code2 className="w-3 h-3" />
-            <span>{product.subcategory || 'eProduct'}</span>
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
+          <span className="px-2 py-0.5 rounded bg-white/95 text-[#14171A] text-[10px] font-semibold border border-gray-200">
+            {product.subcategory || 'eProduct'}
           </span>
-
           {unlockedItem ? (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500 text-slate-950 inline-flex items-center space-x-1">
+            <span className="px-2 py-0.5 rounded bg-[#166534] text-white text-[10px] font-semibold inline-flex items-center space-x-1">
               <Unlock className="w-3 h-3" />
               <span>Unlocked</span>
             </span>
           ) : (
-            <span className="px-2 py-1 rounded-full text-[10px] font-semibold bg-slate-950/80 backdrop-blur text-amber-300 border border-amber-500/30 inline-flex items-center space-x-1">
+            <span className="px-2 py-0.5 rounded bg-white/95 text-amber-800 border border-amber-200 text-[10px] font-semibold inline-flex items-center space-x-1">
               <Lock className="w-2.5 h-2.5" />
-              <span>Unlocks on Purchase</span>
+              <span>Unlocks After Payment</span>
             </span>
           )}
         </div>
 
-        {/* Cause Allocation Strip */}
-        <div className="absolute bottom-3 left-3 right-3 bg-gradient-to-r from-emerald-950/90 to-slate-950/90 backdrop-blur border border-emerald-500/40 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-xs shadow-md">
-          <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold text-[11px]">
-            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-            <span>{product.cause_allocation_pct}% Donated</span>
-          </div>
-          <span className="text-[11px] font-bold text-amber-300">₹{donationAmount}</span>
+        <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 flex items-center justify-between text-[11px]">
+          <span className="flex items-center space-x-1 text-[#166534] font-semibold">
+            <Heart className="w-3 h-3 text-[#166534] fill-[#166534]" />
+            <span>{product.cause_allocation_pct}% to Mission</span>
+          </span>
+          <span className="font-mono font-bold text-[#14171A]">₹{donationAmount}</span>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-        <div>
-          <div className="flex items-center justify-between text-[11px] mb-1.5">
-            <span className="text-cyan-400 font-semibold inline-flex items-center space-x-1">
-              <Zap className="w-3 h-3" />
-              <span>Instant Digital Access</span>
-            </span>
-            <span className="text-slate-400">₹0 Shipping</span>
+      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[11px] text-gray-500">
+            <span className="text-[#166534] font-medium">Digital Edition</span>
+            <span>₹0 Shipping</span>
           </div>
 
-          <h3 className="font-display font-bold text-slate-100 text-sm sm:text-base leading-snug line-clamp-2 group-hover:text-cyan-300 transition-colors">
+          <h3 className="font-display font-bold text-[#14171A] text-base leading-snug line-clamp-2">
             {product.name}
           </h3>
 
           {product.description && (
-            <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-relaxed">
-              {product.description}
-            </p>
+            <p className="text-xs text-gray-600 line-clamp-2">{product.description}</p>
           )}
 
-          {/* Buyer Choose Mission Dropdown */}
-          <div
-            className="mt-3 p-2.5 rounded-xl bg-slate-900/90 border border-emerald-600/30 space-y-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <label className="block text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
-              Choose Mission to Fund:
+          <div className="pt-1 space-y-1" onClick={(e) => e.stopPropagation()}>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              Mission to Support
             </label>
             <select
               value={selectedCauseId}
               onChange={(e) => setSelectedCauseId(e.target.value)}
-              className="w-full bg-[#0d1424] border border-slate-700 hover:border-emerald-500 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium cursor-pointer"
+              className="w-full bg-[#FAF9F6] border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-[#14171A] focus:outline-none focus:border-[#166534]"
             >
               {causes.map((c) => (
-                <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                <option key={c.id} value={c.id}>
                   {c.title}
                 </option>
               ))}
@@ -173,58 +141,47 @@ const EProductCard: React.FC<EProductCardProps> = ({
           </div>
         </div>
 
-        {/* Footer Price + Action */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
           <div>
-            <div className="flex items-baseline space-x-2">
-              <span className="text-lg font-extrabold text-white font-display">
-                ₹{product.price.toLocaleString()}
-              </span>
-              {product.compare_at_price && (
-                <span className="text-xs text-slate-500 line-through">
-                  ₹{product.compare_at_price.toLocaleString()}
-                </span>
-              )}
+            <div className="text-lg font-bold text-[#14171A]">
+              ₹{product.price.toLocaleString('en-IN')}
             </div>
-            <div className="text-[10px] text-cyan-300/80">Interactive HTML Access</div>
+            <div className="text-[10px] text-gray-500">Interactive HTML</div>
           </div>
 
           {unlockedItem ? (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onLaunchUnlocked(unlockedItem);
               }}
-              className="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 flex items-center space-x-1.5 transition active:scale-95"
+              className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Open</span>
+              Open Now
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleAdd}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm ${
-                justAdded
-                  ? 'bg-emerald-500 text-slate-950 scale-105'
-                  : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 active:scale-95'
-              }`}
+              className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold flex items-center space-x-1"
             >
               {justAdded ? (
                 <>
-                  <Check className="w-4 h-4 stroke-[3]" />
+                  <Check className="w-3.5 h-3.5" />
                   <span>Added</span>
                 </>
               ) : (
                 <>
-                  <Plus className="w-4 h-4" />
-                  <span>Buy &amp; Unlock</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Buy</span>
                 </>
               )}
             </button>
           )}
         </div>
       </div>
-    </Tilt3DCard>
+    </div>
   );
 };
 
@@ -240,7 +197,6 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
 }) => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('All');
 
-  // Combine standard eProduct subcategories with any custom subcategory added by Admin
   const liveSubcats = Array.from(
     new Set([
       ...EPRODUCT_SUBCATEGORIES,
@@ -256,102 +212,69 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   return (
     <section
       id="eproducts-section"
-      className="relative bg-gradient-to-b from-[#060416] via-[#0d0829] to-[#060416] border-t border-white/15 py-20 sm:py-24 overflow-hidden"
+      className="bg-white border-t border-b border-gray-200 py-12 sm:py-16 w-full"
     >
-      {/* Colourful Ambient Glow */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-[#00f0ff]/15 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-[#ff2e97]/15 blur-[140px] pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-7">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-white/15">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full glass-3d text-[#00f0ff] font-mono text-[10px] font-bold uppercase tracking-[0.24em]">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Digital Editions · Zero Shipping</span>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
+              Digital Library · ₹0 Shipping
             </div>
-            <h2
-              className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight flex flex-wrap items-center gap-3"
-            >
-              <span>E-Products &amp; <span className="prism-gradient-text">eBooks</span></span>
-              <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#ff2e97]/15 text-[#ff2e97] border border-[#ff2e97]/40 font-bold">
-                {filtered.length} Available
-              </span>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
+              E-Products &amp; eBooks
             </h2>
-            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Interactive HTML eBooks, AI guides, templates, and digital toolkits — strictly locked on the server until verified purchase, unlocking instantly in your Library while funding your chosen Living India mission.
+            <p className="text-sm text-gray-600 max-w-2xl">
+              Interactive HTML eBooks and digital guides that unlock in your Library once payment is verified.
             </p>
           </div>
 
           <button
+            type="button"
             onClick={onOpenLibrary}
-            className="px-5 py-2.5 rounded-full glass-3d hover:border-[#00f0ff]/60 text-[#00f0ff] font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-2 transition shrink-0"
+            className="self-start sm:self-end px-4 py-2 rounded-lg border border-gray-300 bg-[#FAF9F6] hover:border-[#166534] text-[#14171A] text-xs font-semibold flex items-center space-x-1.5 shrink-0"
           >
-            <Unlock className="w-3.5 h-3.5" />
+            <Unlock className="w-3.5 h-3.5 text-[#166534]" />
             <span>
               My Library{unlockedLibrary.length > 0 ? ` (${unlockedLibrary.length})` : ''}
             </span>
           </button>
         </div>
 
-        {/* Subcategory Filter Pills */}
+        {/* Subcategory Pills */}
         <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
           {subcatTabs.map((sub) => {
-            const count =
-              sub === 'All'
-                ? eproducts.length
-                : eproducts.filter((p) => (p.subcategory || 'eBooks') === sub).length;
             const active = selectedSubcategory === sub;
             return (
               <button
                 key={sub}
+                type="button"
                 onClick={() => setSelectedSubcategory(sub)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
                   active
-                    ? 'bg-cyan-400 text-slate-950 font-bold shadow-sm'
-                    : 'bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-[#166534] text-white border-[#166534]'
+                    : 'bg-[#FAF9F6] text-gray-700 border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <span>{sub}</span>
-                {count > 0 && (
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                      active ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-300'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
+                {sub}
               </button>
             );
           })}
         </div>
 
-        {/* Grid or Empty State */}
         {filtered.length === 0 ? (
-          <div className="py-16 rounded-2xl bg-slate-900/40 border border-slate-800/80 text-center space-y-2.5">
-            <BookOpen className="w-8 h-8 mx-auto text-cyan-500/50" />
-            <h3 className="text-sm font-bold text-white">
+          <div className="py-12 px-4 rounded-xl bg-[#FAF9F6] border border-gray-200 text-center space-y-2">
+            <BookOpen className="w-7 h-7 mx-auto text-gray-400" />
+            <h3 className="text-sm font-bold text-[#14171A]">
               {eproducts.length === 0
-                ? 'E-Products & eBooks Launching Soon'
+                ? 'E-Products & eBooks Coming Soon'
                 : `No items in "${selectedSubcategory}" yet`}
             </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
-              {eproducts.length === 0
-                ? 'Interactive HTML eBooks and digital toolkits published in the Admin Console will appear here immediately.'
-                : 'Try selecting another subcategory above to explore available eProducts.'}
+            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+              Digital eBooks and HTML editions published from Admin will appear here immediately.
             </p>
-            {selectedSubcategory !== 'All' && (
-              <button
-                onClick={() => setSelectedSubcategory('All')}
-                className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-cyan-300"
-              >
-                Show All E-Products
-              </button>
-            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {filtered.map((prod) => {
               const owned = unlockedLibrary.find((u) => u.product_id === prod.id);
               return (

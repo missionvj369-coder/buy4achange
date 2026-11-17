@@ -171,12 +171,12 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
         const widgets = hyper.widgets({
           clientSecret: hsIntent.clientSecret,
           appearance: {
-            theme: 'midnight',
+            theme: 'flat',
             variables: {
-              colorPrimary: '#00f0ff',
-              colorBackground: '#0b0824',
-              colorText: '#ffffff',
-              borderRadius: '12px',
+              colorPrimary: '#166534',
+              colorBackground: '#ffffff',
+              colorText: '#14171a',
+              borderRadius: '8px',
             },
           },
         });
@@ -187,7 +187,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
         if (!cancelled) setHsMounted(true);
       } catch (err: any) {
         if (!cancelled) {
-          setError(err.message || 'Could not load live Hyperswitch checkout widget.');
+          setError(err.message || 'Could not load live payment checkout widget.');
         }
       }
     };
@@ -284,62 +284,64 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
     : '';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#04030e]/92 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-lg glass-3d rounded-3xl overflow-hidden shadow-2xl my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xl my-6">
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 bg-[#0d0929] border-b border-white/10 flex items-center justify-between">
+        <div className="px-5 sm:px-6 py-4 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#00f0ff]/15 border border-[#00f0ff]/35 flex items-center justify-center text-[#00f0ff]">
+            <div className="w-8 h-8 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-white font-bold text-sm">
+              <div className="text-gray-900 font-bold text-sm">
                 {hsIntent ? 'Verified Gateway Checkout' : 'Direct UPI Payment'}
               </div>
-              <p className="text-[10px] text-slate-300 font-mono">
+              <p className="text-[11px] text-gray-500">
                 {hsIntent ? 'Live Payment Processor Connected' : 'Real Payment Verification Required'}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/10 text-slate-300 hover:text-white transition"
+            aria-label="Close payment"
+            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Amount Banner */}
-        <div className="px-5 sm:px-6 py-3 bg-[#08051c] border-b border-white/10 flex items-center justify-between text-xs">
-          <span className="text-slate-300">Exact Amount Payable:</span>
-          <span className="text-lg font-extrabold text-[#00f0ff] font-mono">
+        <div className="px-5 sm:px-6 py-3 bg-white border-b border-gray-200 flex items-center justify-between text-xs">
+          <span className="text-gray-600 font-medium">Exact Amount Payable:</span>
+          <span className="text-lg font-bold text-[#166534] font-mono">
             ₹{orderDraft.totalAmount.toLocaleString('en-IN')}
           </span>
         </div>
 
         <div className="p-5 sm:p-6 space-y-4 max-h-[78vh] overflow-y-auto">
           {loadingConfig ? (
-            <div className="py-12 flex flex-col items-center justify-center space-y-3 text-slate-300 text-xs">
-              <RefreshCw className="w-6 h-6 text-[#00f0ff] animate-spin" />
+            <div className="py-12 flex flex-col items-center justify-center space-y-3 text-gray-600 text-xs">
+              <RefreshCw className="w-6 h-6 text-[#166534] animate-spin" />
               <span>Initializing secure payment session...</span>
             </div>
           ) : hsIntent ? (
             /* LIVE HYPERSWITCH UNIFIED CHECKOUT */
             <form onSubmit={handleHyperswitchConfirm} className="space-y-4">
               {error && (
-                <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-start space-x-2">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
 
               <div
                 id="hyperswitch-unified-checkout"
-                className="min-h-[210px] rounded-2xl bg-[#0b0824] border border-white/15 p-3"
+                className="min-h-[210px] rounded-lg bg-white border border-gray-200 p-3"
               >
                 {!hsMounted && (
-                  <div className="py-14 flex flex-col items-center justify-center space-y-2 text-xs text-slate-400">
-                    <RefreshCw className="w-5 h-5 animate-spin text-[#00f0ff]" />
+                  <div className="py-14 flex flex-col items-center justify-center space-y-2 text-xs text-gray-500">
+                    <RefreshCw className="w-5 h-5 animate-spin text-[#166534]" />
                     <span>Loading live payment form...</span>
                   </div>
                 )}
@@ -348,7 +350,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               <button
                 type="submit"
                 disabled={processing || !hsMounted}
-                className="w-full py-3.5 rounded-full prism-button disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase flex items-center justify-center space-x-2 transition active:scale-95"
+                className="w-full py-3 rounded-lg bg-[#166534] hover:bg-[#14532D] disabled:opacity-50 text-white font-semibold text-sm flex items-center justify-center space-x-2"
               >
                 {processing ? (
                   <>
@@ -357,7 +359,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <Lock className="w-3.5 h-3.5" />
+                    <Lock className="w-4 h-4" />
                     <span>Pay ₹{orderDraft.totalAmount.toLocaleString('en-IN')} Now</span>
                   </>
                 )}
@@ -370,10 +372,10 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setMethod('upi'); setError(null); }}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 border transition ${
+                  className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 border ${
                     method === 'upi'
-                      ? 'bg-[#00f0ff]/15 border-[#00f0ff] text-[#00f0ff]'
-                      : 'bg-white/[0.04] border-white/10 text-slate-300'
+                      ? 'bg-[#F0FDF4] border-[#166534] text-[#166534]'
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <QrCode className="w-3.5 h-3.5" />
@@ -382,10 +384,10 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setMethod('card'); setError(null); }}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 border transition ${
+                  className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 border ${
                     method === 'card'
-                      ? 'bg-[#ff2e97]/15 border-[#ff2e97] text-[#ff2e97]'
-                      : 'bg-white/[0.04] border-white/10 text-slate-300'
+                      ? 'bg-[#FAF9F6] border-gray-900 text-gray-900'
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <CreditCard className="w-3.5 h-3.5" />
@@ -394,10 +396,10 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setMethod('netbanking'); setError(null); }}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 border transition ${
+                  className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 border ${
                     method === 'netbanking'
-                      ? 'bg-[#ffb800]/15 border-[#ffb800] text-[#ffb800]'
-                      : 'bg-white/[0.04] border-white/10 text-slate-300'
+                      ? 'bg-[#FAF9F6] border-gray-900 text-gray-900'
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <Building className="w-3.5 h-3.5" />
@@ -406,8 +408,8 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               </div>
 
               {error && (
-                <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-start space-x-2">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
@@ -415,28 +417,28 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               {method === 'upi' ? (
                 <form onSubmit={handleSubmitDirectUpiUtr} className="space-y-4">
                   {/* Step 1: Real UPI QR & Deep Link */}
-                  <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 text-center space-y-3">
-                    <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00f0ff] font-bold">
+                  <div className="p-4 rounded-lg bg-[#FAF9F6] border border-gray-200 text-center space-y-3">
+                    <div className="text-xs uppercase tracking-wider text-[#166534] font-semibold">
                       Step 1 · Pay ₹{orderDraft.totalAmount.toLocaleString('en-IN')} via Any UPI App
                     </div>
 
-                    <div className="p-2.5 bg-white rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-lg">
+                    <div className="p-2 bg-white border border-gray-200 rounded-lg w-44 h-44 mx-auto flex items-center justify-center">
                       {qrImageUrl && !qrFailed ? (
                         <img
                           src={qrImageUrl}
                           alt={`UPI QR Code for ${merchantVpa}`}
                           onError={() => setQrFailed(true)}
-                          className="w-full h-full object-contain rounded-lg"
+                          className="w-full h-full object-contain"
                         />
                       ) : (
-                        <div className="text-slate-800 text-[11px] font-mono p-2">
+                        <div className="text-gray-800 text-xs font-mono p-2">
                           Pay to UPI ID: <strong>{merchantVpa}</strong>
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center justify-center space-x-2">
-                      <span className="px-3 py-1 rounded-lg bg-[#07051a] border border-white/15 font-mono text-xs text-[#00f0ff] font-bold">
+                      <span className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-mono text-xs text-gray-900 font-semibold">
                         {merchantVpa}
                       </span>
                       <button
@@ -446,17 +448,17 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                           setCopiedVpa(true);
                           setTimeout(() => setCopiedVpa(false), 2000);
                         }}
-                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+                        className="p-1.5 rounded-lg bg-white hover:bg-gray-100 border border-gray-300 text-gray-700"
                         title="Copy UPI ID"
                       >
-                        {copiedVpa ? <Check className="w-3.5 h-3.5 text-[#00e5a0]" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedVpa ? <Check className="w-4 h-4 text-[#166534]" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </div>
 
                     {upiUri && (
                       <a
                         href={upiUri}
-                        className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#00f0ff]/15 hover:bg-[#00f0ff]/25 border border-[#00f0ff]/40 text-[#00f0ff] text-xs font-bold transition"
+                        className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-white hover:bg-gray-50 border border-[#166534] text-[#166534] text-xs font-semibold"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>Open in GPay / PhonePe / Paytm / BHIM</span>
@@ -465,11 +467,11 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                   </div>
 
                   {/* Step 2: Mandatory 12-Digit Bank UTR */}
-                  <div className="p-4 rounded-2xl bg-[#ffb800]/[0.07] border border-[#ffb800]/30 space-y-2.5">
-                    <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#ffb800] font-bold">
+                  <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 space-y-2.5">
+                    <div className="text-xs uppercase tracking-wider text-amber-900 font-semibold">
                       Step 2 · Enter 12-Digit Bank UTR / Reference Number (Required)
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                    <p className="text-xs text-gray-700 leading-relaxed">
                       After completing the payment in your UPI app, copy the <strong>12-digit UTR / UPI Transaction Reference Number</strong> from your receipt and paste it below. Your order is confirmed once verified against our bank ledger.
                     </p>
 
@@ -481,13 +483,13 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                       value={utrNumber}
                       onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
                       placeholder="Enter exact 12-digit UTR (e.g. 421812345678)"
-                      className="w-full bg-[#07051a] border border-[#ffb800]/50 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:border-[#00f0ff] focus:outline-none tracking-widest text-center font-bold"
+                      className="w-full bg-white border border-amber-400 rounded-lg px-3.5 py-2.5 text-sm font-mono text-gray-900 placeholder-gray-400 focus:border-[#166534] focus:outline-none tracking-widest text-center font-bold"
                     />
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className={isUtrValid ? 'text-[#00e5a0]' : 'text-slate-400'}>
+                    <div className="flex items-center justify-between text-[11px] font-mono">
+                      <span className={isUtrValid ? 'text-[#166534] font-semibold' : 'text-gray-600'}>
                         {isUtrValid ? '✓ Valid 12-digit UTR format' : `${cleanUtr.length} / 12 digits entered`}
                       </span>
-                      <span className="text-slate-400">No fake auto-approvals</span>
+                      <span className="text-gray-500">Audited verification</span>
                     </div>
 
                     <input
@@ -495,14 +497,14 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                       value={upiId}
                       onChange={(e) => setUpiId(e.target.value)}
                       placeholder="Your UPI ID (optional, e.g. yourname@okicici)"
-                      className="w-full bg-[#07051a] border border-white/15 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:border-[#00f0ff] focus:outline-none"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-mono text-gray-900 placeholder-gray-400 focus:border-[#166534] focus:outline-none"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={processing || !isUtrValid}
-                    className="w-full py-3.5 rounded-full prism-button disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs tracking-wider uppercase flex items-center justify-center space-x-2 transition active:scale-95"
+                    className="w-full py-3 rounded-lg bg-[#166534] hover:bg-[#14532D] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm flex items-center justify-center space-x-2"
                   >
                     {processing ? (
                       <>
@@ -519,18 +521,18 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 </form>
               ) : (
                 /* HONEST GUARD FOR CARD / NETBANKING UNTIL LIVE HYPERSWITCH KEYS ARE CONNECTED */
-                <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/15 text-center space-y-3">
-                  <AlertCircle className="w-8 h-8 mx-auto text-[#ffb800]" />
-                  <h4 className="text-sm font-bold text-white">
+                <div className="p-5 rounded-lg bg-[#FAF9F6] border border-gray-200 text-center space-y-3">
+                  <AlertCircle className="w-8 h-8 mx-auto text-amber-600" />
+                  <h4 className="text-sm font-bold text-gray-900">
                     {method === 'card' ? 'Card Payments' : 'NetBanking'} Not Yet Activated
                   </h4>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    To protect buyers from simulated transactions, live Card and NetBanking checkout only activates once live Hyperswitch gateway keys are configured in <strong>Admin → Payment Gateway</strong>.
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    To protect buyers from simulated transactions, live Card and NetBanking checkout only activates once live gateway keys are configured in the Admin console.
                   </p>
                   <button
                     type="button"
                     onClick={() => setMethod('upi')}
-                    className="px-5 py-2.5 rounded-full prism-button text-white font-bold text-xs uppercase tracking-wider"
+                    className="px-5 py-2.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs"
                   >
                     Pay Now via Direct UPI / QR
                   </button>
@@ -539,8 +541,8 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
             </>
           )}
 
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400">
-            <span className="flex items-center space-x-1 text-[#00e5a0]">
+          <div className="pt-3 border-t border-gray-200 flex items-center justify-between text-[11px] text-gray-500">
+            <span className="flex items-center space-x-1 text-[#166534] font-medium">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Audited Payment Verification</span>
             </span>

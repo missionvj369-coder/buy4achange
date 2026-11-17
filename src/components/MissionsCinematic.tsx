@@ -1,8 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React from 'react';
 import { Cause } from '../types.ts';
-import { ArrowRight, BookOpen, CheckCircle2, Clock, Sparkles } from 'lucide-react';
-import { MISSION_DOCUMENTS, MissionDocument } from '../data/missionDocuments.ts';
-import { Tilt3DCard } from './Tilt3DCard.tsx';
+import { BookOpen, Check } from 'lucide-react';
+import { MISSION_DOCUMENTS } from '../data/missionDocuments.ts';
 
 interface MissionsCinematicProps {
   causes: Cause[];
@@ -12,233 +11,6 @@ interface MissionsCinematicProps {
   onOpenDocument: (causeId: string) => void;
 }
 
-function useInView(threshold = 0.08) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          obs.disconnect();
-        }
-      },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, inView };
-}
-
-interface MissionCardProps {
-  doc: MissionDocument;
-  cause?: Cause;
-  isSelected: boolean;
-  onSelect: () => void;
-  onScrollToCatalog: () => void;
-  onOpenDocument: () => void;
-}
-
-const MissionCard: React.FC<MissionCardProps> = ({
-  doc,
-  cause,
-  isSelected,
-  onSelect,
-  onScrollToCatalog,
-  onOpenDocument,
-}) => {
-  const { ref, inView } = useInView();
-  const raised = cause?.raised_amount || 0;
-  const target = cause?.target_amount || 500000;
-  const impactCount = cause?.impact_count || 0;
-  const impactMetric = cause?.impact_metric || 'Community Impact Units';
-  const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 0;
-
-  const isPanoramic = doc.projectNumber === 1 || doc.projectNumber === 6;
-
-  return (
-    <div
-      ref={ref}
-      style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? 'translateY(0)' : 'translateY(34px)',
-        transition: 'opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1)',
-      }}
-      className={isPanoramic ? 'lg:col-span-2' : ''}
-    >
-      <Tilt3DCard
-        maxTilt={5.5}
-        glowColor={`${doc.accent}42`}
-        className={`relative overflow-hidden rounded-3xl group border transition-all duration-400 flex flex-col justify-between bg-[#0b0724]
-          ${isPanoramic ? 'min-h-[470px] sm:min-h-[530px]' : 'min-h-[440px] sm:min-h-[470px]'}`}
-        style={{
-          borderColor: isSelected ? doc.accent : 'rgba(255,255,255,0.14)',
-          boxShadow: isSelected
-            ? `0 0 0 2px ${doc.accent}, 0 28px 70px -15px ${doc.accent}55`
-            : `0 24px 60px -22px rgba(0,0,0,0.85), 0 0 36px -14px ${doc.accent}35`,
-        }}
-      >
-        {/* Bespoke Regenerated 3D Mission Artwork */}
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 ease-out group-hover:scale-108"
-          style={{ backgroundImage: `url(${doc.imageUrl})` }}
-        />
-
-        {/* Vibrant Colourful Depth Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#060416] via-[#060416]/62 to-[#060416]/15" />
-        <div
-          className="absolute inset-0 opacity-35 mix-blend-color pointer-events-none"
-          style={{
-            background: `linear-gradient(135deg, ${doc.accent}66 0%, transparent 55%, ${doc.accentSecondary}55 100%)`,
-          }}
-        />
-
-        {/* Top Luminous Ribbon */}
-        <div
-          className="absolute top-0 inset-x-0 h-[3px] z-20"
-          style={{
-            background: `linear-gradient(90deg, ${doc.accent}, ${doc.accentSecondary})`,
-          }}
-        />
-
-        {/* Top HUD Bar */}
-        <div className="relative z-10 p-6 sm:p-8 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className="px-3.5 py-1 rounded-full font-mono text-[10px] font-extrabold tracking-[0.22em] uppercase text-[#060416] shadow-lg"
-              style={{
-                background: `linear-gradient(90deg, ${doc.accent}, ${doc.accentSecondary})`,
-              }}
-            >
-              Project 0{doc.projectNumber}
-            </span>
-            <span className="inline-flex items-center space-x-1 font-mono text-[10px] text-white/90 bg-[#060416]/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
-              <Clock className="w-3 h-3" style={{ color: doc.accent }} />
-              <span>
-                {doc.sectionCount} Chapters · {doc.readMinutes} min read
-              </span>
-            </span>
-          </div>
-
-          {isSelected && (
-            <span
-              className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold uppercase tracking-wider text-[#060416]"
-              style={{ backgroundColor: doc.accent }}
-            >
-              <CheckCircle2 className="w-3 h-3" />
-              <span>Active Cause</span>
-            </span>
-          )}
-        </div>
-
-        {/* Bottom 3D Content Card */}
-        <div className="relative z-10 p-6 sm:p-8 lg:p-10 space-y-5 mt-auto">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {doc.pillars.map((p) => (
-                <span
-                  key={p}
-                  className="font-mono text-[9px] font-bold tracking-[0.18em] uppercase px-2.5 py-0.5 rounded-full backdrop-blur-md border"
-                  style={{
-                    color: '#ffffff',
-                    borderColor: `${doc.accent}66`,
-                    backgroundColor: `${doc.accent}22`,
-                  }}
-                >
-                  {p}
-                </span>
-              ))}
-            </div>
-
-            <h3
-              className="font-display font-extrabold text-white leading-[1.08] tracking-tight drop-shadow-lg"
-              style={{
-                fontSize: isPanoramic
-                  ? 'clamp(1.85rem, 3.6vw, 3.05rem)'
-                  : 'clamp(1.45rem, 2.3vw, 2rem)',
-              }}
-            >
-              {doc.officialTitle}
-            </h3>
-
-            <p
-              className="font-medium text-xs sm:text-sm"
-              style={{ color: doc.accentSecondary }}
-            >
-              {doc.subtitle}
-            </p>
-
-            <p className="text-xs sm:text-sm text-slate-200/90 leading-relaxed line-clamp-2 max-w-xl">
-              {doc.sections[0]?.paragraphs[0] || cause?.description}
-            </p>
-          </div>
-
-          {/* Live Funding Bar & Action Buttons */}
-          <div className="pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div className="space-y-1.5 flex-1 max-w-xs">
-              <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-1000"
-                  style={{
-                    width: inView ? `${pct}%` : '0%',
-                    background: `linear-gradient(90deg, ${doc.accent}, ${doc.accentSecondary})`,
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between font-mono text-[11px]">
-                <span style={{ color: doc.accent }} className="font-bold">
-                  ₹{Math.round(raised).toLocaleString('en-IN')} raised
-                </span>
-                <span className="text-slate-300">
-                  {pct}% · ₹{(target / 1000).toFixed(0)}k goal
-                </span>
-              </div>
-              <div className="text-[11px] text-slate-300 flex items-center space-x-1.5">
-                <span
-                  className="w-2 h-2 rounded-full animate-pulse"
-                  style={{ backgroundColor: doc.accent }}
-                />
-                <span>
-                  Live · {impactCount.toLocaleString('en-IN')} {impactMetric}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={onOpenDocument}
-                className="px-4 py-2.5 rounded-full glass-3d hover:border-white/50 text-white font-bold text-xs tracking-wider uppercase flex items-center space-x-2 transition active:scale-95"
-              >
-                <BookOpen className="w-3.5 h-3.5" style={{ color: doc.accent }} />
-                <span>Read Document</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onSelect();
-                  onScrollToCatalog();
-                }}
-                className="px-4 py-2.5 rounded-full text-[#060416] font-extrabold text-xs tracking-wider uppercase flex items-center space-x-1.5 shadow-lg transition hover:brightness-110 active:scale-95"
-                style={{
-                  background: `linear-gradient(90deg, ${doc.accent}, ${doc.accentSecondary})`,
-                }}
-              >
-                <span>Fund Mission</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </Tilt3DCard>
-    </div>
-  );
-};
-
 export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
   causes,
   selectedCauseId,
@@ -246,74 +18,128 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
   onScrollToCatalog,
   onOpenDocument,
 }) => {
-  const { ref: headerRef, inView: headerInView } = useInView(0.1);
-
   return (
     <section
       id="missions-showcase"
-      className="relative bg-[#060416] py-20 sm:py-28 overflow-hidden border-b border-white/10"
+      className="bg-[#FAF9F6] border-b border-gray-200 py-12 sm:py-16 w-full"
     >
-      {/* Colourful Ambient Backlights */}
-      <div className="absolute top-20 right-[-10%] w-[480px] h-[480px] rounded-full bg-[#ff2e97]/15 blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-20 left-[-10%] w-[480px] h-[480px] rounded-full bg-[#00f0ff]/15 blur-[150px] pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div
-          ref={headerRef}
-          className="text-center max-w-3xl mx-auto mb-14 sm:mb-20 space-y-4"
-          style={{
-            opacity: headerInView ? 1 : 0,
-            transform: headerInView ? 'translateY(0)' : 'translateY(24px)',
-            transition: 'opacity 0.9s ease, transform 0.9s ease',
-          }}
-        >
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full glass-3d">
-            <Sparkles className="w-3.5 h-3.5 text-[#ffb800]" />
-            <span className="font-mono text-[10px] tracking-[0.32em] text-[#00f0ff] uppercase font-bold">
-              Living India · 8 Open National Missions
-            </span>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+        {/* Calm Editorial Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
+              Living India · 8 National Missions
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
+              Choose a Mission to Support
+            </h2>
+            <p className="text-sm text-gray-600">
+              Read the complete official proposal document for any mission, or select one to fund with your purchase.
+            </p>
           </div>
 
-          <h2
-            className="font-display font-extrabold text-white tracking-tight"
-            style={{ fontSize: 'clamp(2.1rem, 4.8vw, 3.7rem)', lineHeight: 1.06 }}
-          >
-            Eight Living <span className="prism-gradient-text">India Missions</span>
-          </h2>
-
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Explore our bespoke 3D mission worlds, read each complete official Living India dossier, and direct a verified contribution from any purchase to the mission you choose.
-          </p>
-
           {selectedCauseId && (
-            <div className="pt-2">
-              <button
-                onClick={() => onSelectCause(null)}
-                className="inline-flex items-center px-4 py-1.5 rounded-full glass-3d border-[#ffb800]/50 text-xs font-mono uppercase tracking-wider text-[#ffb800] hover:bg-white/10 transition"
-              >
-                Clear Selected Mission · View All 8
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => onSelectCause(null)}
+              className="self-start sm:self-end text-xs font-semibold text-[#166534] underline underline-offset-4"
+            >
+              Clear selected mission
+            </button>
           )}
         </div>
 
-        {/* All 8 Living India Projects (01 → 08) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        {/* Clean, Scannable 8-Card Responsive Grid (Light, Fast, Zero Clutter on Mobile) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {MISSION_DOCUMENTS.map((doc) => {
-            const matchedCause = causes.find((c) => c.id === doc.causeId);
+            const cause = causes.find((c) => c.id === doc.causeId);
+            const raised = cause?.raised_amount || 0;
+            const target = cause?.target_amount || 500000;
+            const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 0;
+            const isSelected = selectedCauseId === doc.causeId;
+
             return (
-              <MissionCard
+              <article
                 key={doc.causeId}
-                doc={doc}
-                cause={matchedCause}
-                isSelected={selectedCauseId === doc.causeId}
-                onSelect={() =>
-                  onSelectCause(selectedCauseId === doc.causeId ? null : doc.causeId)
-                }
-                onScrollToCatalog={onScrollToCatalog}
-                onOpenDocument={() => onOpenDocument(doc.causeId)}
-              />
+                className={`bg-white rounded-xl overflow-hidden border flex flex-col justify-between transition-colors ${
+                  isSelected
+                    ? 'border-[#166534] ring-2 ring-[#166534]/20'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div>
+                  {/* Mission Image */}
+                  <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
+                    <img
+                      src={doc.imageUrl}
+                      alt={doc.officialTitle}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-white/95 text-[#14171A] font-mono text-[10px] font-bold border border-gray-200">
+                      0{doc.projectNumber}
+                    </span>
+                    {isSelected && (
+                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-[#166534] text-white text-[10px] font-semibold inline-flex items-center space-x-1">
+                        <Check className="w-3 h-3" />
+                        <span>Selected</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Clean Concise Card Text */}
+                  <div className="p-4 space-y-2">
+                    <h3 className="font-display font-bold text-base text-[#14171A] leading-snug">
+                      {doc.officialTitle}
+                    </h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                      {doc.subtitle}
+                    </p>
+
+                    {/* Live Progress */}
+                    <div className="pt-2 space-y-1">
+                      <div className="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full bg-[#166534] rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-[#166534]">
+                          ₹{Math.round(raised).toLocaleString('en-IN')} raised
+                        </span>
+                        <span className="text-gray-500">{pct}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clean 2-Button Footer */}
+                <div className="px-4 pb-4 pt-2 border-t border-gray-100 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenDocument(doc.causeId)}
+                    className="flex-1 py-2 px-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-[#14171A] text-xs font-semibold flex items-center justify-center space-x-1"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-[#166534]" />
+                    <span>Read</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelectCause(isSelected ? null : doc.causeId);
+                      onScrollToCatalog();
+                    }}
+                    className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold ${
+                      isSelected
+                        ? 'bg-[#14532D] text-white'
+                        : 'bg-[#166534] hover:bg-[#14532D] text-white'
+                    }`}
+                  >
+                    {isSelected ? 'Supporting' : 'Support'}
+                  </button>
+                </div>
+              </article>
             );
           })}
         </div>

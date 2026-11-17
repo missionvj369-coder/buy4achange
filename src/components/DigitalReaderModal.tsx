@@ -34,31 +34,31 @@ export const DigitalReaderModal: React.FC<DigitalReaderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-2 sm:p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-2 sm:p-4">
       <div
-        className={`relative bg-[#0a0f1d] border border-cyan-500/30 shadow-2xl flex flex-col overflow-hidden transition-all ${
+        className={`relative bg-white border border-gray-200 shadow-2xl flex flex-col overflow-hidden ${
           fullscreen
             ? 'w-screen h-screen rounded-none'
-            : 'w-full max-w-6xl h-[90vh] rounded-2xl'
+            : 'w-full max-w-6xl h-[90vh] rounded-xl'
         }`}
       >
         {/* Top Interactive Reader Toolbar */}
-        <div className="px-4 sm:px-6 py-3 bg-[#0f1728] border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-3 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534] shrink-0">
               <BookOpen className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <h3 className="text-sm font-bold text-white truncate">{item.product_name}</h3>
+                <h3 className="text-sm font-bold text-gray-900 truncate">{item.product_name}</h3>
                 {item.subcategory && (
-                  <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">
+                  <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0] shrink-0">
                     {item.subcategory}
                   </span>
                 )}
               </div>
-              <div className="flex items-center space-x-2 text-[11px] text-slate-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <div className="flex items-center space-x-1.5 text-[11px] text-gray-600">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#166534] shrink-0" />
                 <span>
                   {isPreview
                     ? 'Admin Live Preview Mode (Locked on Storefront Until Purchase)'
@@ -73,7 +73,7 @@ export const DigitalReaderModal: React.FC<DigitalReaderModalProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadHtml}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs flex items-center space-x-1.5 transition"
+                className="px-3 py-1.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center space-x-1.5"
                 title="Download offline HTML copy"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -83,7 +83,7 @@ export const DigitalReaderModal: React.FC<DigitalReaderModalProps> = ({
             <button
               type="button"
               onClick={() => setFullscreen((f) => !f)}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+              className="p-2 rounded-lg bg-white hover:bg-gray-100 border border-gray-300 text-gray-700"
               title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
               {fullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -91,7 +91,7 @@ export const DigitalReaderModal: React.FC<DigitalReaderModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/70 text-slate-300 hover:text-white transition"
+              className="p-2 rounded-lg bg-white hover:bg-rose-50 border border-gray-300 text-gray-700 hover:text-rose-700"
               title="Close viewer"
             >
               <X className="w-4 h-4" />
