@@ -1,11 +1,12 @@
 import React from 'react';
-import { ExternalLink, ShieldCheck, Download, MessageCircle, Mail } from 'lucide-react';
+import { ExternalLink, ShieldCheck, Download, MessageCircle, Mail, Store } from 'lucide-react';
 import { MISSION_DOCUMENTS } from '../data/missionDocuments.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
 interface FooterProps {
   onOpenMissionDoc?: (causeId: string) => void;
   onOpenTrack?: (tab: 'track' | 'ledger') => void;
+  onOpenSellerPortal?: () => void;
   canInstallPwa?: boolean;
   onInstallPwa?: () => void;
   whatsappSupportNumber?: string;
@@ -15,6 +16,7 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({
   onOpenMissionDoc,
   onOpenTrack,
+  onOpenSellerPortal,
   canInstallPwa = false,
   onInstallPwa,
   whatsappSupportNumber,
@@ -61,8 +63,18 @@ export const Footer: React.FC<FooterProps> = ({
               </a>
             </div>
 
-            {/* Transparency & Support Quick Actions */}
+            {/* Transparency, Manufacturer Portal & Support Quick Actions */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
+              {onOpenSellerPortal && (
+                <button
+                  type="button"
+                  onClick={onOpenSellerPortal}
+                  className="px-3 py-1.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-[11px] inline-flex items-center space-x-1.5"
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Sell With Us (Manufacturer Portal)</span>
+                </button>
+              )}
               {onOpenTrack && (
                 <>
                   <button

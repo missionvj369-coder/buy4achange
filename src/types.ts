@@ -41,6 +41,56 @@ export interface Product {
   created_at?: string;
   cause_title?: string;
   cause_category?: string;
+  seller_id?: string;
+  seller_name?: string;
+  approval_status?: 'pending_approval' | 'approved' | 'rejected';
+  quality_cert_url?: string;
+  quality_cert_name?: string;
+  zero_chemical_cert_url?: string;
+  zero_chemical_cert_name?: string;
+  approval_notes?: string;
+  origin_state?: string;
+}
+
+export interface Seller {
+  id: string;
+  store_name: string;
+  owner_name: string;
+  email: string;
+  phone: string;
+  business_type: string;
+  registration_no: string;
+  city: string;
+  state: string;
+  pincode: string;
+  upi_payout_id: string;
+  bank_details?: string;
+  story: string;
+  status: 'pending_approval' | 'approved' | 'rejected' | 'suspended';
+  admin_notes?: string;
+  created_at: string;
+  product_count?: number;
+  pending_product_count?: number;
+}
+
+export interface ProductReview {
+  id: string;
+  product_id: string;
+  order_number: string;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  verified_purchase: number;
+  created_at: string;
+}
+
+export interface SellerEarningsSummary {
+  totalGross: number;
+  missionContribution: number;
+  platformFee: number;
+  netPayout: number;
+  verifiedOrdersCount: number;
+  pendingOrdersCount: number;
 }
 
 export interface UnlockedDigitalItem {

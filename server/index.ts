@@ -36,6 +36,20 @@ import {
   logAnalyticsEvent,
   getAnalyticsSummary,
   queueEmailNotification,
+  registerSeller,
+  verifySellerLogin,
+  validateSellerToken,
+  getSellerById,
+  getAllSellersAdmin,
+  updateSellerStatus,
+  getSellerProducts,
+  updateProductApproval,
+  getSellerOrdersAndEarnings,
+  sellerOwnsOrder,
+  getProductReviews,
+  createVerifiedProductReview,
+  generatePayoutSplitCsv,
+  generateOndcBecknCatalog,
   verifyAdminLogin,
   validateAdminToken
 } from './db.ts';
@@ -62,7 +76,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(
   express.json({
-    limit: '5mb',
+    limit: '15mb',
     verify: (req: any, _res, buf) => {
       req.rawBody = buf.toString('utf8');
     },
@@ -93,6 +107,25 @@ const requireAdminAuth = (req: express.Request, res: express.Response, next: exp
     return res.status(401).json({ error: 'Invalid or expired session token' });
   }
 
+  next();
+};
+
+// Seller Auth Middleware
+const requireSellerAuth = (req: any, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Manufacturer login required' });
+  }
+  const token = authHeader.split(' ')[1];
+  const session = validateSellerToken(token);
+  if (!session) {
+    return res.status(401).json({ error: 'Invalid or expired seller session' });
+  }
+  const seller = getSellerById(session.id);
+  if (!seller) {
+    return res.status(401).json({ error: 'Seller account not found' });
+  }
+  req.seller = seller;
   next();
 };
 
@@ -777,6 +810,353 @@ app.put('/api/admin/integrations', requireAdminAuth, (req, res) => {
 app.get('/api/admin/analytics', requireAdminAuth, (_req, res) => {
   try {
     res.json(getAnalyticsSummary());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// PUBLIC PRODUCT ORIGIN VERIFICATION & VERIFIED-BUYER REVIEWS
+// ============================================================
+
+app.get('/api/products/:id/verify', (req, res) => {
+  try {
+    const product = getProductById(req.params.id, false);
+    if (!product || product.approval_status !== 'approved') {
+      return res.status(404).json({ error: 'Verified product record not found' });
+    }
+    const reviews = getProductReviews(product.id);
+    res.json({
+      verified: true,
+      product,
+      certificates: {
+        hasQualityCert: Boolean(product.quality_cert_url),
+        qualityCertName: product.quality_cert_name || 'Quality Certificate',
+        qualityCertUrl: product.quality_cert_url || '',
+        hasZeroChemicalCert: Boolean(product.zero_chemical_cert_url),
+        zeroChemicalCertName: product.zero_chemical_cert_name || 'Zero-Chemical Certificate',
+        zeroChemicalCertUrl: product.zero_chemical_cert_url || '',
+      },
+      reviews,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/products/:id/reviews', (req, res) => {
+  try {
+    res.json(getProductReviews(req.params.id));
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/products/:id/reviews', (req, res) => {
+  try {
+    const { orderNumber, email, rating, comment } = req.body || {};
+    if (!orderNumber || !email) {
+      return res.status(400).json({ error: 'Order number and checkout email are required.' });
+    }
+    const reviews = createVerifiedProductReview({
+      productId: req.params.id,
+      orderNumber,
+      email,
+      rating: Number(rating) || 5,
+      comment: String(comment || ''),
+    });
+    res.status(201).json({ success: true, reviews });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Could not submit verified review.' });
+  }
+});
+
+// ============================================================
+// PRO MANUFACTURER / SELLER PORTAL ENDPOINTS
+// ============================================================
+
+app.post('/api/seller/register', (req, res) => {
+  try {
+    const {
+      store_name,
+      owner_name,
+      email,
+      password,
+      phone,
+      business_type,
+      registration_no,
+      city,
+      state,
+      pincode,
+      upi_payout_id,
+      bank_details,
+      story,
+    } = req.body || {};
+
+    if (!store_name || !owner_name || !email || !password || !phone) {
+      return res.status(400).json({
+        error: 'Store name, owner name, email, phone, and password are required.',
+      });
+    }
+    if (String(password).length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+
+    const result = registerSeller({
+      store_name,
+      owner_name,
+      email,
+      password,
+      phone,
+      business_type,
+      registration_no,
+      city,
+      state,
+      pincode,
+      upi_payout_id,
+      bank_details,
+      story,
+    });
+    res.status(201).json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Registration failed' });
+  }
+});
+
+app.post('/api/seller/login', (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+    const auth = verifySellerLogin(email, password);
+    if (!auth) {
+      return res.status(401).json({ error: 'Invalid manufacturer email or password.' });
+    }
+    res.json({ success: true, ...auth });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/seller/me', requireSellerAuth, (req: any, res) => {
+  try {
+    const seller = req.seller;
+    const products = getSellerProducts(seller.id);
+    const { orders, earnings } = getSellerOrdersAndEarnings(seller.id);
+    res.json({ seller, products, orders, earnings });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/seller/products', requireSellerAuth, (req: any, res) => {
+  try {
+    const seller = req.seller;
+    if (seller.status !== 'approved') {
+      return res.status(403).json({
+        error:
+          'Your manufacturer store is pending UGT Admin approval. Once your store is approved, you can submit products for certificate audit.',
+      });
+    }
+
+    const {
+      name,
+      description,
+      price,
+      compare_at_price,
+      category,
+      subcategory,
+      product_type,
+      digital_html_content,
+      digital_access_note,
+      image_url,
+      stock,
+      cause_id,
+      cause_allocation_pct,
+      cause_impact_text,
+      quality_cert_url,
+      quality_cert_name,
+      zero_chemical_cert_url,
+      zero_chemical_cert_name,
+      origin_state,
+    } = req.body || {};
+
+    if (!name || !price || !category || !image_url) {
+      return res.status(400).json({
+        error: 'Product title, price, category, and uploaded product photo are required.',
+      });
+    }
+
+    // STRICT MANDATORY DUAL CERTIFICATE REQUIREMENT FOR EVERY SELLER PRODUCT
+    if (!quality_cert_url || !String(quality_cert_url).trim()) {
+      return res.status(400).json({
+        error: 'Mandatory Quality Certificate upload is required before submission.',
+      });
+    }
+    if (!zero_chemical_cert_url || !String(zero_chemical_cert_url).trim()) {
+      return res.status(400).json({
+        error: 'Mandatory Zero-Chemical Certificate upload is required before submission.',
+      });
+    }
+
+    const resolvedType = product_type === 'digital' ? 'digital' : 'physical';
+    const id = `prod-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`;
+    const slug =
+      String(name)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') +
+      '-' +
+      Math.floor(Math.random() * 900 + 100);
+
+    const created = createProduct({
+      id,
+      name: String(name).trim(),
+      slug,
+      description: String(description || '').trim(),
+      price: parseFloat(price),
+      compare_at_price: compare_at_price ? parseFloat(compare_at_price) : undefined,
+      category: String(category).trim(),
+      subcategory: subcategory || (resolvedType === 'digital' ? 'eBooks' : ''),
+      product_type: resolvedType,
+      digital_html_content: resolvedType === 'digital' ? String(digital_html_content || '') : '',
+      digital_access_note:
+        resolvedType === 'digital'
+          ? digital_access_note || 'Unlocked immediately after verified payment'
+          : '',
+      image_url: String(image_url),
+      stock: parseInt(stock, 10) || 50,
+      is_featured: 0,
+      cause_id: cause_id || 'cause-everyday-essentials',
+      cause_allocation_pct: Math.max(10, parseFloat(cause_allocation_pct) || 15),
+      cause_impact_text: cause_impact_text || `Crafted by ${seller.store_name}`,
+      rating: 0,
+      reviews_count: 0,
+      badge: 'Zero-Chemical Audited',
+      seller_id: seller.id,
+      seller_name: seller.store_name,
+      approval_status: 'pending_approval', // STRICT: NEVER live until Admin audits both certificates!
+      quality_cert_url: String(quality_cert_url),
+      quality_cert_name: String(quality_cert_name || 'Quality Certificate'),
+      zero_chemical_cert_url: String(zero_chemical_cert_url),
+      zero_chemical_cert_name: String(zero_chemical_cert_name || 'Zero-Chemical Certificate'),
+      approval_notes: '',
+      origin_state: String(origin_state || seller.state || 'India').trim(),
+    });
+
+    res.status(201).json({ success: true, product: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/seller/products/:id', requireSellerAuth, (req: any, res) => {
+  try {
+    const seller = req.seller;
+    const existing = getProductById(req.params.id, true);
+    if (!existing || existing.seller_id !== seller.id) {
+      return res.status(404).json({ error: 'Product not found in your store.' });
+    }
+    const body = req.body || {};
+    // Any product edit re-queues Admin certificate audit to prevent post-approval bait-and-switch!
+    const updated = updateProduct(req.params.id, {
+      ...body,
+      seller_id: seller.id,
+      seller_name: seller.store_name,
+      approval_status: 'pending_approval',
+    });
+    res.json({ success: true, product: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/seller/products/:id', requireSellerAuth, (req: any, res) => {
+  try {
+    const existing = getProductById(req.params.id, true);
+    if (!existing || existing.seller_id !== req.seller.id) {
+      return res.status(404).json({ error: 'Product not found in your store.' });
+    }
+    deleteProduct(req.params.id);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/seller/orders/:id/dispatch', requireSellerAuth, (req: any, res) => {
+  try {
+    if (!sellerOwnsOrder(req.seller.id, req.params.id)) {
+      return res.status(403).json({ error: 'You are not authorized to dispatch this order.' });
+    }
+    const { courierName = '', trackingNumber = '', status } = req.body || {};
+    const updated = updateOrderDispatch(req.params.id, courierName, trackingNumber, status);
+    if (!updated) return res.status(404).json({ error: 'Order not found' });
+    res.json({ success: true, order: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// ADMIN SELLER APPROVAL, PRODUCT CERTIFICATE AUDIT & EXPORTS
+// ============================================================
+
+app.get('/api/admin/sellers', requireAdminAuth, (_req, res) => {
+  try {
+    res.json(getAllSellersAdmin());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/sellers/:id/status', requireAdminAuth, (req, res) => {
+  try {
+    const { status, adminNotes = '' } = req.body || {};
+    if (!['approved', 'rejected', 'suspended', 'pending_approval'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid seller status' });
+    }
+    const updated = updateSellerStatus(req.params.id, status, adminNotes);
+    if (!updated) return res.status(404).json({ error: 'Seller not found' });
+    res.json({ success: true, seller: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/products/:id/approval', requireAdminAuth, (req, res) => {
+  try {
+    const { approvalStatus, approvalNotes = '' } = req.body || {};
+    if (!['approved', 'rejected', 'pending_approval'].includes(approvalStatus)) {
+      return res.status(400).json({ error: 'Invalid approvalStatus' });
+    }
+    const updated = updateProductApproval(req.params.id, approvalStatus, approvalNotes);
+    if (!updated) return res.status(404).json({ error: 'Product not found' });
+    res.json({ success: true, product: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 1-Click 3-Way Payout Split CSV Export (Tally & Trust Audit)
+app.get('/api/admin/exports/payouts.csv', requireAdminAuth, (_req, res) => {
+  try {
+    const csv = generatePayoutSplitCsv();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="buy4achange-3way-payouts.csv"');
+    res.send(csv);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 1-Click ONDC / Beckn Open-Commerce Catalog Export
+app.get('/api/admin/exports/ondc-catalog.json', requireAdminAuth, (_req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="buy4achange-ondc-beckn-catalog.json"');
+    res.json(generateOndcBecknCatalog());
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

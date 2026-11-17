@@ -38,7 +38,25 @@ export function initDatabase() {
     db.exec("ALTER TABLE orders ADD COLUMN courier_name TEXT DEFAULT ''");
   }
 
-  // Open-source integrations config, cookie-free analytics, and transactional email outbox
+  // Ensure manufacturer/seller & dual-certificate columns exist on products
+  const sellerProdMigrations: [string, string][] = [
+    ['seller_id', "TEXT DEFAULT ''"],
+    ['seller_name', "TEXT DEFAULT ''"],
+    ['approval_status', "TEXT DEFAULT 'approved'"],
+    ['quality_cert_url', "TEXT DEFAULT ''"],
+    ['quality_cert_name', "TEXT DEFAULT ''"],
+    ['zero_chemical_cert_url', "TEXT DEFAULT ''"],
+    ['zero_chemical_cert_name', "TEXT DEFAULT ''"],
+    ['approval_notes', "TEXT DEFAULT ''"],
+    ['origin_state', "TEXT DEFAULT ''"],
+  ];
+  for (const [col, def] of sellerProdMigrations) {
+    if (!cols.includes(col)) {
+      db.exec(`ALTER TABLE products ADD COLUMN ${col} ${def}`);
+    }
+  }
+
+  // Open-source integrations, analytics, email outbox, sellers marketplace & verified reviews
   db.exec(`
     CREATE TABLE IF NOT EXISTS site_integrations (
       key TEXT PRIMARY KEY,
@@ -59,6 +77,36 @@ export function initDatabase() {
       subject TEXT NOT NULL,
       body_preview TEXT DEFAULT '',
       status TEXT DEFAULT 'queued',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS sellers (
+      id TEXT PRIMARY KEY,
+      store_name TEXT NOT NULL,
+      owner_name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      business_type TEXT DEFAULT 'Manufacturer',
+      registration_no TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      state TEXT DEFAULT '',
+      pincode TEXT DEFAULT '',
+      upi_payout_id TEXT DEFAULT '',
+      bank_details TEXT DEFAULT '',
+      story TEXT DEFAULT '',
+      status TEXT DEFAULT 'pending_approval',
+      admin_notes TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS product_reviews (
+      id TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      order_number TEXT NOT NULL,
+      reviewer_name TEXT NOT NULL,
+      reviewer_email TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      comment TEXT DEFAULT '',
+      verified_purchase INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -117,6 +165,15 @@ export interface Product {
   created_at?: string;
   cause_title?: string;
   cause_category?: string;
+  seller_id?: string;
+  seller_name?: string;
+  approval_status?: 'pending_approval' | 'approved' | 'rejected';
+  quality_cert_url?: string;
+  quality_cert_name?: string;
+  zero_chemical_cert_url?: string;
+  zero_chemical_cert_name?: string;
+  approval_notes?: string;
+  origin_state?: string;
 }
 
 export interface OrderItem {
@@ -243,6 +300,7 @@ export function resetAllCausesToZero(): Cause[] {
 
 // --- Product Operations ---
 // Public product listing: NEVER exposes digital_html_content (locked until purchase!)
+// AND ONLY returns admin-approved products!
 const PUBLIC_PRODUCT_COLS = `
   p.id, p.name, p.slug, p.description, p.price, p.compare_at_price,
   p.category, COALESCE(p.subcategory, '') as subcategory,
@@ -251,6 +309,14 @@ const PUBLIC_PRODUCT_COLS = `
   CASE WHEN COALESCE(p.digital_html_content, '') != '' THEN 1 ELSE 0 END as has_digital_content,
   p.image_url, p.stock, p.is_featured, p.cause_id, p.cause_allocation_pct,
   p.cause_impact_text, p.rating, p.reviews_count, p.badge, p.created_at,
+  COALESCE(p.seller_id, '') as seller_id,
+  COALESCE(p.seller_name, '') as seller_name,
+  COALESCE(p.approval_status, 'approved') as approval_status,
+  COALESCE(p.quality_cert_url, '') as quality_cert_url,
+  COALESCE(p.quality_cert_name, '') as quality_cert_name,
+  COALESCE(p.zero_chemical_cert_url, '') as zero_chemical_cert_url,
+  COALESCE(p.zero_chemical_cert_name, '') as zero_chemical_cert_name,
+  COALESCE(p.origin_state, '') as origin_state,
   c.title as cause_title, c.category as cause_category
 `;
 
@@ -259,7 +325,7 @@ export function getAllProducts(category?: string, search?: string): Product[] {
     SELECT ${PUBLIC_PRODUCT_COLS}
     FROM products p
     LEFT JOIN causes c ON p.cause_id = c.id
-    WHERE 1=1
+    WHERE COALESCE(p.approval_status, 'approved') = 'approved'
   `;
   const params: any[] = [];
 
@@ -310,8 +376,11 @@ export function createProduct(prod: Omit<Product, 'created_at'>): Product {
       id, name, slug, description, price, compare_at_price, category,
       subcategory, product_type, digital_html_content, digital_access_note,
       image_url, stock, is_featured, cause_id, cause_allocation_pct,
-      cause_impact_text, rating, reviews_count, badge
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      cause_impact_text, rating, reviews_count, badge,
+      seller_id, seller_name, approval_status,
+      quality_cert_url, quality_cert_name, zero_chemical_cert_url, zero_chemical_cert_name,
+      approval_notes, origin_state
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   stmt.run(
     prod.id,
@@ -333,7 +402,16 @@ export function createProduct(prod: Omit<Product, 'created_at'>): Product {
     prod.cause_impact_text || '',
     prod.rating ?? 0,
     prod.reviews_count ?? 0,
-    prod.badge || ''
+    prod.badge || '',
+    prod.seller_id || '',
+    prod.seller_name || '',
+    prod.approval_status || 'approved',
+    prod.quality_cert_url || '',
+    prod.quality_cert_name || '',
+    prod.zero_chemical_cert_url || '',
+    prod.zero_chemical_cert_name || '',
+    prod.approval_notes || '',
+    prod.origin_state || ''
   );
   return getProductById(prod.id, true)!;
 }
@@ -348,7 +426,9 @@ export function updateProduct(id: string, prod: Partial<Product>): Product | und
       name = ?, slug = ?, description = ?, price = ?, compare_at_price = ?,
       category = ?, subcategory = ?, product_type = ?, digital_html_content = ?, digital_access_note = ?,
       image_url = ?, stock = ?, is_featured = ?, cause_id = ?,
-      cause_allocation_pct = ?, cause_impact_text = ?, badge = ?
+      cause_allocation_pct = ?, cause_impact_text = ?, badge = ?,
+      approval_status = ?, quality_cert_url = ?, quality_cert_name = ?,
+      zero_chemical_cert_url = ?, zero_chemical_cert_name = ?, approval_notes = ?, origin_state = ?
     WHERE id = ?
   `);
   stmt.run(
@@ -369,6 +449,13 @@ export function updateProduct(id: string, prod: Partial<Product>): Product | und
     updated.cause_allocation_pct,
     updated.cause_impact_text,
     updated.badge || '',
+    updated.approval_status || 'approved',
+    updated.quality_cert_url || '',
+    updated.quality_cert_name || '',
+    updated.zero_chemical_cert_url || '',
+    updated.zero_chemical_cert_name || '',
+    updated.approval_notes || '',
+    updated.origin_state || '',
     id
   );
   return getProductById(id, true);
@@ -991,4 +1078,435 @@ export async function queueEmailNotification(params: {
     `INSERT INTO email_outbox (id, order_number, recipient_email, event_type, subject, body_preview, status)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
   ).run(id, params.orderNumber, params.recipientEmail, params.eventType, params.subject, params.bodyPreview, status);
+}
+
+// ============================================================
+// PRO MANUFACTURER / SELLER MARKETPLACE + CERTIFICATE AUDIT
+// ============================================================
+
+export interface SellerRecord {
+  id: string;
+  store_name: string;
+  owner_name: string;
+  email: string;
+  phone: string;
+  business_type: string;
+  registration_no: string;
+  city: string;
+  state: string;
+  pincode: string;
+  upi_payout_id: string;
+  bank_details: string;
+  story: string;
+  status: 'pending_approval' | 'approved' | 'rejected' | 'suspended';
+  admin_notes: string;
+  created_at: string;
+}
+
+function signSellerToken(seller: { id: string; email: string }): string {
+  const payload = `seller:${seller.id}:${seller.email}:${Date.now()}`;
+  const sig = crypto.createHmac('sha256', 'UGT_SELLER_SECRET_KEY_2026').update(payload).digest('hex');
+  return Buffer.from(`${payload}:${sig}`).toString('base64');
+}
+
+export function validateSellerToken(token: string): { id: string; email: string } | null {
+  if (!token) return null;
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const parts = decoded.split(':');
+    if (parts.length < 5 || parts[0] !== 'seller') return null;
+    const [prefix, id, email, ts, sig] = parts;
+    const payload = `${prefix}:${id}:${email}:${ts}`;
+    const expected = crypto.createHmac('sha256', 'UGT_SELLER_SECRET_KEY_2026').update(payload).digest('hex');
+    if (sig !== expected) return null;
+    if (Date.now() - parseInt(ts, 10) > 14 * 24 * 60 * 60 * 1000) return null;
+    return { id, email };
+  } catch {
+    return null;
+  }
+}
+
+export function registerSeller(input: {
+  store_name: string;
+  owner_name: string;
+  email: string;
+  password: string;
+  phone: string;
+  business_type?: string;
+  registration_no?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  upi_payout_id?: string;
+  bank_details?: string;
+  story?: string;
+}): { seller: SellerRecord; token: string } {
+  const cleanEmail = input.email.trim().toLowerCase();
+  const existing = db.prepare('SELECT id FROM sellers WHERE LOWER(email) = ?').get(cleanEmail);
+  if (existing) {
+    throw new Error('An account with this manufacturer email already exists. Please sign in.');
+  }
+
+  const id = `seller-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+  const pwdHash = hashPassword(input.password);
+  db.prepare(`
+    INSERT INTO sellers (
+      id, store_name, owner_name, email, password_hash, phone,
+      business_type, registration_no, city, state, pincode,
+      upi_payout_id, bank_details, story, status, admin_notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', '')
+  `).run(
+    id,
+    input.store_name.trim(),
+    input.owner_name.trim(),
+    cleanEmail,
+    pwdHash,
+    input.phone.trim(),
+    input.business_type || 'Manufacturer',
+    (input.registration_no || '').trim(),
+    (input.city || '').trim(),
+    (input.state || '').trim(),
+    (input.pincode || '').trim(),
+    (input.upi_payout_id || '').trim(),
+    (input.bank_details || '').trim(),
+    (input.story || '').trim()
+  );
+
+  const seller = getSellerById(id)!;
+  return { seller, token: signSellerToken(seller) };
+}
+
+export function verifySellerLogin(email: string, password: string): { seller: SellerRecord; token: string } | null {
+  const cleanEmail = email.trim().toLowerCase();
+  const pwdHash = hashPassword(password);
+  const row = db
+    .prepare(
+      `SELECT id, store_name, owner_name, email, phone, business_type, registration_no,
+              city, state, pincode, upi_payout_id, bank_details, story, status, admin_notes, created_at
+       FROM sellers
+       WHERE LOWER(email) = ? AND password_hash = ?`
+    )
+    .get(cleanEmail, pwdHash) as SellerRecord | undefined;
+  if (!row) return null;
+  return { seller: row, token: signSellerToken(row) };
+}
+
+export function getSellerById(id: string): SellerRecord | undefined {
+  return db
+    .prepare(
+      `SELECT id, store_name, owner_name, email, phone, business_type, registration_no,
+              city, state, pincode, upi_payout_id, bank_details, story, status, admin_notes, created_at
+       FROM sellers WHERE id = ?`
+    )
+    .get(id) as SellerRecord | undefined;
+}
+
+export function getAllSellersAdmin() {
+  return db
+    .prepare(
+      `SELECT s.id, s.store_name, s.owner_name, s.email, s.phone, s.business_type, s.registration_no,
+              s.city, s.state, s.pincode, s.upi_payout_id, s.bank_details, s.story, s.status,
+              s.admin_notes, s.created_at,
+              (SELECT COUNT(*) FROM products p WHERE p.seller_id = s.id) as product_count,
+              (SELECT COUNT(*) FROM products p WHERE p.seller_id = s.id AND p.approval_status = 'pending_approval') as pending_product_count
+       FROM sellers s
+       ORDER BY CASE WHEN s.status = 'pending_approval' THEN 0 ELSE 1 END, s.created_at DESC`
+    )
+    .all();
+}
+
+export function updateSellerStatus(
+  sellerId: string,
+  status: 'approved' | 'rejected' | 'suspended' | 'pending_approval',
+  adminNotes = ''
+): SellerRecord | undefined {
+  const existing = getSellerById(sellerId);
+  if (!existing) return undefined;
+  db.prepare('UPDATE sellers SET status = ?, admin_notes = ? WHERE id = ?').run(
+    status,
+    adminNotes.trim(),
+    sellerId
+  );
+  return getSellerById(sellerId);
+}
+
+export function getSellerProducts(sellerId: string): Product[] {
+  return db
+    .prepare(
+      `SELECT p.*, c.title as cause_title, c.category as cause_category
+       FROM products p
+       LEFT JOIN causes c ON p.cause_id = c.id
+       WHERE p.seller_id = ?
+       ORDER BY p.created_at DESC, p.rowid DESC`
+    )
+    .all(sellerId) as unknown as Product[];
+}
+
+export function updateProductApproval(
+  productId: string,
+  approvalStatus: 'approved' | 'rejected' | 'pending_approval',
+  approvalNotes = ''
+): Product | undefined {
+  const existing = getProductById(productId, true);
+  if (!existing) return undefined;
+  db.prepare('UPDATE products SET approval_status = ?, approval_notes = ? WHERE id = ?').run(
+    approvalStatus,
+    approvalNotes.trim(),
+    productId
+  );
+  return getProductById(productId, true);
+}
+
+export function getSellerOrdersAndEarnings(sellerId: string) {
+  const rows = db
+    .prepare(
+      `SELECT o.id, o.order_number, o.customer_name, o.customer_phone, o.shipping_address,
+              o.city, o.state, o.pincode, o.payment_status, o.order_status,
+              o.courier_name, o.tracking_number, o.created_at,
+              oi.id as item_id, oi.product_id, oi.product_name, oi.price, oi.quantity, oi.total,
+              oi.cause_allocation_pct, oi.cause_contribution,
+              COALESCE(c.title, 'Living India Mission') as cause_title
+       FROM order_items oi
+       INNER JOIN products p ON p.id = oi.product_id
+       INNER JOIN orders o ON o.id = oi.order_id
+       LEFT JOIN causes c ON oi.cause_id = c.id
+       WHERE p.seller_id = ?
+       ORDER BY o.created_at DESC`
+    )
+    .all(sellerId) as any[];
+
+  let totalGross = 0;
+  let missionContribution = 0;
+  let platformFee = 0;
+  let netPayout = 0;
+  let verifiedOrdersCount = 0;
+  let pendingOrdersCount = 0;
+
+  const enriched = rows.map((r) => {
+    const gross = Number(r.total || 0);
+    const mission = Number(r.cause_contribution || 0);
+    const ops = Math.round(gross * 0.05 * 100) / 100; // Transparent 5% platform operations split
+    const sellerNet = Math.max(0, Math.round((gross - mission - ops) * 100) / 100);
+    if (r.payment_status === 'paid') {
+      totalGross += gross;
+      missionContribution += mission;
+      platformFee += ops;
+      netPayout += sellerNet;
+      verifiedOrdersCount += 1;
+    } else if (r.payment_status === 'pending_verification') {
+      pendingOrdersCount += 1;
+    }
+    return {
+      ...r,
+      platform_fee: ops,
+      seller_net_payout: sellerNet,
+    };
+  });
+
+  return {
+    orders: enriched,
+    earnings: {
+      totalGross: Math.round(totalGross),
+      missionContribution: Math.round(missionContribution),
+      platformFee: Math.round(platformFee),
+      netPayout: Math.round(netPayout),
+      verifiedOrdersCount,
+      pendingOrdersCount,
+    },
+  };
+}
+
+export function sellerOwnsOrder(sellerId: string, orderId: string): boolean {
+  const row = db
+    .prepare(
+      `SELECT oi.id FROM order_items oi
+       INNER JOIN products p ON p.id = oi.product_id
+       WHERE oi.order_id = ? AND p.seller_id = ?
+       LIMIT 1`
+    )
+    .get(orderId, sellerId);
+  return Boolean(row);
+}
+
+// --- Verified-Buyer-Only Reviews (Zero Fake Ratings) ---
+export function getProductReviews(productId: string) {
+  return db
+    .prepare(
+      `SELECT id, product_id, order_number, reviewer_name, rating, comment, verified_purchase, created_at
+       FROM product_reviews
+       WHERE product_id = ?
+       ORDER BY created_at DESC`
+    )
+    .all(productId);
+}
+
+export function createVerifiedProductReview(input: {
+  productId: string;
+  orderNumber: string;
+  email: string;
+  rating: number;
+  comment: string;
+}) {
+  const cleanOrder = input.orderNumber.trim().toUpperCase();
+  const cleanEmail = input.email.trim().toLowerCase();
+  const rating = Math.min(5, Math.max(1, Math.round(Number(input.rating) || 5)));
+
+  // Strictly verify buyer has a PAID order containing this product
+  const verifiedOrder = db
+    .prepare(
+      `SELECT o.order_number, o.customer_name
+       FROM orders o
+       INNER JOIN order_items oi ON oi.order_id = o.id
+       WHERE UPPER(o.order_number) = ?
+         AND LOWER(o.customer_email) = ?
+         AND o.payment_status = 'paid'
+         AND oi.product_id = ?
+       LIMIT 1`
+    )
+    .get(cleanOrder, cleanEmail, input.productId) as any;
+
+  if (!verifiedOrder) {
+    throw new Error(
+      'Only verified buyers with a PAID order for this exact product can submit a review.'
+    );
+  }
+
+  const dup = db
+    .prepare('SELECT id FROM product_reviews WHERE product_id = ? AND UPPER(order_number) = ?')
+    .get(input.productId, cleanOrder);
+  if (dup) {
+    throw new Error('You have already submitted a verified review for this product on this order.');
+  }
+
+  const id = `rev_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  db.prepare(
+    `INSERT INTO product_reviews (id, product_id, order_number, reviewer_name, reviewer_email, rating, comment, verified_purchase)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1)`
+  ).run(
+    id,
+    input.productId,
+    cleanOrder,
+    verifiedOrder.customer_name || 'Verified Buyer',
+    cleanEmail,
+    rating,
+    input.comment.trim().slice(0, 600)
+  );
+
+  // Recalculate authentic product rating & review count
+  const agg = db
+    .prepare('SELECT AVG(rating) as avg_rating, COUNT(*) as cnt FROM product_reviews WHERE product_id = ?')
+    .get(input.productId) as any;
+  db.prepare('UPDATE products SET rating = ?, reviews_count = ? WHERE id = ?').run(
+    Math.round((agg?.avg_rating || rating) * 10) / 10,
+    agg?.cnt || 1,
+    input.productId
+  );
+
+  return getProductReviews(input.productId);
+}
+
+// --- 3-Way Split Accounting CSV Export (Tally / Trust Audit) ---
+export function generatePayoutSplitCsv(): string {
+  const rows = db
+    .prepare(
+      `SELECT o.order_number, o.created_at, o.payment_status, o.order_status,
+              oi.product_name, oi.quantity, oi.total, oi.cause_contribution,
+              COALESCE(p.seller_name, 'UGT Direct') as seller_name,
+              COALESCE(c.title, 'Living India Mission') as cause_title
+       FROM order_items oi
+       INNER JOIN orders o ON o.id = oi.order_id
+       LEFT JOIN products p ON p.id = oi.product_id
+       LEFT JOIN causes c ON oi.cause_id = c.id
+       ORDER BY o.created_at DESC`
+    )
+    .all() as any[];
+
+  const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [
+    'Order Number,Date,Payment Status,Order Status,Manufacturer / Seller,Product,Qty,Gross INR,Mission Title,Mission Share INR,Platform Ops (5%) INR,Manufacturer Payout INR',
+  ];
+  for (const r of rows) {
+    const gross = Number(r.total || 0);
+    const mission = Number(r.cause_contribution || 0);
+    const ops = Math.round(gross * 0.05 * 100) / 100;
+    const payout = Math.max(0, Math.round((gross - mission - ops) * 100) / 100);
+    lines.push(
+      [
+        esc(r.order_number),
+        esc(r.created_at),
+        esc(r.payment_status),
+        esc(r.order_status),
+        esc(r.seller_name),
+        esc(r.product_name),
+        r.quantity,
+        gross.toFixed(2),
+        esc(r.cause_title),
+        mission.toFixed(2),
+        ops.toFixed(2),
+        payout.toFixed(2),
+      ].join(',')
+    );
+  }
+  return lines.join('\n');
+}
+
+// --- ONDC / Beckn Open-Commerce Catalog JSON Export ---
+export function generateOndcBecknCatalog() {
+  const approvedProducts = getAllProducts();
+  const approvedSellers = (getAllSellersAdmin() as any[]).filter((s) => s.status === 'approved');
+  return {
+    context: {
+      domain: 'ONDC:RET10',
+      country: 'IND',
+      action: 'on_search',
+      core_version: '1.2.0',
+      bap_id: 'buy4achange.ugtindia.space',
+      timestamp: new Date().toISOString(),
+    },
+    message: {
+      catalog: {
+        'bpp/descriptor': {
+          name: 'Buy4AChange — Universal Guard Trust & UGT India',
+          short_desc: 'Verified zero-chemical Indian manufacturers funding 8 Living India missions.',
+        },
+        'bpp/providers': [
+          {
+            id: 'ugt-india-direct',
+            descriptor: { name: 'Buy4AChange Direct & Certified Makers' },
+            items: approvedProducts.map((p) => ({
+              id: p.id,
+              descriptor: {
+                name: p.name,
+                short_desc: p.description,
+                images: p.image_url ? [p.image_url] : [],
+              },
+              category_id: p.category,
+              price: { currency: 'INR', value: String(p.price) },
+              quantity: { available: { count: String(p.stock) } },
+              tags: [
+                {
+                  code: 'origin_and_purity',
+                  list: [
+                    { code: 'manufacturer', value: p.seller_name || 'UGT India' },
+                    { code: 'origin_state', value: p.origin_state || 'India' },
+                    { code: 'quality_certified', value: p.quality_cert_url ? 'yes' : 'standard' },
+                    { code: 'zero_chemical_certified', value: p.zero_chemical_cert_url ? 'yes' : 'standard' },
+                    { code: 'living_india_mission', value: p.cause_title || p.cause_id },
+                  ],
+                },
+              ],
+            })),
+          },
+          ...approvedSellers.map((s) => ({
+            id: s.id,
+            descriptor: {
+              name: s.store_name,
+              short_desc: `${s.business_type} · ${s.city}, ${s.state}`,
+            },
+            locations: [{ id: `${s.id}-loc`, address: { city: s.city, state: s.state, area_code: s.pincode } }],
+          })),
+        ],
+      },
+    },
+  };
 }

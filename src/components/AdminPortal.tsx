@@ -4,14 +4,16 @@ import {
   Heart, RefreshCw, Lock, LogOut, ArrowLeft, ExternalLink,
   CheckCircle2, AlertCircle, CreditCard, Key,
   Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw,
-  BookOpen, Code2, Eye, FileCode, Truck, FileDown, Activity, Mail, Sliders
+  BookOpen, Code2, Eye, FileCode, Truck, FileDown, Activity, Mail, Sliders,
+  Store, Leaf, FileCheck2, Download
 } from 'lucide-react';
 import {
   Product, Order, Cause, AdminMetrics, PaymentTransaction,
-  UnlockedDigitalItem, SiteIntegrations, AnalyticsSummary
+  UnlockedDigitalItem, SiteIntegrations, AnalyticsSummary, Seller
 } from '../types.ts';
 import { EPRODUCT_SUBCATEGORIES } from './EProductsSection.tsx';
 import { DigitalReaderModal } from './DigitalReaderModal.tsx';
+import { CertificateViewerModal } from './CertificateViewerModal.tsx';
 import { generateOrderReceiptPdf } from '../utils/pdfCertificate.ts';
 
 interface AdminPortalProps {
@@ -36,8 +38,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Tab state
   const [activeTab, setActiveTab] = useState<
-    'orders' | 'products' | 'missions' | 'transactions' | 'gateway' | 'integrations'
+    'orders' | 'products' | 'sellers' | 'missions' | 'transactions' | 'gateway' | 'integrations'
   >('orders');
+
+  // Manufacturer / Seller Store & Certificate Audit state
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [viewingCert, setViewingCert] = useState<{
+    title: string;
+    subtitle?: string;
+    fileName?: string;
+    dataUrl: string;
+  } | null>(null);
 
   // Real Dispatch Modal state (Courier + AWB Tracking)
   const [dispatchOrder, setDispatchOrder] = useState<Order | null>(null);
@@ -355,6 +366,75 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
+  const fetchSellers = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/sellers', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setSellers(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSellerStatusChange = async (
+    sellerId: string,
+    status: 'approved' | 'rejected' | 'suspended'
+  ) => {
+    if (!token) return;
+    const adminNotes =
+      status === 'approved'
+        ? 'Verified & Approved by UGT India Operations'
+        : prompt(`Optional reason for marking store as ${status}:`) || '';
+    const res = await fetch(`/api/admin/sellers/${sellerId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status, adminNotes }),
+    });
+    if (res.ok) fetchSellers();
+  };
+
+  const handleProductApproval = async (
+    productId: string,
+    approvalStatus: 'approved' | 'rejected'
+  ) => {
+    if (!token) return;
+    const approvalNotes =
+      approvalStatus === 'approved'
+        ? 'Quality & Zero-Chemical Certificates Audited & Verified'
+        : prompt('Reason for rejecting product certificates:') || 'Certificates require clarification.';
+    const res = await fetch(`/api/admin/products/${productId}/approval`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ approvalStatus, approvalNotes }),
+    });
+    if (res.ok) {
+      fetchAdminProducts();
+      fetchSellers();
+      onRefreshData();
+    }
+  };
+
+  const handleDownloadAdminExport = async (endpoint: string, fileName: string) => {
+    if (!token) return;
+    const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     if (token) {
       fetchMetrics();
@@ -363,6 +443,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       fetchGatewayConfig();
       fetchAdminProducts();
       fetchIntegrationsAndAnalytics();
+      fetchSellers();
     }
   }, [token, orderDateFilter]);
 
@@ -797,6 +878,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               }`}
             >
               Products ({adminProducts.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('sellers')}
+              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+                activeTab === 'sellers'
+                  ? 'bg-[#166534] text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Store className="w-3.5 h-3.5" />
+              <span>Sellers &amp; Audits</span>
+              {sellers.filter((s) => s.status === 'pending_approval').length +
+                adminProducts.filter((p) => p.approval_status === 'pending_approval').length >
+                0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                  {sellers.filter((s) => s.status === 'pending_approval').length +
+                    adminProducts.filter((p) => p.approval_status === 'pending_approval').length}
+                </span>
+              )}
             </button>
 
             <button
@@ -1296,6 +1398,268 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
                   );
                 })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2B: SELLERS & PER-PRODUCT DUAL-CERTIFICATE AUDIT QUEUE */}
+        {activeTab === 'sellers' && (
+          <div className="space-y-6">
+            {/* National Transformation Open Exports Bar */}
+            <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">
+                  Manufacturer Verification &amp; National Open-Commerce Exports
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Approve manufacturer stores, audit every Quality &amp; Zero-Chemical certificate, and export 3-Way Payout CSV or ONDC/Beckn catalog.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDownloadAdminExport(
+                      '/api/admin/exports/payouts.csv',
+                      'buy4achange-3way-payouts.csv'
+                    )
+                  }
+                  className="px-3 py-2 rounded-lg bg-[#F0FDF4] hover:bg-green-100 border border-[#BBF7D0] text-[#166534] text-xs font-semibold inline-flex items-center space-x-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>3-Way Payout CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDownloadAdminExport(
+                      '/api/admin/exports/ondc-catalog.json',
+                      'buy4achange-ondc-beckn-catalog.json'
+                    )
+                  }
+                  className="px-3 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 text-xs font-semibold inline-flex items-center space-x-1.5"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-[#166534]" />
+                  <span>Export ONDC JSON</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section 1: Pending & Registered Manufacturer Stores */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                  <Store className="w-4 h-4 text-[#166534]" />
+                  <span>Manufacturer &amp; Artisan Stores ({sellers.length})</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={fetchSellers}
+                  className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 inline-flex items-center space-x-1"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-[#166534]" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              {sellers.length === 0 ? (
+                <p className="text-xs text-gray-500 py-4 text-center">
+                  No manufacturer stores registered yet. Share <span className="font-mono text-gray-800">/seller</span> with ethical producers to onboard.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {sellers.map((s) => (
+                    <div
+                      key={s.id}
+                      className="p-4 rounded-xl bg-[#FAF9F6] border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1 text-xs">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-sm text-gray-900">{s.store_name}</span>
+                          <span className="px-2 py-0.5 rounded bg-white border border-gray-200 text-[10px] font-semibold text-gray-700">
+                            {s.business_type}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              s.status === 'approved'
+                                ? 'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]'
+                                : s.status === 'rejected' || s.status === 'suspended'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : 'bg-amber-50 text-amber-800 border border-amber-200'
+                            }`}
+                          >
+                            {s.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="text-gray-600">
+                          Owner: <strong>{s.owner_name}</strong> · {s.email} · {s.phone}
+                        </div>
+                        <div className="text-gray-600">
+                          Location: {s.city}, {s.state} {s.pincode} · Reg: <span className="font-mono">{s.registration_no || 'N/A'}</span> · Payout UPI: <span className="font-mono text-[#166534]">{s.upi_payout_id}</span>
+                        </div>
+                        {s.story && <p className="text-gray-500 italic">&ldquo;{s.story}&rdquo;</p>}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {s.status !== 'approved' && (
+                          <button
+                            type="button"
+                            onClick={() => handleSellerStatusChange(s.id, 'approved')}
+                            className="px-3 py-1.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
+                          >
+                            Approve Store
+                          </button>
+                        )}
+                        {s.status === 'pending_approval' && (
+                          <button
+                            type="button"
+                            onClick={() => handleSellerStatusChange(s.id, 'rejected')}
+                            className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold"
+                          >
+                            Reject
+                          </button>
+                        )}
+                        {s.status === 'approved' && (
+                          <button
+                            type="button"
+                            onClick={() => handleSellerStatusChange(s.id, 'suspended')}
+                            className="px-3 py-1.5 rounded-lg bg-white hover:bg-rose-50 border border-gray-300 text-gray-700 text-xs font-semibold"
+                          >
+                            Suspend
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Section 2: Per-Product Dual-Certificate Audit Queue */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-4">
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                  <ShieldCheck className="w-4 h-4 text-[#166534]" />
+                  <span>
+                    Product Quality &amp; Zero-Chemical Certificate Audit Queue (
+                    {adminProducts.filter((p) => p.seller_id).length})
+                  </span>
+                </h4>
+                <p className="text-xs text-gray-500">
+                  Inspect both uploaded certificates before approving any manufacturer product to appear on the storefront.
+                </p>
+              </div>
+
+              {adminProducts.filter((p) => p.seller_id).length === 0 ? (
+                <p className="text-xs text-gray-500 py-4 text-center">
+                  No manufacturer products submitted for certificate audit yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {adminProducts
+                    .filter((p) => p.seller_id)
+                    .sort((a, b) =>
+                      a.approval_status === 'pending_approval' && b.approval_status !== 'pending_approval'
+                        ? -1
+                        : 1
+                    )
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        className="p-4 rounded-xl bg-[#FAF9F6] border border-gray-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <img
+                            src={p.image_url}
+                            alt={p.name}
+                            className="w-16 h-16 rounded-lg object-cover border border-gray-200 bg-white shrink-0"
+                          />
+                          <div className="space-y-1 text-xs">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-bold text-sm text-gray-900">{p.name}</span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  p.approval_status === 'approved'
+                                    ? 'bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]'
+                                    : p.approval_status === 'rejected'
+                                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                }`}
+                              >
+                                {(p.approval_status || 'pending_approval').replace('_', ' ').toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="text-gray-600">
+                              Manufacturer: <strong>{p.seller_name}</strong> ({p.origin_state || 'India'}) · ₹{p.price} · Mission Share {p.cause_allocation_pct}%
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                              {p.quality_cert_url ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setViewingCert({
+                                      title: `Quality Certificate — ${p.name}`,
+                                      subtitle: `Submitted by ${p.seller_name}`,
+                                      fileName: p.quality_cert_name,
+                                      dataUrl: p.quality_cert_url!,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-white border border-[#166534] text-[#166534] font-semibold text-[11px] inline-flex items-center space-x-1"
+                                >
+                                  <FileCheck2 className="w-3.5 h-3.5" />
+                                  <span>Inspect Quality Certificate</span>
+                                </button>
+                              ) : (
+                                <span className="text-rose-600 font-semibold">Missing Quality Cert</span>
+                              )}
+
+                              {p.zero_chemical_cert_url ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setViewingCert({
+                                      title: `Zero-Chemical Certificate — ${p.name}`,
+                                      subtitle: `Submitted by ${p.seller_name}`,
+                                      fileName: p.zero_chemical_cert_name,
+                                      dataUrl: p.zero_chemical_cert_url!,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] font-semibold text-[11px] inline-flex items-center space-x-1"
+                                >
+                                  <Leaf className="w-3.5 h-3.5" />
+                                  <span>Inspect Zero-Chemical Certificate</span>
+                                </button>
+                              ) : (
+                                <span className="text-rose-600 font-semibold">Missing Zero-Chemical Cert</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {p.approval_status !== 'approved' && (
+                            <button
+                              type="button"
+                              onClick={() => handleProductApproval(p.id, 'approved')}
+                              className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
+                            >
+                              Approve &amp; Publish Live
+                            </button>
+                          )}
+                          {p.approval_status !== 'rejected' && (
+                            <button
+                              type="button"
+                              onClick={() => handleProductApproval(p.id, 'rejected')}
+                              className="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold"
+                            >
+                              Reject
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -2654,6 +3018,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         onClose={() => setPreviewDigitalItem(null)}
         isPreview={true}
       />
+
+      {/* ADMIN CERTIFICATE AUDIT VIEWER */}
+      <CertificateViewerModal cert={viewingCert} onClose={() => setViewingCert(null)} />
     </div>
   );
 };

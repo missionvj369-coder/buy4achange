@@ -13,6 +13,7 @@ import { DigitalLibraryModal } from './components/DigitalLibraryModal.tsx';
 import { DigitalReaderModal } from './components/DigitalReaderModal.tsx';
 import { MissionDocumentModal } from './components/MissionDocumentModal.tsx';
 import { OrderTrackLedgerModal } from './components/OrderTrackLedgerModal.tsx';
+import { SellerPortal } from './components/SellerPortal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { Cause, Product, CartItem, Order, UnlockedDigitalItem } from './types.ts';
@@ -333,9 +334,20 @@ export function App() {
   const categories = ['All', ...dynamicCategories];
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // ADMIN ROUTE (/admin)
+  // Auto-open verified product when scanned via Origin & Purity QR Code (?verify=<productId>)
+  useEffect(() => {
+    const verifyId = new URLSearchParams(window.location.search).get('verify');
+    if (verifyId && products.length > 0 && !selectedProduct) {
+      const match = products.find((p) => p.id === verifyId || p.slug === verifyId);
+      if (match) setSelectedProduct(match);
+    }
+  }, [products]);
+
+  // ADMIN ROUTE (/admin) & SELLER MARKETPLACE ROUTE (/seller)
   const isAdminRoute =
     /^\/admin(\/.*)?$/i.test(currentPath) || /^#\/?admin(\/.*)?$/i.test(currentHash);
+  const isSellerRoute =
+    /^\/seller(\/.*)?$/i.test(currentPath) || /^#\/?seller(\/.*)?$/i.test(currentHash);
 
   if (isAdminRoute) {
     return (
@@ -344,6 +356,16 @@ export function App() {
         products={products}
         onRefreshData={fetchData}
         onNavigateStore={() => navigateTo('/')}
+      />
+    );
+  }
+
+  if (isSellerRoute) {
+    return (
+      <SellerPortal
+        causes={causes}
+        onNavigateStore={() => navigateTo('/')}
+        onRefreshStore={fetchData}
       />
     );
   }
@@ -658,6 +680,7 @@ export function App() {
           setTrackLedgerTab(tab);
           setIsTrackLedgerOpen(true);
         }}
+        onOpenSellerPortal={() => navigateTo('/seller')}
         canInstallPwa={Boolean(deferredPwaPrompt)}
         onInstallPwa={handleInstallPwa}
         whatsappSupportNumber={publicIntegrations.whatsappSupportNumber}

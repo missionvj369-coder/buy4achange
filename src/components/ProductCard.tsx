@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Plus, Check } from 'lucide-react';
+import { Heart, Plus, Check, ShieldCheck } from 'lucide-react';
 import { Product, Cause } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
@@ -61,11 +61,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {product.badge && (
+        {product.quality_cert_url && product.zero_chemical_cert_url ? (
+          <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-[#F0FDF4] text-[#166534] text-[10px] font-semibold border border-[#BBF7D0] inline-flex items-center space-x-1">
+            <ShieldCheck className="w-3 h-3 shrink-0" />
+            <span>Zero-Chemical Certified</span>
+          </div>
+        ) : product.badge ? (
           <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-white/95 text-[#14171A] text-[10px] font-semibold border border-gray-200">
             {product.badge}
           </div>
-        )}
+        ) : null}
 
         <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 flex items-center justify-between text-[11px]">
           <span className="flex items-center space-x-1 text-[#166534] font-semibold">
@@ -89,6 +94,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <h3 className="font-display font-bold text-[#14171A] text-base leading-snug line-clamp-2">
             {product.name}
           </h3>
+
+          {product.seller_name && (
+            <div className="text-[11px] text-[#166534] font-medium truncate">
+              By {product.seller_name}
+              {product.origin_state ? ` · ${product.origin_state}` : ''}
+            </div>
+          )}
 
           {/* Buyer Mission Selector */}
           <div className="pt-1 space-y-1" onClick={(e) => e.stopPropagation()}>

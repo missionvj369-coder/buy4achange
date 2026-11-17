@@ -322,7 +322,63 @@ export default {
         return json(cause);
       }
 
-      // Products (Public — NEVER returns digital_html_content; locked until purchase!)
+      // Lazy-ensure Seller Marketplace & Certificate columns exist on D1
+      const ensureMarketplaceSchema = async () => {
+        try {
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS sellers (
+              id TEXT PRIMARY KEY,
+              store_name TEXT NOT NULL,
+              owner_name TEXT NOT NULL,
+              email TEXT UNIQUE NOT NULL,
+              password_hash TEXT NOT NULL,
+              phone TEXT DEFAULT '',
+              business_type TEXT DEFAULT 'Manufacturer',
+              registration_no TEXT DEFAULT '',
+              city TEXT DEFAULT '',
+              state TEXT DEFAULT '',
+              pincode TEXT DEFAULT '',
+              upi_payout_id TEXT DEFAULT '',
+              bank_details TEXT DEFAULT '',
+              story TEXT DEFAULT '',
+              status TEXT DEFAULT 'pending_approval',
+              admin_notes TEXT DEFAULT '',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS product_reviews (
+              id TEXT PRIMARY KEY,
+              product_id TEXT NOT NULL,
+              order_number TEXT NOT NULL,
+              reviewer_name TEXT NOT NULL,
+              reviewer_email TEXT NOT NULL,
+              rating INTEGER NOT NULL,
+              comment TEXT DEFAULT '',
+              verified_purchase INTEGER DEFAULT 1,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+        } catch {}
+        const migrations = [
+          "ALTER TABLE products ADD COLUMN seller_id TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN seller_name TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN approval_status TEXT DEFAULT 'approved'",
+          "ALTER TABLE products ADD COLUMN quality_cert_url TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN quality_cert_name TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN zero_chemical_cert_url TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN zero_chemical_cert_name TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN approval_notes TEXT DEFAULT ''",
+          "ALTER TABLE products ADD COLUMN origin_state TEXT DEFAULT ''",
+        ];
+        for (const sql of migrations) {
+          try {
+            await env.BUY4ACHANGE_DB.prepare(sql).run();
+          } catch {}
+        }
+      };
+
+      // Products (Public — NEVER returns digital_html_content; ONLY returns approved products!)
       const PUBLIC_PRODUCT_COLS = `
         p.id, p.name, p.slug, p.description, p.price, p.compare_at_price,
         p.category, COALESCE(p.subcategory, '') as subcategory,
@@ -331,10 +387,19 @@ export default {
         CASE WHEN COALESCE(p.digital_html_content, '') != '' THEN 1 ELSE 0 END as has_digital_content,
         p.image_url, p.stock, p.is_featured, p.cause_id, p.cause_allocation_pct,
         p.cause_impact_text, p.rating, p.reviews_count, p.badge, p.created_at,
+        COALESCE(p.seller_id, '') as seller_id,
+        COALESCE(p.seller_name, '') as seller_name,
+        COALESCE(p.approval_status, 'approved') as approval_status,
+        COALESCE(p.quality_cert_url, '') as quality_cert_url,
+        COALESCE(p.quality_cert_name, '') as quality_cert_name,
+        COALESCE(p.zero_chemical_cert_url, '') as zero_chemical_cert_url,
+        COALESCE(p.zero_chemical_cert_name, '') as zero_chemical_cert_name,
+        COALESCE(p.origin_state, '') as origin_state,
         c.title as cause_title, c.category as cause_category
       `;
 
       if (pathname === '/api/products' && request.method === 'GET') {
+        await ensureMarketplaceSchema();
         const category = searchParams.get('category');
         const search = searchParams.get('search');
 
@@ -342,7 +407,7 @@ export default {
           SELECT ${PUBLIC_PRODUCT_COLS}
           FROM products p
           LEFT JOIN causes c ON p.cause_id = c.id
-          WHERE 1=1
+          WHERE COALESCE(p.approval_status, 'approved') = 'approved'
         `;
         const params: any[] = [];
 
@@ -1037,6 +1102,266 @@ export default {
         }
       }
 
+      // Public Product Reviews & Verification
+      const prodVerifyMatch = pathname.match(/^\/api\/products\/([^/]+)\/verify$/);
+      if (prodVerifyMatch && request.method === 'GET') {
+        await ensureMarketplaceSchema();
+        const id = decodeURIComponent(prodVerifyMatch[1]);
+        const product: any = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT ${PUBLIC_PRODUCT_COLS} FROM products p LEFT JOIN causes c ON p.cause_id = c.id
+           WHERE (p.id = ? OR p.slug = ?) AND COALESCE(p.approval_status, 'approved') = 'approved'`
+        ).bind(id, id).first();
+        if (!product) return json({ error: 'Verified product record not found' }, 404);
+        const { results: reviews } = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, product_id, order_number, reviewer_name, rating, comment, verified_purchase, created_at FROM product_reviews WHERE product_id = ? ORDER BY created_at DESC'
+        ).bind(product.id).all();
+        return json({
+          verified: true,
+          product,
+          certificates: {
+            hasQualityCert: Boolean(product.quality_cert_url),
+            qualityCertName: product.quality_cert_name || 'Quality Certificate',
+            qualityCertUrl: product.quality_cert_url || '',
+            hasZeroChemicalCert: Boolean(product.zero_chemical_cert_url),
+            zeroChemicalCertName: product.zero_chemical_cert_name || 'Zero-Chemical Certificate',
+            zeroChemicalCertUrl: product.zero_chemical_cert_url || '',
+          },
+          reviews: reviews || [],
+        });
+      }
+
+      const prodRevMatch = pathname.match(/^\/api\/products\/([^/]+)\/reviews$/);
+      if (prodRevMatch && request.method === 'GET') {
+        await ensureMarketplaceSchema();
+        const id = decodeURIComponent(prodRevMatch[1]);
+        const { results } = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, product_id, order_number, reviewer_name, rating, comment, verified_purchase, created_at FROM product_reviews WHERE product_id = ? ORDER BY created_at DESC'
+        ).bind(id).all();
+        return json(results || []);
+      }
+
+      if (prodRevMatch && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const productId = decodeURIComponent(prodRevMatch[1]);
+        const body: any = await request.json().catch(() => ({}));
+        const cleanOrder = String(body?.orderNumber || '').trim().toUpperCase();
+        const cleanEmail = String(body?.email || '').trim().toLowerCase();
+        const rating = Math.min(5, Math.max(1, Math.round(Number(body?.rating) || 5)));
+        if (!cleanOrder || !cleanEmail) {
+          return json({ error: 'Order number and checkout email are required.' }, 400);
+        }
+        const verifiedOrder: any = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT o.order_number, o.customer_name FROM orders o
+           INNER JOIN order_items oi ON oi.order_id = o.id
+           WHERE UPPER(o.order_number) = ? AND LOWER(o.customer_email) = ?
+             AND o.payment_status = 'paid' AND oi.product_id = ? LIMIT 1`
+        ).bind(cleanOrder, cleanEmail, productId).first();
+        if (!verifiedOrder) {
+          return json({ error: 'Only verified buyers with a PAID order for this exact product can submit a review.' }, 400);
+        }
+        const dup = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id FROM product_reviews WHERE product_id = ? AND UPPER(order_number) = ?'
+        ).bind(productId, cleanOrder).first();
+        if (dup) {
+          return json({ error: 'You have already submitted a verified review for this product on this order.' }, 400);
+        }
+        await env.BUY4ACHANGE_DB.prepare(
+          `INSERT INTO product_reviews (id, product_id, order_number, reviewer_name, reviewer_email, rating, comment, verified_purchase)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 1)`
+        ).bind(
+          `rev_${Date.now()}_${randomHex(3)}`,
+          productId,
+          cleanOrder,
+          verifiedOrder.customer_name || 'Verified Buyer',
+          cleanEmail,
+          rating,
+          String(body?.comment || '').trim().slice(0, 600)
+        ).run();
+        const agg: any = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT AVG(rating) as avg_rating, COUNT(*) as cnt FROM product_reviews WHERE product_id = ?'
+        ).bind(productId).first();
+        await env.BUY4ACHANGE_DB.prepare('UPDATE products SET rating = ?, reviews_count = ? WHERE id = ?')
+          .bind(Math.round((agg?.avg_rating || rating) * 10) / 10, agg?.cnt || 1, productId)
+          .run();
+        const { results: reviews } = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, product_id, order_number, reviewer_name, rating, comment, verified_purchase, created_at FROM product_reviews WHERE product_id = ? ORDER BY created_at DESC'
+        ).bind(productId).all();
+        return json({ success: true, reviews: reviews || [] }, 201);
+      }
+
+      // ============================================================
+      // PRO MANUFACTURER / SELLER PORTAL (CLOUDFLARE D1)
+      // ============================================================
+      const signSellerEdgeToken = async (seller: { id: string; email: string }) => {
+        const payload = `seller:${seller.id}:${seller.email}:${Date.now()}`;
+        const sig = await hmacSha256Hex('UGT_SELLER_SECRET_KEY_2026', payload);
+        return btoa(`${payload}:${sig}`);
+      };
+      const verifySellerEdgeToken = async (tok: string) => {
+        try {
+          const parts = atob(tok).split(':');
+          if (parts.length < 5 || parts[0] !== 'seller') return null;
+          const [prefix, id, email, ts, sig] = parts;
+          const expected = await hmacSha256Hex('UGT_SELLER_SECRET_KEY_2026', `${prefix}:${id}:${email}:${ts}`);
+          if (!timingSafeEqualStr(sig, expected)) return null;
+          return { id, email };
+        } catch {
+          return null;
+        }
+      };
+
+      if (pathname === '/api/seller/register' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        if (!b.store_name || !b.owner_name || !b.email || !b.password || !b.phone) {
+          return json({ error: 'Store name, owner name, email, phone, and password are required.' }, 400);
+        }
+        const cleanEmail = String(b.email).trim().toLowerCase();
+        const dup = await env.BUY4ACHANGE_DB.prepare('SELECT id FROM sellers WHERE LOWER(email) = ?').bind(cleanEmail).first();
+        if (dup) return json({ error: 'An account with this manufacturer email already exists.' }, 400);
+        const id = `seller-${Date.now()}-${randomHex(3)}`;
+        const pwdHash = await sha256Hex(String(b.password) + 'UGT_SECRET_SALT_2026');
+        await env.BUY4ACHANGE_DB.prepare(
+          `INSERT INTO sellers (
+            id, store_name, owner_name, email, password_hash, phone,
+            business_type, registration_no, city, state, pincode,
+            upi_payout_id, bank_details, story, status, admin_notes
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', '')`
+        ).bind(
+          id, String(b.store_name).trim(), String(b.owner_name).trim(), cleanEmail, pwdHash, String(b.phone).trim(),
+          b.business_type || 'Manufacturer', String(b.registration_no || '').trim(),
+          String(b.city || '').trim(), String(b.state || '').trim(), String(b.pincode || '').trim(),
+          String(b.upi_payout_id || '').trim(), String(b.bank_details || '').trim(), String(b.story || '').trim()
+        ).run();
+        const seller: any = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, store_name, owner_name, email, phone, business_type, registration_no, city, state, pincode, upi_payout_id, bank_details, story, status, admin_notes, created_at FROM sellers WHERE id = ?'
+        ).bind(id).first();
+        const token = await signSellerEdgeToken(seller);
+        return json({ success: true, seller, token }, 201);
+      }
+
+      if (pathname === '/api/seller/login' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        const cleanEmail = String(b.email || '').trim().toLowerCase();
+        const pwdHash = await sha256Hex(String(b.password || '') + 'UGT_SECRET_SALT_2026');
+        const seller: any = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, store_name, owner_name, email, phone, business_type, registration_no, city, state, pincode, upi_payout_id, bank_details, story, status, admin_notes, created_at, password_hash FROM sellers WHERE LOWER(email) = ?'
+        ).bind(cleanEmail).first();
+        if (!seller || !timingSafeEqualStr(seller.password_hash, pwdHash)) {
+          return json({ error: 'Invalid manufacturer email or password.' }, 401);
+        }
+        delete seller.password_hash;
+        const token = await signSellerEdgeToken(seller);
+        return json({ success: true, seller, token });
+      }
+
+      if (pathname.startsWith('/api/seller/')) {
+        await ensureMarketplaceSchema();
+        const authHdr = request.headers.get('Authorization') || '';
+        const session = authHdr.startsWith('Bearer ') ? await verifySellerEdgeToken(authHdr.slice(7)) : null;
+        if (!session) return json({ error: 'Manufacturer login required' }, 401);
+        const seller: any = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, store_name, owner_name, email, phone, business_type, registration_no, city, state, pincode, upi_payout_id, bank_details, story, status, admin_notes, created_at FROM sellers WHERE id = ?'
+        ).bind(session.id).first();
+        if (!seller) return json({ error: 'Seller account not found' }, 401);
+
+        if (pathname === '/api/seller/me' && request.method === 'GET') {
+          const { results: prods } = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT p.*, c.title as cause_title FROM products p LEFT JOIN causes c ON p.cause_id = c.id WHERE p.seller_id = ? ORDER BY p.created_at DESC'
+          ).bind(seller.id).all();
+          const { results: ordRows } = await env.BUY4ACHANGE_DB.prepare(
+            `SELECT o.id, o.order_number, o.customer_name, o.customer_phone, o.shipping_address, o.city, o.state, o.pincode,
+                    o.payment_status, o.order_status, o.courier_name, o.tracking_number, o.created_at,
+                    oi.id as item_id, oi.product_id, oi.product_name, oi.price, oi.quantity, oi.total,
+                    oi.cause_allocation_pct, oi.cause_contribution, COALESCE(c.title, 'Living India Mission') as cause_title
+             FROM order_items oi INNER JOIN products p ON p.id = oi.product_id
+             INNER JOIN orders o ON o.id = oi.order_id LEFT JOIN causes c ON oi.cause_id = c.id
+             WHERE p.seller_id = ? ORDER BY o.created_at DESC`
+          ).bind(seller.id).all();
+          let totalGross = 0, missionContribution = 0, platformFee = 0, netPayout = 0, verifiedOrdersCount = 0, pendingOrdersCount = 0;
+          const orders = ((ordRows as any[]) || []).map((r) => {
+            const g = Number(r.total || 0), m = Number(r.cause_contribution || 0), ops = Math.round(g * 0.05 * 100) / 100;
+            const net = Math.max(0, Math.round((g - m - ops) * 100) / 100);
+            if (r.payment_status === 'paid') { totalGross += g; missionContribution += m; platformFee += ops; netPayout += net; verifiedOrdersCount++; }
+            else if (r.payment_status === 'pending_verification') pendingOrdersCount++;
+            return { ...r, platform_fee: ops, seller_net_payout: net };
+          });
+          return json({
+            seller,
+            products: prods || [],
+            orders,
+            earnings: { totalGross: Math.round(totalGross), missionContribution: Math.round(missionContribution), platformFee: Math.round(platformFee), netPayout: Math.round(netPayout), verifiedOrdersCount, pendingOrdersCount },
+          });
+        }
+
+        if (pathname === '/api/seller/products' && request.method === 'POST') {
+          if (seller.status !== 'approved') {
+            return json({ error: 'Your manufacturer store is pending UGT Admin approval.' }, 403);
+          }
+          const b: any = await request.json().catch(() => ({}));
+          if (!b.name || !b.price || !b.category || !b.image_url) {
+            return json({ error: 'Product title, price, category, and uploaded photo are required.' }, 400);
+          }
+          if (!b.quality_cert_url || !b.zero_chemical_cert_url) {
+            return json({ error: 'Both Quality Certificate and Zero-Chemical Certificate uploads are mandatory.' }, 400);
+          }
+          const id = `prod-${Date.now()}-${Math.floor(Math.random() * 900 + 100)}`;
+          const slug = String(b.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.floor(Math.random() * 900 + 100);
+          const resolvedType = b.product_type === 'digital' ? 'digital' : 'physical';
+          await env.BUY4ACHANGE_DB.prepare(
+            `INSERT INTO products (
+              id, name, slug, description, price, compare_at_price, category, subcategory, product_type,
+              digital_html_content, digital_access_note, image_url, stock, is_featured, cause_id,
+              cause_allocation_pct, cause_impact_text, rating, reviews_count, badge,
+              seller_id, seller_name, approval_status, quality_cert_url, quality_cert_name,
+              zero_chemical_cert_url, zero_chemical_cert_name, approval_notes, origin_state
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0, 0, 'Zero-Chemical Audited', ?, ?, 'pending_approval', ?, ?, ?, ?, '', ?)`
+          ).bind(
+            id, String(b.name).trim(), slug, String(b.description || '').trim(), parseFloat(b.price),
+            b.compare_at_price ? parseFloat(b.compare_at_price) : null, String(b.category).trim(),
+            b.subcategory || (resolvedType === 'digital' ? 'eBooks' : ''), resolvedType,
+            resolvedType === 'digital' ? String(b.digital_html_content || '') : '',
+            resolvedType === 'digital' ? String(b.digital_access_note || '') : '',
+            String(b.image_url), parseInt(b.stock, 10) || 50, b.cause_id || 'cause-everyday-essentials',
+            Math.max(10, parseFloat(b.cause_allocation_pct) || 15),
+            String(b.cause_impact_text || `Crafted by ${seller.store_name}`),
+            seller.id, seller.store_name, String(b.quality_cert_url), String(b.quality_cert_name || 'Quality Certificate'),
+            String(b.zero_chemical_cert_url), String(b.zero_chemical_cert_name || 'Zero-Chemical Certificate'),
+            String(b.origin_state || seller.state || 'India').trim()
+          ).run();
+          const created = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first();
+          return json({ success: true, product: created }, 201);
+        }
+
+        const sellerProdDel = pathname.match(/^\/api\/seller\/products\/([^/]+)$/);
+        if (sellerProdDel && request.method === 'DELETE') {
+          const pid = decodeURIComponent(sellerProdDel[1]);
+          const owned: any = await env.BUY4ACHANGE_DB.prepare('SELECT id FROM products WHERE id = ? AND seller_id = ?').bind(pid, seller.id).first();
+          if (!owned) return json({ error: 'Product not found in your store.' }, 404);
+          await env.BUY4ACHANGE_DB.batch([
+            env.BUY4ACHANGE_DB.prepare('UPDATE order_items SET product_id = NULL WHERE product_id = ?').bind(pid),
+            env.BUY4ACHANGE_DB.prepare('DELETE FROM products WHERE id = ?').bind(pid),
+          ]);
+          return json({ success: true });
+        }
+
+        const sellerDisp = pathname.match(/^\/api\/seller\/orders\/([^/]+)\/dispatch$/);
+        if (sellerDisp && request.method === 'PATCH') {
+          const oid = decodeURIComponent(sellerDisp[1]);
+          const owns = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT oi.id FROM order_items oi INNER JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ? AND p.seller_id = ? LIMIT 1'
+          ).bind(oid, seller.id).first();
+          if (!owns) return json({ error: 'Not authorized to dispatch this order.' }, 403);
+          const b: any = await request.json().catch(() => ({}));
+          try { await env.BUY4ACHANGE_DB.prepare("ALTER TABLE orders ADD COLUMN courier_name TEXT DEFAULT ''").run(); } catch {}
+          await env.BUY4ACHANGE_DB.prepare('UPDATE orders SET courier_name = ?, tracking_number = ?, order_status = ? WHERE id = ?')
+            .bind(String(b.courierName || '').trim(), String(b.trackingNumber || '').trim(), b.status || 'Shipped', oid)
+            .run();
+          return json({ success: true });
+        }
+      }
+
       // ============================================================
       // ADMIN AUTHENTICATION
       // ============================================================
@@ -1566,6 +1891,98 @@ export default {
               recentEmails: [],
             });
           }
+        }
+
+        // Admin Sellers Approval & Per-Product Dual-Certificate Audit
+        if (pathname === '/api/admin/sellers' && request.method === 'GET') {
+          await ensureMarketplaceSchema();
+          const { results } = await env.BUY4ACHANGE_DB.prepare(
+            `SELECT s.id, s.store_name, s.owner_name, s.email, s.phone, s.business_type, s.registration_no,
+                    s.city, s.state, s.pincode, s.upi_payout_id, s.bank_details, s.story, s.status,
+                    s.admin_notes, s.created_at,
+                    (SELECT COUNT(*) FROM products p WHERE p.seller_id = s.id) as product_count,
+                    (SELECT COUNT(*) FROM products p WHERE p.seller_id = s.id AND p.approval_status = 'pending_approval') as pending_product_count
+             FROM sellers s
+             ORDER BY CASE WHEN s.status = 'pending_approval' THEN 0 ELSE 1 END, s.created_at DESC`
+          ).all();
+          return json(results || []);
+        }
+
+        const sellerStatusMatch = pathname.match(/^\/api\/admin\/sellers\/([^/]+)\/status$/);
+        if (sellerStatusMatch && request.method === 'PATCH') {
+          await ensureMarketplaceSchema();
+          const sid = decodeURIComponent(sellerStatusMatch[1]);
+          const b: any = await request.json().catch(() => ({}));
+          if (!['approved', 'rejected', 'suspended', 'pending_approval'].includes(b.status)) {
+            return json({ error: 'Invalid seller status' }, 400);
+          }
+          await env.BUY4ACHANGE_DB.prepare('UPDATE sellers SET status = ?, admin_notes = ? WHERE id = ?')
+            .bind(b.status, String(b.adminNotes || '').trim(), sid)
+            .run();
+          const updated = await env.BUY4ACHANGE_DB.prepare(
+            'SELECT id, store_name, owner_name, email, phone, business_type, registration_no, city, state, pincode, upi_payout_id, bank_details, story, status, admin_notes, created_at FROM sellers WHERE id = ?'
+          ).bind(sid).first();
+          return json({ success: true, seller: updated });
+        }
+
+        const prodApproveMatch = pathname.match(/^\/api\/admin\/products\/([^/]+)\/approval$/);
+        if (prodApproveMatch && request.method === 'PATCH') {
+          await ensureMarketplaceSchema();
+          const pid = decodeURIComponent(prodApproveMatch[1]);
+          const b: any = await request.json().catch(() => ({}));
+          if (!['approved', 'rejected', 'pending_approval'].includes(b.approvalStatus)) {
+            return json({ error: 'Invalid approvalStatus' }, 400);
+          }
+          await env.BUY4ACHANGE_DB.prepare('UPDATE products SET approval_status = ?, approval_notes = ? WHERE id = ?')
+            .bind(b.approvalStatus, String(b.approvalNotes || '').trim(), pid)
+            .run();
+          const updated = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM products WHERE id = ?').bind(pid).first();
+          return json({ success: true, product: updated });
+        }
+
+        if (pathname === '/api/admin/exports/payouts.csv' && request.method === 'GET') {
+          await ensureMarketplaceSchema();
+          const { results } = await env.BUY4ACHANGE_DB.prepare(
+            `SELECT o.order_number, o.created_at, o.payment_status, o.order_status,
+                    oi.product_name, oi.quantity, oi.total, oi.cause_contribution,
+                    COALESCE(p.seller_name, 'UGT Direct') as seller_name,
+                    COALESCE(c.title, 'Living India Mission') as cause_title
+             FROM order_items oi INNER JOIN orders o ON o.id = oi.order_id
+             LEFT JOIN products p ON p.id = oi.product_id LEFT JOIN causes c ON oi.cause_id = c.id
+             ORDER BY o.created_at DESC`
+          ).all();
+          const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+          const lines = [
+            'Order Number,Date,Payment Status,Order Status,Manufacturer / Seller,Product,Qty,Gross INR,Mission Title,Mission Share INR,Platform Ops (5%) INR,Manufacturer Payout INR',
+          ];
+          for (const r of (results as any[]) || []) {
+            const g = Number(r.total || 0), m = Number(r.cause_contribution || 0), ops = Math.round(g * 0.05 * 100) / 100;
+            const net = Math.max(0, Math.round((g - m - ops) * 100) / 100);
+            lines.push([esc(r.order_number), esc(r.created_at), esc(r.payment_status), esc(r.order_status), esc(r.seller_name), esc(r.product_name), r.quantity, g.toFixed(2), esc(r.cause_title), m.toFixed(2), ops.toFixed(2), net.toFixed(2)].join(','));
+          }
+          return new Response(lines.join('\n'), {
+            headers: {
+              'Content-Type': 'text/csv; charset=utf-8',
+              'Content-Disposition': 'attachment; filename="buy4achange-3way-payouts.csv"',
+              ...CORS_HEADERS,
+            },
+          });
+        }
+
+        if (pathname === '/api/admin/exports/ondc-catalog.json' && request.method === 'GET') {
+          await ensureMarketplaceSchema();
+          const { results: prods } = await env.BUY4ACHANGE_DB.prepare(
+            `SELECT ${PUBLIC_PRODUCT_COLS} FROM products p LEFT JOIN causes c ON p.cause_id = c.id WHERE COALESCE(p.approval_status, 'approved') = 'approved'`
+          ).all();
+          return json({
+            context: { domain: 'ONDC:RET10', country: 'IND', action: 'on_search', core_version: '1.2.0', timestamp: new Date().toISOString() },
+            message: {
+              catalog: {
+                'bpp/descriptor': { name: 'Buy4AChange — Universal Guard Trust & UGT India' },
+                'bpp/providers': [{ id: 'ugt-india-verified', items: prods || [] }],
+              },
+            },
+          });
         }
       }
 
