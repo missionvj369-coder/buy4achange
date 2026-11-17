@@ -177,7 +177,7 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete }) =>
 
       <button
         onClick={handleSkip}
-        className="absolute bottom-8 right-8 z-30 px-4 py-2 rounded-full glass-3d font-mono text-[10px] uppercase tracking-[0.25em] text-[#00f0ff] hover:text-white transition cursor-pointer"
+        className="absolute top-6 right-6 z-30 px-4 py-2 rounded-full glass-3d font-mono text-[10px] uppercase tracking-[0.25em] text-[#00f0ff] hover:text-white transition cursor-pointer"
       >
         Launch Experience →
       </button>

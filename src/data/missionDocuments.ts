@@ -46,7 +46,7 @@ export const MISSION_DOCUMENTS: MissionDocument[] = [
         "number": "01",
         "heading": "PROJECT VISION",
         "paragraphs": [
-          "India Women Entrepreneurship Mission creates a nationwide network of an open nationwide network of women entrepreneurs across every district of India.",
+          "India Women Entrepreneurship Mission creates an open nationwide network of women entrepreneurs across every district of India.",
           "The mission moves beyond conventional entrepreneurship programs that stop at training, certification or financial assistance.",
           "It creates an integrated pathway:",
           "Identify → Assess → Train → Equip → Create → Connect → Market → Grow → Scale",
