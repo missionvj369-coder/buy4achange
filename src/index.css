@@ -3,11 +3,20 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-canvas: #F3F7FB;
+    --bg-obsidian: #070D19;
+    --ink-primary: #0A101F;
+    --accent-emerald: #059669;
+    --accent-teal: #0D9488;
+    --accent-cyan: #0284C7;
+  }
+
   html,
   body {
-    background-color: #FAF9F6;
-    color: #14171A;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+    background-color: #F3F7FB;
+    color: #0A101F;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
@@ -16,67 +25,131 @@
     max-width: 100%;
   }
 
+  h1, h2, h3, .font-display {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.025em;
+  }
+
   * {
     box-sizing: border-box;
   }
 }
 
 /*
- * Next-Gen Solarpunk Light Architectural UI (2030 Precision Editorial)
- * Pure standard CSS — zero backdrop-blur lag, zero WebGL, silky on any old phone or OS.
+ * AETHER 2030 — Futuristic Precision Clean-Tech Design System
+ * Aerospace porcelain canvas + Spatial Obsidian HUD decks + Luminous Emerald-Teal-Cyan signals.
  */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.35); }
-  70% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes horizon-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .hero-architectural {
   position: relative;
-  background-color: #FFFFFF;
+  background-color: #F7FAFD;
   background-image:
-    radial-gradient(ellipse 70% 55% at 50% -10%, rgba(22, 101, 52, 0.085) 0%, transparent 70%),
-    radial-gradient(circle at 12% 35%, rgba(16, 185, 129, 0.065) 0%, transparent 45%),
-    radial-gradient(circle at 88% 30%, rgba(5, 150, 105, 0.055) 0%, transparent 45%),
-    linear-gradient(to right, rgba(20, 23, 26, 0.028) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(20, 23, 26, 0.028) 1px, transparent 1px);
+    radial-gradient(ellipse 80% 60% at 50% -18%, rgba(16, 185, 129, 0.14) 0%, transparent 65%),
+    radial-gradient(circle at 12% 28%, rgba(6, 182, 212, 0.11) 0%, transparent 45%),
+    radial-gradient(circle at 88% 22%, rgba(14, 165, 233, 0.10) 0%, transparent 45%),
+    radial-gradient(rgba(15, 23, 42, 0.085) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px;
+}
+
+.futuristic-obsidian-bg {
+  background-color: #060B16;
+  background-image:
+    radial-gradient(ellipse 75% 55% at 50% -10%, rgba(16, 185, 129, 0.22) 0%, transparent 65%),
+    radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 15% 80%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
 }
 
 .hero-horizon-bar {
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #166534 30%, #10B981 50%, #166534 70%, transparent 100%);
+  background: linear-gradient(90deg, #059669 0%, #10B981 25%, #06B6D4 50%, #38BDF8 75%, #059669 100%);
+  background-size: 200% 100%;
+  animation: horizon-flow 6s ease infinite;
+}
+
+.gradient-text-future {
+  background: linear-gradient(105deg, #047857 0%, #0D9488 48%, #0284C7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.obsidian-deck {
+  background: linear-gradient(145deg, #070D19 0%, #0D192D 55%, #081C26 100%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow:
+    0 24px 50px -20px rgba(7, 13, 25, 0.55),
+    0 0 0 1px rgba(16, 185, 129, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .card-editorial {
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 1px 2px rgba(20, 23, 26, 0.03);
-  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -18px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
 }
 
 .card-editorial:hover {
-  border-color: #86EFAC;
-  box-shadow: 0 14px 32px -14px rgba(22, 101, 52, 0.16), 0 2px 6px rgba(20, 23, 26, 0.04);
-  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow:
+    0 20px 38px -18px rgba(6, 182, 212, 0.22),
+    0 8px 18px -10px rgba(16, 185, 129, 0.18),
+    0 0 0 1px rgba(16, 185, 129, 0.15);
+  transform: translateY(-3px);
 }
 
 .bento-surface {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FAF9F6 100%);
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 6px 20px -12px rgba(20, 23, 26, 0.08);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F4F8FC 100%);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: 0 10px 28px -16px rgba(15, 23, 42, 0.14);
+}
+
+.kpi-tile-future {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.16);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-tile-future:hover {
+  transform: translateY(-2px);
+  border-color: rgba(13, 148, 136, 0.35);
+  box-shadow: 0 14px 30px -16px rgba(6, 182, 212, 0.22);
 }
 
 .btn-future-primary {
-  background: linear-gradient(135deg, #166534 0%, #15803D 100%);
+  background: linear-gradient(135deg, #059669 0%, #0D9488 55%, #0284C7 100%);
   color: #FFFFFF;
-  box-shadow: 0 4px 14px -4px rgba(22, 101, 52, 0.45);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-shadow:
+    0 8px 22px -6px rgba(13, 148, 136, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .btn-future-primary:hover {
-  background: linear-gradient(135deg, #14532D 0%, #166534 100%);
-  box-shadow: 0 8px 20px -6px rgba(22, 101, 52, 0.55);
+  filter: brightness(1.06);
+  box-shadow:
+    0 12px 26px -6px rgba(6, 182, 212, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -84,21 +157,42 @@
   transform: translateY(0);
 }
 
+.btn-future-obsidian {
+  background: linear-gradient(135deg, #0B1221 0%, #16233B 100%);
+  color: #F8FAFC;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 8px 20px -8px rgba(7, 13, 25, 0.5);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.btn-future-obsidian:hover {
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow: 0 12px 24px -8px rgba(16, 185, 129, 0.28);
+  transform: translateY(-1px);
+}
+
 .live-dot {
   display: inline-block;
   width: 7px;
   height: 7px;
   border-radius: 9999px;
-  background-color: #16A34A;
-  animation: pulse-ring 2.2s infinite;
+  background-color: #10B981;
+  animation: pulse-ring 2s infinite;
+}
+
+.progress-future {
+  background: linear-gradient(90deg, #059669 0%, #10B981 55%, #06B6D4 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .live-dot {
+  .live-dot,
+  .hero-horizon-bar {
     animation: none;
   }
   .card-editorial:hover,
-  .btn-future-primary:hover {
+  .btn-future-primary:hover,
+  .btn-future-obsidian:hover,
+  .kpi-tile-future:hover {
     transform: none;
   }
 }
@@ -112,7 +206,7 @@
   background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
+  background: #CBD5E1;
   border-radius: 9999px;
 }
 

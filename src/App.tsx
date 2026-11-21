@@ -471,9 +471,9 @@ export function App() {
     );
   }
 
-  // PUBLIC STOREFRONT — Clean Futuristic Warm-Paper & Forest-Green Editorial UI
+  // PUBLIC STOREFRONT — Aether 2030 Futuristic Clean-Tech Architecture
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#14171A] flex flex-col font-sans w-full">
+    <div className="min-h-screen bg-[#F3F7FB] text-[#0A101F] flex flex-col font-sans w-full">
       <Navbar
         cartCount={totalCartCount}
         libraryCount={unlockedLibrary.length}
@@ -559,15 +559,16 @@ export function App() {
 
         {/* 2. Shop Catalog First for Instant Visitor Clarity */}
         <section id="catalog-grid" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-gray-200">
-            <div className="space-y-1">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
-                {t.shopEyebrow}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-slate-200/80">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center space-x-2 text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-[#0D9488]">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>{t.shopEyebrow}</span>
               </div>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
+              <h2 className="font-display text-2xl sm:text-4xl font-bold text-[#0A101F] tracking-tight">
                 {t.shopHeading}
               </h2>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-slate-600">
                 {activeMission
                   ? `Supporting "${activeMission.title}" — you can change the mission on any item.`
                   : t.shopSubtext}
@@ -581,10 +582,10 @@ export function App() {
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all ${
                       selectedCategory === cat
-                        ? 'bg-[#166534] text-white border-[#166534]'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                        ? 'btn-future-primary border-transparent'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400'
                     }`}
                   >
                     {cat === 'All' ? t.allCategories : cat}

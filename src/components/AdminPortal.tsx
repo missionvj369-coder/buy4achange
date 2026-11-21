@@ -872,121 +872,152 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setProductForm((prev) => ({ ...prev, digital_html_content: sample }));
   };
 
-  // --- VIEW 1: ADMIN LOGIN SCREEN ---
+  // --- VIEW 1: FUTURISTIC OBSIDIAN ADMIN VAULT ---
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 mx-auto rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
-              <Lock className="w-5 h-5" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 font-serif">
-              Buy4AChange Admin Console
-            </h2>
-            <p className="text-xs text-gray-500">
-              Operations &amp; Mission Control · Universal Guard Trust (UGT India)
-            </p>
-          </div>
-
-          {loginError && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-              <span>{loginError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-gray-700 mb-1 font-semibold">Administrator Email</label>
-              <input
-                type="email"
-                required
-                placeholder="admin@ugtindia.space"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#166534]"
-              />
+      <div className="min-h-screen futuristic-obsidian-bg flex items-center justify-center p-4">
+        <div className="w-full max-w-md obsidian-deck rounded-3xl overflow-hidden">
+          <div className="hero-horizon-bar" />
+          <div className="p-6 sm:p-8 space-y-6">
+            <div className="text-center space-y-2.5">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)]">
+                <Lock className="w-6 h-6" />
+              </div>
+              <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-300">
+                <span className="live-dot" />
+                <span>UGT OPS // COMMAND VAULT</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white font-display tracking-tight">
+                Buy4AChange Control Deck
+              </h2>
+              <p className="text-xs text-slate-400">
+                Operations &amp; Mission Control · Universal Guard Trust (UGT India)
+              </p>
             </div>
 
-            <div>
-              <label className="block text-gray-700 mb-1 font-semibold">Password</label>
-              <input
-                type="password"
-                required
-                placeholder="Enter administrator password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#166534]"
-              />
+            {loginError && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-400/40 text-rose-200 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-300 mb-1.5 font-mono uppercase tracking-wider text-[10px]">
+                  Administrator Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="admin@ugtindia.space"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1.5 font-mono uppercase tracking-wider text-[10px]">
+                  Security Passkey
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter administrator password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loggingIn}
+                className="w-full py-3 rounded-xl btn-future-primary font-semibold text-xs flex items-center justify-center space-x-2"
+              >
+                {loggingIn ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Authenticating Session...</span>
+                  </>
+                ) : (
+                  <span>Initialize Operations Console</span>
+                )}
+              </button>
+            </form>
+
+            <div className="pt-4 border-t border-white/10 text-center">
+              <button
+                type="button"
+                onClick={onNavigateStore}
+                className="text-xs text-slate-400 hover:text-emerald-300 inline-flex items-center space-x-1.5 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Return to Public Storefront</span>
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={loggingIn}
-              className="w-full py-3 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center justify-center space-x-2"
-            >
-              {loggingIn ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Verifying Credentials...</span>
-                </>
-              ) : (
-                <span>Sign In to Operations Console</span>
-              )}
-            </button>
-          </form>
-
-          <div className="pt-3 border-t border-gray-200 text-center">
-            <button
-              type="button"
-              onClick={onNavigateStore}
-              className="text-xs text-gray-600 hover:text-[#166534] inline-flex items-center space-x-1 font-medium"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Public Storefront</span>
-            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // --- VIEW 2: AUTHENTICATED ADMIN CONSOLE ---
+  // --- VIEW 2: FUTURISTIC ADMIN COMMAND CONSOLE ---
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-gray-900">
-      {/* Top Console Navigation Bar */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center space-x-3 shrink-0">
-            <button
-              type="button"
-              onClick={onNavigateStore}
-              className="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs flex items-center space-x-1.5 font-medium"
-              title="Return to Storefront"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#166534]" />
-              <span className="hidden sm:inline">Store</span>
-            </button>
-            <div className="flex items-center space-x-2">
-              <span className="font-serif font-bold text-base text-gray-900">
-                Buy4AChange
+    <div className="min-h-screen bg-[#F3F7FB] text-[#0A101F]">
+      {/* Deep Obsidian Futuristic Command Header */}
+      <header className="bg-[#070D19] text-white border-b border-emerald-500/25 sticky top-0 z-30 shadow-[0_12px_32px_-16px_rgba(7,13,25,0.65)]">
+        <div className="hero-horizon-bar" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-14 flex items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 shrink-0">
+              <button
+                type="button"
+                onClick={onNavigateStore}
+                className="px-3 py-1.5 rounded-xl bg-white/[0.07] hover:bg-white/[0.14] border border-white/15 text-slate-200 text-xs flex items-center space-x-1.5 font-semibold transition-all"
+                title="Return to Storefront"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Store</span>
+              </button>
+              <div className="flex items-center space-x-2">
+                <span className="font-display font-bold text-base tracking-tight text-white">
+                  Buy<span className="text-emerald-400">4</span>AChange
+                </span>
+                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/35">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>OPS OS</span>
+                </span>
+              </div>
+            </div>
+
+            {/* User Profile & Logout */}
+            <div className="flex items-center space-x-2.5 shrink-0">
+              <span className="hidden sm:inline text-[11px] text-slate-400 font-mono">
+                admin@ugtindia.space
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]">
-                ADMIN
-              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-2.5 py-1.5 rounded-xl bg-white/[0.07] hover:bg-rose-500/20 hover:text-rose-300 border border-white/15 text-slate-300 text-xs inline-flex items-center space-x-1.5 transition-all"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline font-medium">Sign Out</span>
+              </button>
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <nav className="flex items-center space-x-1 overflow-x-auto text-xs">
+          {/* Full-Width Sleek Dark Glass Tab Rail — Zero Clipping on Desktop */}
+          <nav className="flex items-center space-x-1 overflow-x-auto pb-2.5 pt-1 text-xs scrollbar-thin border-t border-white/[0.07]">
             <button
               type="button"
               onClick={() => setActiveTab('orders')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
                 activeTab === 'orders'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               Orders ({orders.length})
@@ -995,10 +1026,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('products')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
                 activeTab === 'products'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               Products ({adminProducts.length})
@@ -1007,10 +1038,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('sellers')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap flex items-center space-x-1.5 transition-all ${
                 activeTab === 'sellers'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               <Store className="w-3.5 h-3.5" />
@@ -1018,7 +1049,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {sellers.filter((s) => s.status === 'pending_approval').length +
                 adminProducts.filter((p) => p.approval_status === 'pending_approval').length >
                 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-[#070D19] font-mono text-[10px] font-bold">
                   {sellers.filter((s) => s.status === 'pending_approval').length +
                     adminProducts.filter((p) => p.approval_status === 'pending_approval').length}
                 </span>
@@ -1028,10 +1059,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('programs')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap flex items-center space-x-1.5 transition-all ${
                 activeTab === 'programs'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
@@ -1041,16 +1072,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('referrals')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap flex items-center space-x-1.5 transition-all ${
                 activeTab === 'referrals'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>Referrals</span>
               {refOverview.payouts.filter((p) => p.status === 'requested').length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-[#070D19] font-mono text-[10px] font-bold">
                   {refOverview.payouts.filter((p) => p.status === 'requested').length}
                 </span>
               )}
@@ -1059,10 +1090,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('missions')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
                 activeTab === 'missions'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               8 Missions
@@ -1071,10 +1102,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('transactions')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
                 activeTab === 'transactions'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               Transactions
@@ -1083,10 +1114,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('gateway')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap flex items-center space-x-1.5 transition-all ${
                 activeTab === 'gateway'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               <CreditCard className="w-3.5 h-3.5" />
@@ -1096,77 +1127,72 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('integrations')}
-              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap flex items-center space-x-1.5 transition-all ${
                 activeTab === 'integrations'
-                  ? 'bg-[#166534] text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'btn-future-primary text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
               <span>Integrations &amp; Analytics</span>
             </button>
           </nav>
-
-          {/* User Profile & Logout */}
-          <div className="flex items-center space-x-2 shrink-0">
-            <span className="hidden md:inline text-xs text-gray-500 font-mono">
-              admin@ugtindia.space
-            </span>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="p-2 rounded-lg bg-white hover:bg-rose-50 hover:text-rose-700 border border-gray-300 text-gray-600 text-xs"
-              title="Sign Out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </header>
 
       {/* Main Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
-        {/* Top Metric Cards */}
+        {/* Futuristic KPI Telemetry Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white p-4 rounded-xl border border-gray-200">
-            <span className="text-xs text-gray-500 font-medium">Total Verified Revenue</span>
-            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+          <div className="kpi-tile-future rounded-2xl p-4 sm:p-5">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-slate-500 font-semibold">
+              Verified Revenue
+            </span>
+            <div className="text-xl sm:text-2xl font-mono font-bold text-[#0A101F] mt-1.5">
               ₹{(metrics?.totalRevenue || 0).toLocaleString('en-IN')}
             </div>
-            <div className="text-xs text-[#166534] font-medium mt-0.5">
+            <div className="text-[11px] text-[#059669] font-semibold mt-1">
               Today: ₹{(metrics?.todayRevenue || 0).toLocaleString('en-IN')}
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200">
-            <span className="text-xs text-[#166534] font-semibold flex items-center space-x-1">
-              <Heart className="w-3.5 h-3.5" />
+          <div className="obsidian-deck rounded-2xl p-4 sm:p-5 text-white relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 via-cyan-400 to-sky-400" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-emerald-300 font-semibold flex items-center space-x-1">
+              <Heart className="w-3 h-3 fill-emerald-400 text-emerald-400" />
               <span>Mission Funds Raised</span>
             </span>
-            <div className="text-xl sm:text-2xl font-bold text-[#166534] mt-1">
+            <div className="text-xl sm:text-2xl font-mono font-bold text-white mt-1.5">
               ₹{(metrics?.totalRaised || 0).toLocaleString('en-IN')}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-[11px] text-slate-300 mt-1">
               Today: ₹{(metrics?.todayRaised || 0).toLocaleString('en-IN')}
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200">
-            <span className="text-xs text-gray-500 font-medium">Total Orders</span>
-            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+          <div className="kpi-tile-future rounded-2xl p-4 sm:p-5">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 to-sky-500" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-slate-500 font-semibold">
+              Total Orders
+            </span>
+            <div className="text-xl sm:text-2xl font-mono font-bold text-[#0A101F] mt-1.5">
               {metrics?.totalOrders || 0}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-[11px] text-slate-500 font-medium mt-1">
               Today: {metrics?.todayOrdersCount || 0} orders
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200">
-            <span className="text-xs text-gray-500 font-medium">Living India Missions</span>
-            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-              {causes.length}
+          <div className="kpi-tile-future rounded-2xl p-4 sm:p-5">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-teal-500 to-emerald-500" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-slate-500 font-semibold">
+              Living India Nodes
+            </span>
+            <div className="text-xl sm:text-2xl font-mono font-bold text-[#0A101F] mt-1.5">
+              0{causes.length}
             </div>
-            <div className="text-xs text-[#166534] mt-0.5">
+            <div className="text-[11px] text-[#0D9488] font-semibold mt-1">
               Active National Initiatives
             </div>
           </div>

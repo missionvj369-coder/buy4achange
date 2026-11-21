@@ -358,40 +358,41 @@ export const SellerPortal: React.FC<SellerPortalProps> = ({
   // --- VIEW 1: MANUFACTURER LOGIN / REGISTRATION ---
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] text-gray-900 py-8 px-4">
+      <div className="min-h-screen hero-architectural text-[#0A101F] py-8 px-4">
         <div className="max-w-xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={onNavigateStore}
-              className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-xs font-semibold text-gray-700 inline-flex items-center space-x-1.5 hover:bg-gray-50"
+              className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 inline-flex items-center space-x-1.5 hover:border-teal-400"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#166534]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-[#0D9488]" />
               <span>Back to Storefront</span>
             </button>
-            <span className="text-xs font-semibold text-[#166534] bg-[#F0FDF4] border border-[#BBF7D0] px-3 py-1 rounded-full">
-              Zero-Chemical Certified Marketplace
+            <span className="text-[11px] font-mono font-semibold text-emerald-300 bg-[#070D19] border border-emerald-400/35 px-3 py-1 rounded-full">
+              ZERO-CHEMICAL CERTIFIED NETWORK
             </span>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-6 bg-[#FAF9F6] border-b border-gray-200 text-center space-y-2">
-              <div className="w-12 h-12 mx-auto rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+          <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
+            <div className="hero-horizon-bar" />
+            <div className="p-6 bg-[#070D19] text-white border-b border-emerald-500/20 text-center space-y-2.5">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300">
                 <Store className="w-6 h-6" />
               </div>
-              <h1 className="font-display text-2xl font-bold text-gray-900">
+              <h1 className="font-display text-2xl font-bold text-white tracking-tight">
                 Sell With Buy4AChange
               </h1>
-              <p className="text-xs text-gray-600 max-w-md mx-auto leading-relaxed">
-                For ethical Indian manufacturers, artisan collectives, women SHGs, and farmer FPOs producing verified <strong>Quality &amp; Zero-Chemical</strong> products.
+              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                For ethical Indian manufacturers, artisan collectives, women SHGs, and farmer FPOs producing verified <strong className="text-emerald-300">Quality &amp; Zero-Chemical</strong> products.
               </p>
 
-              <div className="inline-flex p-1 rounded-lg bg-white border border-gray-200 mt-2">
+              <div className="inline-flex p-1 rounded-xl bg-white/[0.06] border border-white/15 mt-2">
                 <button
                   type="button"
                   onClick={() => { setAuthMode('register'); setAuthError(null); }}
-                  className={`px-4 py-1.5 rounded-md text-xs font-semibold ${
-                    authMode === 'register' ? 'bg-[#166534] text-white' : 'text-gray-600'
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    authMode === 'register' ? 'btn-future-primary text-white' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Register Manufacturer Store
@@ -399,8 +400,8 @@ export const SellerPortal: React.FC<SellerPortalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setAuthMode('login'); setAuthError(null); }}
-                  className={`px-4 py-1.5 rounded-md text-xs font-semibold ${
-                    authMode === 'login' ? 'bg-[#166534] text-white' : 'text-gray-600'
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    authMode === 'login' ? 'btn-future-primary text-white' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Manufacturer Sign In
@@ -630,29 +631,30 @@ export const SellerPortal: React.FC<SellerPortalProps> = ({
   const isApprovedStore = seller?.status === 'approved';
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-gray-900">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div className="min-h-screen bg-[#F3F7FB] text-[#0A101F]">
+      <header className="bg-[#070D19] text-white border-b border-emerald-500/25 sticky top-0 z-30 shadow-[0_12px_32px_-16px_rgba(7,13,25,0.65)]">
+        <div className="hero-horizon-bar" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center space-x-3 min-w-0">
             <button
               type="button"
               onClick={onNavigateStore}
-              className="px-2.5 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 flex items-center space-x-1 shrink-0"
+              className="px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.07] hover:bg-white/[0.14] text-xs font-semibold text-slate-200 flex items-center space-x-1 shrink-0 transition-all"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#166534]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Store</span>
             </button>
             <div className="min-w-0">
-              <div className="font-display font-bold text-sm sm:text-base text-gray-900 truncate">
+              <div className="font-display font-bold text-sm sm:text-base text-white truncate">
                 {seller?.store_name || 'Manufacturer Portal'}
               </div>
-              <div className="text-[11px] text-gray-500 truncate">
+              <div className="text-[11px] text-cyan-300 font-mono truncate">
                 {seller?.business_type} · {seller?.city}, {seller?.state}
               </div>
             </div>
           </div>
 
-          <nav className="flex items-center space-x-1 overflow-x-auto text-xs">
+          <nav className="flex items-center space-x-1 overflow-x-auto text-xs bg-white/[0.04] border border-white/10 p-1 rounded-2xl scrollbar-thin">
             {(
               [
                 { id: 'products', label: `Products (${sellerProducts.length})` },
@@ -664,8 +666,8 @@ export const SellerPortal: React.FC<SellerPortalProps> = ({
                 key={tb.id}
                 type="button"
                 onClick={() => setActiveTab(tb.id)}
-                className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap ${
-                  activeTab === tb.id ? 'bg-[#166534] text-white' : 'text-gray-600 hover:bg-gray-100'
+                className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
+                  activeTab === tb.id ? 'btn-future-primary text-white' : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
                 }`}
               >
                 {tb.label}
@@ -676,7 +678,7 @@ export const SellerPortal: React.FC<SellerPortalProps> = ({
           <button
             type="button"
             onClick={handleLogout}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-rose-50 hover:text-rose-700 text-gray-600"
+            className="p-2 rounded-xl border border-white/15 bg-white/[0.07] hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 transition-all"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />

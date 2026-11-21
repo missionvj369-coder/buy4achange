@@ -280,25 +280,25 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
             <span>Back to Buy4AChange</span>
           </button>
 
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
             <div className="hero-horizon-bar" />
-            <div className="p-6 bg-[#FAF9F6] border-b border-gray-200 text-center space-y-2">
-              <div className="w-12 h-12 mx-auto rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+            <div className="p-6 bg-[#070D19] text-white border-b border-emerald-500/20 text-center space-y-2.5">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300">
                 <User className="w-6 h-6" />
               </div>
-              <h1 className="font-display text-2xl font-bold text-gray-900">
+              <h1 className="font-display text-2xl font-bold text-white tracking-tight">
                 Buy4AChange Member Account
               </h1>
-              <p className="text-xs text-gray-600 max-w-sm mx-auto leading-relaxed">
-                Save your checkout details, sync your eBooks across devices, and get your personal <strong>Refer &amp; Earn</strong> social sharing link.
+              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                Save your checkout details, sync your eBooks across devices, and get your personal <strong className="text-emerald-300">Refer &amp; Earn</strong> social sharing link.
               </p>
 
-              <div className="inline-flex p-1 rounded-xl bg-white border border-gray-200 mt-2">
+              <div className="inline-flex p-1 rounded-xl bg-white/[0.06] border border-white/15 mt-2">
                 <button
                   type="button"
                   onClick={() => { setAuthMode('register'); setAuthError(null); }}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold ${
-                    authMode === 'register' ? 'bg-[#166534] text-white' : 'text-gray-600'
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    authMode === 'register' ? 'btn-future-primary text-white' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Create Free Account
@@ -306,8 +306,8 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setAuthMode('login'); setAuthError(null); }}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold ${
-                    authMode === 'login' ? 'bg-[#166534] text-white' : 'text-gray-600'
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    authMode === 'login' ? 'btn-future-primary text-white' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Sign In
@@ -458,30 +458,30 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   const shareText = `Shop zero-chemical products & interactive eBooks on Buy4AChange where every purchase funds 8 Living India national missions!`;
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-gray-900">
-      <div className="hero-horizon-bar" />
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div className="min-h-screen bg-[#F3F7FB] text-[#0A101F]">
+      <header className="bg-[#070D19] text-white border-b border-emerald-500/25 sticky top-0 z-30 shadow-[0_12px_32px_-16px_rgba(7,13,25,0.65)]">
+        <div className="hero-horizon-bar" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center space-x-3 min-w-0">
             <button
               type="button"
               onClick={onNavigateStore}
-              className="px-2.5 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 inline-flex items-center space-x-1 shrink-0"
+              className="px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.07] hover:bg-white/[0.14] text-xs font-semibold text-slate-200 inline-flex items-center space-x-1 shrink-0 transition-all"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#166534]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Shop</span>
             </button>
             <div className="min-w-0">
-              <div className="font-display font-bold text-sm sm:text-base text-gray-900 truncate">
+              <div className="font-display font-bold text-sm sm:text-base text-white truncate">
                 {user?.name || 'My Account'}
               </div>
-              <div className="text-[11px] text-[#166534] font-mono truncate">
+              <div className="text-[11px] text-emerald-300 font-mono truncate">
                 {user?.referral_code} · Earn {wallet.commissionPct}% per referral
               </div>
             </div>
           </div>
 
-          <nav className="flex items-center space-x-1 overflow-x-auto text-xs">
+          <nav className="flex items-center space-x-1 overflow-x-auto text-xs bg-white/[0.04] border border-white/10 p-1 rounded-2xl scrollbar-thin">
             {(
               [
                 { id: 'refer', label: 'Refer & Earn', icon: Share2 },
@@ -496,8 +496,8 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                   key={tb.id}
                   type="button"
                   onClick={() => setActiveTab(tb.id)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap inline-flex items-center space-x-1 ${
-                    activeTab === tb.id ? 'bg-[#166534] text-white' : 'text-gray-600 hover:bg-gray-100'
+                  className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap inline-flex items-center space-x-1 transition-all ${
+                    activeTab === tb.id ? 'btn-future-primary text-white' : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -510,7 +510,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
           <button
             type="button"
             onClick={handleLogout}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-rose-50 hover:text-rose-700 text-gray-600"
+            className="p-2 rounded-xl border border-white/15 bg-white/[0.07] hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 transition-all"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />

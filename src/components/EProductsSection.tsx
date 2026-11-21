@@ -234,26 +234,27 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   return (
     <section
       id="eproducts-section"
-      className="bg-white border-t border-b border-gray-200 py-12 sm:py-16 w-full"
+      className="bg-white border-t border-b border-slate-200/80 py-14 sm:py-20 w-full"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#166534]">
-              {t.eproductsEyebrow} · ₹0 Shipping
+          <div className="space-y-2">
+            <div className="inline-flex items-center space-x-2 text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-[#0D9488]">
+              <span className="w-2 h-2 rounded-full bg-cyan-500" />
+              <span>{t.eproductsEyebrow} · ₹0 SHIPPING</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14171A]">
+            <h2 className="font-display text-2xl sm:text-4xl font-bold text-[#0A101F] tracking-tight">
               {t.eproductsHeading}
             </h2>
-            <p className="text-sm text-gray-600 max-w-2xl">{t.eproductsSubtext}</p>
+            <p className="text-sm text-slate-600 max-w-2xl">{t.eproductsSubtext}</p>
           </div>
 
           <button
             type="button"
             onClick={onOpenLibrary}
-            className="self-start sm:self-end px-4 py-2 rounded-lg border border-gray-300 bg-[#FAF9F6] hover:border-[#166534] text-[#14171A] text-xs font-semibold flex items-center space-x-1.5 shrink-0"
+            className="self-start sm:self-end px-4 py-2.5 rounded-xl btn-future-obsidian text-xs font-semibold flex items-center space-x-1.5 shrink-0"
           >
-            <Unlock className="w-3.5 h-3.5 text-[#166534]" />
+            <Unlock className="w-3.5 h-3.5 text-emerald-400" />
             <span>
               My Library{unlockedLibrary.length > 0 ? ` (${unlockedLibrary.length})` : ''}
             </span>
@@ -269,10 +270,10 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => setSelectedSubcategory(sub)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all ${
                   active
-                    ? 'bg-[#166534] text-white border-[#166534]'
-                    : 'bg-[#FAF9F6] text-gray-700 border-gray-200 hover:border-gray-300'
+                    ? 'btn-future-primary border-transparent'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-teal-400 hover:bg-white'
                 }`}
               >
                 {sub}
@@ -282,14 +283,14 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="py-12 px-4 rounded-xl bg-[#FAF9F6] border border-gray-200 text-center space-y-2">
-            <BookOpen className="w-7 h-7 mx-auto text-gray-400" />
-            <h3 className="text-sm font-bold text-[#14171A]">
+          <div className="py-12 px-4 rounded-2xl bg-[#F3F7FB] border border-slate-200 text-center space-y-2">
+            <BookOpen className="w-7 h-7 mx-auto text-[#0D9488]" />
+            <h3 className="text-sm font-display font-bold text-[#0A101F]">
               {eproducts.length === 0
                 ? 'E-Products & eBooks Coming Soon'
                 : `No items in "${selectedSubcategory}" yet`}
             </h3>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
               Digital eBooks and HTML editions published from Admin will appear here immediately.
             </p>
           </div>
