@@ -2,10 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
-# Proxy all /api/* requests to the live Cloudflare Workers + D1 production API
+# Proxy all /api/* requests to the live Cloudflare Workers + D1 production API on buy4achange.in
 [[redirects]]
   from = "/api/*"
-  to = "https://buy4achange.bethechangeugt.workers.dev/api/:splat"
+  to = "https://buy4achange.in/api/:splat"
   status = 200
   force = true
 

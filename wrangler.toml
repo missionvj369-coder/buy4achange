@@ -1,7 +1,14 @@
 name = "buy4achange"
+account_id = "d2d9e117b1f2d60e8fba956d80de7c9f"
 main = "worker/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
+
+# Custom domain routes on buy4achange.in
+routes = [
+  { pattern = "buy4achange.in", custom_domain = true },
+  { pattern = "www.buy4achange.in", custom_domain = true }
+]
 
 # Serve built Vite SPA directly from Cloudflare Edge Assets
 [assets]
@@ -14,7 +21,7 @@ run_worker_first = ["/api/*"]
 [[d1_databases]]
 binding = "BUY4ACHANGE_DB"
 database_name = "buy4achange-db"
-database_id = "a098f89e-a498-4479-86b5-194bc537c246"
+database_id = "f5708938-cb5b-4697-bbca-e583a9903a52"
 
 [vars]
 ENVIRONMENT = "production"
