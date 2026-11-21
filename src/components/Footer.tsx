@@ -34,18 +34,18 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pb-14 items-start">
           {/* Left: Monumental Manifesto Quote */}
           <div className="lg:col-span-5 space-y-3">
-            <div className="font-display font-extrabold uppercase text-xl sm:text-2xl text-white leading-[1.02] tracking-[-0.02em] max-w-sm">
+            <div className="heading-future font-extrabold uppercase text-2xl sm:text-3xl leading-[1.04] max-w-md">
               EVERY PURCHASE BUILDS
               <br />A LIVING INDIA.
             </div>
-            <div className="text-[11px] text-white/45">
+            <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-emerald-300/70">
               Universal Guard Trust · UGT India
             </div>
           </div>
 
           {/* Center Label */}
           <div className="lg:col-span-2">
-            <div className="font-display font-extrabold uppercase text-base sm:text-lg text-white leading-[0.98] tracking-[-0.02em]">
+            <div className="heading-future font-extrabold uppercase text-base sm:text-lg leading-[1.05] tracking-[0.04em]">
               CONNECT
               <br />
               WITH

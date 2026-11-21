@@ -18,8 +18,17 @@
   }
 
   h1, h2, h3, .font-display {
-    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-    letter-spacing: -0.03em;
+    font-family: 'Outfit', 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.025em;
+  }
+
+  .heading-future {
+    font-family: 'Outfit', 'Space Grotesk', sans-serif;
+    letter-spacing: -0.025em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 55%, #A7F3D0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   * {

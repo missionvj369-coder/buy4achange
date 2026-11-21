@@ -41,7 +41,7 @@ export const MissionsCinematic: React.FC<MissionsCinematicProps> = ({
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/55">
               03 /
             </div>
-            <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.92] tracking-[-0.03em]">
+            <h2 className="heading-future font-extrabold uppercase text-3xl sm:text-5xl leading-[0.98]">
               08 LIVING INDIA
               <br />
               MISSIONS

@@ -8,9 +8,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Syne', 'Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
-        editorial: ['Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
-        serif: ['Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
+        display: ['Outfit', 'Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
+        editorial: ['Outfit', 'Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
+        serif: ['Outfit', 'Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       colors: {
