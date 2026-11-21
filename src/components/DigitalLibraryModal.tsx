@@ -80,38 +80,45 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xl my-6">
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl bg-[#02140D] border border-emerald-400/30 rounded-2xl overflow-hidden shadow-2xl my-6 text-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="hero-horizon-bar" />
+
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#031D13] border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+            <div className="w-9 h-9 rounded-full bg-emerald-400/15 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold font-serif text-gray-900">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
+                DIGITAL VAULT
+              </div>
+              <h2 className="text-base font-extrabold uppercase font-display text-white">
                 My Digital Library
               </h2>
-              <p className="text-xs text-gray-500">
-                Purchased eBooks &amp; HTML eProducts — unlocked after verified payment
-              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close library"
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900"
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-          {/* Unlocked Items */}
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto scrollbar-thin">
           {libraryItems.length > 0 ? (
             <div className="space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#166534] flex items-center space-x-1.5">
+              <h3 className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-emerald-300 flex items-center space-x-1.5">
                 <Unlock className="w-3.5 h-3.5" />
                 <span>Your Unlocked eProducts ({libraryItems.length})</span>
               </h3>
@@ -120,32 +127,32 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
                 {libraryItems.map((item) => (
                   <div
                     key={`${item.order_number}-${item.product_id}`}
-                    className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="flex items-center space-x-3 min-w-0">
                       {item.image_url ? (
                         <img
                           src={item.image_url}
                           alt={item.product_name}
-                          className="w-12 h-12 rounded-lg object-cover bg-gray-100 border border-gray-200 shrink-0"
+                          className="w-12 h-12 rounded-lg object-cover bg-black/40 border border-white/15 shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534] shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-emerald-400/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 shrink-0">
                           <BookOpen className="w-5 h-5" />
                         </div>
                       )}
                       <div className="min-w-0">
                         <div className="flex items-center space-x-2">
-                          <span className="font-semibold text-gray-900 text-xs truncate">
+                          <span className="font-semibold text-white text-xs truncate">
                             {item.product_name}
                           </span>
                           {item.subcategory && (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0] shrink-0">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/35 shrink-0">
                               {item.subcategory}
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-gray-500 font-mono mt-0.5">
+                        <div className="text-[11px] text-white/50 font-mono mt-0.5">
                           Order {item.order_number}
                         </div>
                       </div>
@@ -155,7 +162,7 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDownloadHtml(item)}
-                        className="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 text-xs font-semibold flex items-center space-x-1"
+                        className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white text-[11px] font-mono uppercase font-semibold flex items-center space-x-1"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Download</span>
@@ -163,7 +170,7 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
                       <button
                         type="button"
                         onClick={() => onLaunchItem(item)}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
+                        className="px-4 py-1.5 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase text-[11px] font-extrabold transition-colors"
                       >
                         Open Now
                       </button>
@@ -173,34 +180,38 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="p-6 rounded-lg bg-[#FAF9F6] border border-gray-200 text-center space-y-2">
-              <Lock className="w-6 h-6 mx-auto text-gray-400" />
-              <div className="text-sm font-semibold text-gray-900">No Unlocked eProducts Yet</div>
-              <p className="text-xs text-gray-600 max-w-md mx-auto">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-2">
+              <Lock className="w-6 h-6 mx-auto text-emerald-400" />
+              <div className="text-xs font-mono uppercase tracking-wider font-bold text-white">
+                No Unlocked eProducts Yet
+              </div>
+              <p className="text-xs text-white/55 max-w-md mx-auto">
                 Purchase any eBook or eProduct to unlock its content once payment is verified, or restore an existing paid order below.
               </p>
             </div>
           )}
 
           {/* Unlock by Order Number & Email */}
-          <div className="p-4 rounded-lg bg-[#FAF9F6] border border-gray-200 space-y-3">
+          <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3">
             <div>
-              <h4 className="text-xs font-semibold text-gray-900">Restore / Unlock Purchased eProducts</h4>
-              <p className="text-xs text-gray-600">
-                Enter your Order Number (e.g. <span className="font-mono text-gray-900">B4C-2026-...</span>) and the email used at checkout.
+              <h4 className="text-xs font-mono uppercase tracking-wider font-bold text-emerald-300">
+                Restore / Unlock Purchased eProducts
+              </h4>
+              <p className="text-xs text-white/55 mt-0.5">
+                Enter your Order Number (e.g. <span className="font-mono text-white">B4C-2026-...</span>) and checkout email.
               </p>
             </div>
 
             {error && (
-              <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-400/40 text-rose-200 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="p-2.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] text-xs flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-[#166534] shrink-0" />
+              <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-xs flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{successMsg}</span>
               </div>
             )}
@@ -212,7 +223,7 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
                 placeholder="Order Number (B4C-...)"
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
-                className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-mono text-gray-900 placeholder-gray-400 focus:border-[#166534] focus:outline-none"
+                className="bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2.5 text-xs font-mono text-white placeholder-white/40 focus:border-emerald-400 focus:outline-none"
               />
               <input
                 type="email"
@@ -220,18 +231,14 @@ export const DigitalLibraryModal: React.FC<DigitalLibraryModalProps> = ({
                 placeholder="Purchase Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 placeholder-gray-400 focus:border-[#166534] focus:outline-none"
+                className="bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white placeholder-white/40 focus:border-emerald-400 focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={unlocking}
-                className="px-4 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center justify-center space-x-1.5"
+                className="px-4 py-2.5 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase tracking-wider font-extrabold text-[11px] flex items-center justify-center space-x-1.5 transition-colors"
               >
-                {unlocking ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Unlock className="w-3.5 h-3.5" />
-                )}
+                {unlocking ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Unlock className="w-3.5 h-3.5" />}
                 <span>{unlocking ? 'Verifying...' : 'Unlock Access'}</span>
               </button>
             </form>

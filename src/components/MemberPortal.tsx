@@ -269,15 +269,17 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   // --- VIEW 1: REGISTER / SIGN IN ---
   if (!token) {
     return (
-      <div className="min-h-screen hero-architectural py-8 px-4">
+      <div className="studio-grain min-h-screen living-india-studio py-8 px-4">
         <div className="max-w-lg mx-auto space-y-5">
           <button
             type="button"
             onClick={onNavigateStore}
-            className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-xs font-semibold text-gray-700 inline-flex items-center space-x-1.5"
+            className="pill-hape-cta"
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#166534]" />
-            <span>Back to Buy4AChange</span>
+            <span>BACK TO STORE</span>
+            <span className="pill-hape-circle">
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </span>
           </button>
 
           <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">

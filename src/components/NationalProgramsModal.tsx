@@ -120,67 +120,76 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
     }
   };
 
+  const inputCls =
+    'w-full bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-emerald-400';
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden my-6"
+        className="w-full max-w-2xl bg-[#02140D] border border-emerald-400/30 rounded-2xl shadow-2xl overflow-hidden my-6 text-white"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="hero-horizon-bar" />
+
         {/* Header */}
-        <div className="px-5 py-4 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between gap-3">
+        <div className="px-6 py-5 bg-[#031D13] border-b border-white/10 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-base sm:text-lg font-bold font-display text-gray-900">
+            <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
+              LIVING INDIA PROGRAMS
+            </div>
+            <h2 className="text-lg sm:text-xl font-extrabold font-display uppercase tracking-tight text-white">
               National Transformation Programs
             </h2>
-            <p className="text-xs text-gray-500">
-              Recurring Zero-Chemical Household Boxes &amp; Institutional / CSR Bulk Procurement
-            </p>
           </div>
-          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-gray-200 text-gray-600">
-            <X className="w-5 h-5" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="px-5 pt-3 border-b border-gray-200 flex items-center space-x-2">
+        <div className="px-6 pt-3 bg-[#02120B] border-b border-white/10 flex items-center space-x-2">
           <button
             type="button"
             onClick={() => { setTab('subscription'); setNotice(null); }}
-            className={`px-3.5 py-2 text-xs font-semibold border-b-2 -mb-px flex items-center space-x-1.5 ${
-              tab === 'subscription' ? 'border-[#166534] text-[#166534]' : 'border-transparent text-gray-500'
+            className={`px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider font-bold border-b-2 -mb-px flex items-center space-x-1.5 transition-colors ${
+              tab === 'subscription' ? 'border-emerald-400 text-emerald-300' : 'border-transparent text-white/55 hover:text-white'
             }`}
           >
             <Repeat className="w-3.5 h-3.5" />
-            <span>Monthly Essentials Box</span>
+            <span>Monthly Box</span>
           </button>
           <button
             type="button"
             onClick={() => { setTab('bulk'); setNotice(null); }}
-            className={`px-3.5 py-2 text-xs font-semibold border-b-2 -mb-px flex items-center space-x-1.5 ${
-              tab === 'bulk' ? 'border-[#166534] text-[#166534]' : 'border-transparent text-gray-500'
+            className={`px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider font-bold border-b-2 -mb-px flex items-center space-x-1.5 transition-colors ${
+              tab === 'bulk' ? 'border-emerald-400 text-emerald-300' : 'border-transparent text-white/55 hover:text-white'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            <span>Institutional &amp; CSR Bulk</span>
+            <span>CSR &amp; Institutional Bulk</span>
           </button>
         </div>
 
-        <div className="p-5 sm:p-6 max-h-[76vh] overflow-y-auto space-y-4 text-xs">
+        <div className="p-6 max-h-[76vh] overflow-y-auto space-y-4 text-xs scrollbar-thin">
           {notice && (
             <div
-              className={`p-3.5 rounded-lg border flex items-start space-x-2 ${
+              className={`p-3.5 rounded-xl border flex items-start space-x-2 ${
                 notice.ok
-                  ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
-                  : 'bg-rose-50 border-rose-200 text-rose-700'
+                  ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200'
+                  : 'bg-rose-500/15 border-rose-400/40 text-rose-200'
               }`}
             >
               {notice.ok ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
               ) : (
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               )}
               <span>{notice.text}</span>
             </div>
@@ -188,7 +197,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
 
           {tab === 'subscription' ? (
             <form onSubmit={handleSubscribe} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {SUBSCRIPTION_BOXES.map((box) => {
                   const selected = subForm.plan_name === box.name;
                   return (
@@ -198,15 +207,15 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                       onClick={() =>
                         setSubForm({ ...subForm, plan_name: box.name, monthly_budget: box.price })
                       }
-                      className={`p-3 rounded-xl border text-left ${
+                      className={`p-3.5 rounded-xl border text-left transition-all ${
                         selected
-                          ? 'bg-[#F0FDF4] border-[#166534]'
-                          : 'bg-[#FAF9F6] border-gray-200 hover:border-gray-300'
+                          ? 'bg-emerald-500/15 border-emerald-400 text-white'
+                          : 'bg-white/[0.04] border-white/10 hover:border-white/30 text-white/80'
                       }`}
                     >
-                      <div className="font-bold text-gray-900 text-xs">{box.name}</div>
-                      <div className="font-mono font-bold text-[#166534] mt-1">₹{box.price} / box</div>
-                      <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">{box.desc}</p>
+                      <div className="font-display font-bold text-white text-xs">{box.name}</div>
+                      <div className="font-mono font-bold text-emerald-300 mt-1">₹{box.price} / box</div>
+                      <p className="text-[11px] text-white/55 mt-1 leading-relaxed">{box.desc}</p>
                     </button>
                   );
                 })}
@@ -214,29 +223,31 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Delivery Frequency</label>
+                  <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                    Delivery Frequency
+                  </label>
                   <select
                     value={subForm.frequency}
                     onChange={(e) => setSubForm({ ...subForm, frequency: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                    className={inputCls}
                   >
-                    <option value="Monthly">Monthly Refill</option>
-                    <option value="Bi-Monthly">Every 2 Months</option>
-                    <option value="Quarterly">Quarterly</option>
+                    <option value="Monthly" className="bg-[#031810]">Monthly Refill</option>
+                    <option value="Bi-Monthly" className="bg-[#031810]">Every 2 Months</option>
+                    <option value="Quarterly" className="bg-[#031810]">Quarterly</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1 flex items-center space-x-1">
-                    <Heart className="w-3.5 h-3.5 text-[#166534]" />
+                  <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1 flex items-center space-x-1">
+                    <Heart className="w-3 h-3 text-emerald-400" />
                     <span>Recurring Mission to Fund</span>
                   </label>
                   <select
                     value={subForm.cause_id}
                     onChange={(e) => setSubForm({ ...subForm, cause_id: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                    className={inputCls}
                   >
                     {causes.map((c) => (
-                      <option key={c.id} value={c.id}>{c.title}</option>
+                      <option key={c.id} value={c.id} className="bg-[#031810]">{c.title}</option>
                     ))}
                   </select>
                 </div>
@@ -249,7 +260,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Full Name *"
                   value={subForm.subscriber_name}
                   onChange={(e) => setSubForm({ ...subForm, subscriber_name: e.target.value })}
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
                 <input
                   type="email"
@@ -257,7 +268,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Email Address *"
                   value={subForm.email}
                   onChange={(e) => setSubForm({ ...subForm, email: e.target.value })}
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
                 <input
                   type="tel"
@@ -265,7 +276,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Mobile / WhatsApp *"
                   value={subForm.phone}
                   onChange={(e) => setSubForm({ ...subForm, phone: e.target.value })}
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
 
@@ -276,7 +287,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Delivery Address *"
                   value={subForm.delivery_address}
                   onChange={(e) => setSubForm({ ...subForm, delivery_address: e.target.value })}
-                  className="sm:col-span-2 bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={`sm:col-span-2 ${inputCls}`}
                 />
                 <input
                   type="text"
@@ -287,14 +298,14 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   onChange={(e) =>
                     setSubForm({ ...subForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })
                   }
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono"
+                  className={`${inputCls} font-mono`}
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold"
+                className="w-full py-3 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase tracking-[0.14em] font-extrabold transition-colors"
               >
                 {submitting ? 'Enrolling...' : `Enroll in ${subForm.frequency} Essentials Box`}
               </button>
@@ -303,28 +314,32 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
             <form onSubmit={handleBulkSubmit} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Organization / Institution Name *</label>
+                  <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                    Organization / Institution Name *
+                  </label>
                   <input
                     type="text"
                     required
                     placeholder="School, Hospital, Company, or Trust"
                     value={bulkForm.org_name}
                     onChange={(e) => setBulkForm({ ...bulkForm, org_name: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Organization Type</label>
+                  <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                    Organization Type
+                  </label>
                   <select
                     value={bulkForm.org_type}
                     onChange={(e) => setBulkForm({ ...bulkForm, org_type: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                    className={inputCls}
                   >
-                    <option value="Corporate CSR">Corporate CSR Program</option>
-                    <option value="School / College">School / University</option>
-                    <option value="Hospital / Clinic">Hospital / Wellness Center</option>
-                    <option value="NGO / Trust">NGO / Charitable Trust</option>
-                    <option value="Government / Panchayat">Government / Gram Panchayat</option>
+                    <option value="Corporate CSR" className="bg-[#031810]">Corporate CSR Program</option>
+                    <option value="School / College" className="bg-[#031810]">School / University</option>
+                    <option value="Hospital / Clinic" className="bg-[#031810]">Hospital / Wellness Center</option>
+                    <option value="NGO / Trust" className="bg-[#031810]">NGO / Charitable Trust</option>
+                    <option value="Government / Panchayat" className="bg-[#031810]">Government / Gram Panchayat</option>
                   </select>
                 </div>
               </div>
@@ -336,7 +351,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Contact Person *"
                   value={bulkForm.contact_name}
                   onChange={(e) => setBulkForm({ ...bulkForm, contact_name: e.target.value })}
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
                 <input
                   type="email"
@@ -344,7 +359,7 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Official Email *"
                   value={bulkForm.email}
                   onChange={(e) => setBulkForm({ ...bulkForm, email: e.target.value })}
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
                 <input
                   type="tel"
@@ -352,50 +367,56 @@ export const NationalProgramsModal: React.FC<NationalProgramsModalProps> = ({
                   placeholder="Phone Number *"
                   value={bulkForm.phone}
                   onChange={(e) => setBulkForm({ ...bulkForm, phone: e.target.value })}
-                  className="bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Estimated Order Budget (₹)</label>
+                  <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                    Estimated Order Budget (₹)
+                  </label>
                   <input
                     type="number"
                     value={bulkForm.estimated_budget}
                     onChange={(e) => setBulkForm({ ...bulkForm, estimated_budget: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono font-semibold"
+                    className={`${inputCls} font-mono font-bold`}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Living India Mission to Direct CSR Impact</label>
+                  <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                    Mission to Direct CSR Impact
+                  </label>
                   <select
                     value={bulkForm.cause_id}
                     onChange={(e) => setBulkForm({ ...bulkForm, cause_id: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                    className={inputCls}
                   >
                     {causes.map((c) => (
-                      <option key={c.id} value={c.id}>{c.title}</option>
+                      <option key={c.id} value={c.id} className="bg-[#031810]">{c.title}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Bulk Product Needs &amp; Delivery Location *</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  Bulk Product Needs &amp; Delivery Location *
+                </label>
                 <textarea
                   rows={3}
                   required
                   placeholder="Specify quantities, preferred zero-chemical products or eBooks, and target delivery city/state..."
                   value={bulkForm.requirements}
                   onChange={(e) => setBulkForm({ ...bulkForm, requirements: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold"
+                className="w-full py-3 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase tracking-[0.14em] font-extrabold transition-colors"
               >
                 {submitting ? 'Submitting Proposal Request...' : 'Request Institutional / CSR Quote'}
               </button>

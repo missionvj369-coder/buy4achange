@@ -69,30 +69,32 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden my-6"
+        className="w-full max-w-md bg-[#02140D] border border-emerald-400/35 rounded-2xl shadow-2xl overflow-hidden my-6 text-white"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="hero-horizon-bar" />
-        <div className="px-5 py-4 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between gap-2">
+        <div className="px-5 py-4 bg-[#031D13] border-b border-white/10 flex items-center justify-between gap-2">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+            <div className="w-9 h-9 rounded-full bg-emerald-400/15 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
               <Share2 className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Share &amp; Earn {commissionPct}%</h3>
-              <p className="text-[11px] text-gray-500">
-                Spread the Living India mission &amp; earn on verified purchases
-              </p>
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-emerald-300">
+                PARTNER PROTOCOL
+              </div>
+              <h3 className="text-sm font-display font-extrabold uppercase text-white">
+                Share &amp; Earn {commissionPct}%
+              </h3>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors"
             aria-label="Close share"
           >
             <X className="w-4 h-4" />
@@ -101,41 +103,41 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
 
         <div className="p-5 space-y-4 text-xs">
           {product && (
-            <div className="p-3 rounded-xl bg-[#FAF9F6] border border-gray-200 flex items-center space-x-3">
+            <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center space-x-3">
               {product.image_url && (
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-12 h-12 rounded-lg object-cover border shrink-0"
+                  className="w-12 h-12 rounded-lg object-cover border border-white/15 shrink-0"
                 />
               )}
               <div className="min-w-0">
-                <div className="font-bold text-gray-900 truncate">{product.name}</div>
-                <div className="text-[11px] text-[#166534] font-semibold">
+                <div className="font-bold text-white truncate">{product.name}</div>
+                <div className="text-[11px] font-mono text-emerald-300 font-semibold">
                   ₹{product.price.toLocaleString('en-IN')} · Earn ~₹
-                  {Math.round((product.price * commissionPct) / 100)} per verified referral
+                  {Math.round((product.price * commissionPct) / 100)} / referral
                 </div>
               </div>
             </div>
           )}
 
           {memberUser ? (
-            <div className="p-3 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-between gap-2">
-              <div className="flex items-center space-x-1.5 text-[#166534] font-semibold">
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-between gap-2">
+              <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold">
                 <Sparkles className="w-4 h-4 shrink-0" />
                 <span>Your Referral Code Attached:</span>
               </div>
-              <span className="font-mono font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-[#BBF7D0]">
+              <span className="font-mono font-bold text-black bg-emerald-300 px-2.5 py-0.5 rounded-full">
                 {memberUser.referral_code}
               </span>
             </div>
           ) : (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
-              <div className="font-semibold text-amber-900">
+            <div className="p-4 rounded-xl bg-amber-400/10 border border-amber-300/30 space-y-2.5">
+              <div className="font-bold text-amber-200">
                 Want to earn {commissionPct}% income from this share?
               </div>
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                Sign in or create a free Buy4AChange member account so your unique referral code is automatically attached to every link you share.
+              <p className="text-[11px] text-white/65 leading-relaxed">
+                Create a free Buy4AChange member account so your unique referral code attaches automatically to every link you share.
               </p>
               <button
                 type="button"
@@ -143,39 +145,37 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
                   onClose();
                   onOpenAccount();
                 }}
-                className="px-3 py-1.5 rounded-lg bg-[#166534] text-white font-semibold text-xs inline-flex items-center space-x-1.5"
+                className="px-4 py-2 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase tracking-wider font-extrabold text-[10px] inline-flex items-center space-x-1.5 transition-colors"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>Create Free Account &amp; Get Referral Link</span>
+                <span>Create Free Account &amp; Earn</span>
               </button>
             </div>
           )}
 
-          {/* Copyable Link Box */}
           <div className="flex items-center space-x-2">
             <input
               type="text"
               readOnly
               value={shareUrl}
-              className="flex-1 bg-[#FAF9F6] border border-gray-300 rounded-lg px-3 py-2 font-mono text-[11px] text-gray-800"
+              className="flex-1 bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2.5 font-mono text-[11px] text-emerald-200"
             />
             <button
               type="button"
               onClick={handleCopy}
-              className="px-3 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold inline-flex items-center space-x-1 shrink-0"
+              className="px-4 py-2.5 rounded-full bg-white hover:bg-emerald-400 text-black font-mono uppercase text-[10px] font-bold inline-flex items-center space-x-1 shrink-0 transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
-          {/* 1-Tap Social Share Grid */}
           <div className="grid grid-cols-2 gap-2">
             <a
               href={`https://wa.me/?text=${encodedText}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2.5 px-3 rounded-xl bg-[#F0FDF4] hover:bg-green-100 border border-[#BBF7D0] text-[#166534] font-semibold flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-400 border border-emerald-400/35 text-emerald-200 hover:text-black font-semibold flex items-center justify-center space-x-1.5 transition-colors"
             >
               <MessageCircle className="w-4 h-4" />
               <span>WhatsApp</span>
@@ -184,7 +184,7 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
               href={`https://t.me/share/url?url=${encodedUrl}&text=${encodedTextOnly}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2.5 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-semibold flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-xl bg-sky-400/15 hover:bg-sky-400 border border-sky-300/35 text-sky-200 hover:text-black font-semibold flex items-center justify-center space-x-1.5 transition-colors"
             >
               <Send className="w-4 h-4" />
               <span>Telegram</span>
@@ -193,7 +193,7 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
               href={`https://twitter.com/intent/tweet?text=${encodedTextOnly}&url=${encodedUrl}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2.5 px-3 rounded-xl bg-[#FAF9F6] hover:bg-gray-100 border border-gray-200 text-gray-800 font-semibold text-center"
+              className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white border border-white/15 text-white hover:text-black font-semibold text-center transition-colors"
             >
               X (Twitter)
             </a>
@@ -201,7 +201,7 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2.5 px-3 rounded-xl bg-[#FAF9F6] hover:bg-gray-100 border border-gray-200 text-gray-800 font-semibold text-center"
+              className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white border border-white/15 text-white hover:text-black font-semibold text-center transition-colors"
             >
               Facebook
             </a>
@@ -209,14 +209,14 @@ export const ShareEarnModal: React.FC<ShareEarnModalProps> = ({
               href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2.5 px-3 rounded-xl bg-[#FAF9F6] hover:bg-gray-100 border border-gray-200 text-gray-800 font-semibold text-center"
+              className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white border border-white/15 text-white hover:text-black font-semibold text-center transition-colors"
             >
               LinkedIn
             </a>
             <button
               type="button"
               onClick={handleNativeShare}
-              className="py-2.5 px-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-semibold flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-xl bg-emerald-400 hover:bg-white text-black font-bold flex items-center justify-center space-x-1.5 transition-colors"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>Instagram / More</span>

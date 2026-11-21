@@ -197,24 +197,29 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
     }
   };
 
+  const inputCls =
+    'w-full bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-emerald-400';
+
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-gray-900 py-6 px-4">
+    <div className="studio-grain min-h-screen living-india-studio text-white py-8 px-4">
       <div className="max-w-xl mx-auto space-y-5">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={onNavigateStore}
-            className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-xs font-semibold text-gray-700 inline-flex items-center space-x-1.5"
+            className="pill-hape-cta"
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#166534]" />
-            <span>Back to Store</span>
+            <span>BACK TO STORE</span>
+            <span className="pill-hape-circle">
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </span>
           </button>
 
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center space-x-1.5 border ${
+            className={`px-3.5 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em] font-bold inline-flex items-center space-x-1.5 border ${
               isOnline
-                ? 'bg-[#F0FDF4] text-[#166534] border-[#BBF7D0]'
-                : 'bg-amber-50 text-amber-800 border-amber-200'
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40'
+                : 'bg-amber-400/15 text-amber-200 border-amber-300/40'
             }`}
           >
             {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
@@ -224,18 +229,18 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
 
         {/* Offline Queue Sync Bar */}
         {offlineQueue.length > 0 && (
-          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3 text-xs">
+          <div className="p-4 rounded-2xl bg-amber-400/15 border border-amber-300/40 flex items-center justify-between gap-3 text-xs">
             <div>
-              <div className="font-bold text-amber-900">
+              <div className="font-bold text-amber-200">
                 {offlineQueue.length} Offline Audit Report(s) Ready to Sync
               </div>
-              <p className="text-amber-800">Stored safely on your phone until internet returns.</p>
+              <p className="text-amber-100/75">Stored safely on your phone until internet returns.</p>
             </div>
             <button
               type="button"
               disabled={syncing}
               onClick={syncOfflineQueue}
-              className="px-3.5 py-2 rounded-lg bg-[#166534] text-white font-semibold inline-flex items-center space-x-1.5 shrink-0"
+              className="px-4 py-2 rounded-full bg-amber-300 text-black font-mono uppercase text-[10px] font-bold inline-flex items-center space-x-1.5 shrink-0"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
               <span>Sync Now</span>
@@ -243,34 +248,35 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
           </div>
         )}
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-5 bg-[#FAF9F6] border-b border-gray-200 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+        <div className="bg-[#02140D]/95 border border-emerald-400/30 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="hero-horizon-bar" />
+          <div className="p-5 bg-[#031D13] border-b border-white/10 flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-400/15 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
               <ClipboardCheck className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-display text-lg font-bold text-gray-900">
-                UGT India Field Auditor Mode (PWA)
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
+                OFFLINE-CAPABLE PWA
+              </div>
+              <h1 className="font-display text-lg font-extrabold uppercase tracking-tight text-white">
+                UGT India Field Auditor Mode
               </h1>
-              <p className="text-xs text-gray-500">
-                Geo-tagged factory purity inspections &amp; mission ground verification — works offline
-              </p>
             </div>
           </div>
 
           <form onSubmit={handleSubmitAudit} className="p-5 space-y-4 text-xs">
             {notice && (
               <div
-                className={`p-3 rounded-lg border flex items-start space-x-2 ${
+                className={`p-3.5 rounded-xl border flex items-start space-x-2 ${
                   notice.ok
-                    ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
-                    : 'bg-rose-50 border-rose-200 text-rose-700'
+                    ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200'
+                    : 'bg-rose-500/15 border-rose-400/40 text-rose-200'
                 }`}
               >
                 {notice.ok ? (
-                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
                 )}
                 <span>{notice.text}</span>
               </div>
@@ -278,85 +284,97 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Field Auditor Name *</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  Field Auditor Name *
+                </label>
                 <input
                   type="text"
                   required
                   value={form.auditor_name}
                   onChange={(e) => setForm({ ...form, auditor_name: e.target.value })}
                   placeholder="Your full name"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Auditor Phone</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  Auditor Phone
+                </label>
                 <input
                   type="tel"
                   value={form.auditor_phone}
                   onChange={(e) => setForm({ ...form, auditor_phone: e.target.value })}
                   placeholder="+91 98XXXXXXXX"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Inspection Type *</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  Inspection Type *
+                </label>
                 <select
                   value={form.audit_type}
                   onChange={(e) => setForm({ ...form, audit_type: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 >
-                  <option value="Manufacturer Factory Inspection">Manufacturer Factory Inspection</option>
-                  <option value="Zero-Chemical Batch Check">Zero-Chemical Batch Check</option>
-                  <option value="Women SHG / FPO Verification">Women SHG / FPO Verification</option>
-                  <option value="Living India Mission Ground Check">Living India Mission Ground Check</option>
+                  <option value="Manufacturer Factory Inspection" className="bg-[#031810]">Manufacturer Factory Inspection</option>
+                  <option value="Zero-Chemical Batch Check" className="bg-[#031810]">Zero-Chemical Batch Check</option>
+                  <option value="Women SHG / FPO Verification" className="bg-[#031810]">Women SHG / FPO Verification</option>
+                  <option value="Living India Mission Ground Check" className="bg-[#031810]">Living India Mission Ground Check</option>
                 </select>
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Manufacturer / Site Name *</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  Manufacturer / Site Name *
+                </label>
                 <input
                   type="text"
                   required
                   value={form.subject_name}
                   onChange={(e) => setForm({ ...form, subject_name: e.target.value })}
                   placeholder="e.g. Cauvery SHG Oil Unit"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">State *</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  State *
+                </label>
                 <select
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 >
                   {STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s} className="bg-[#031810]">{s}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">District / Village</label>
+                <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                  District / Village
+                </label>
                 <input
                   type="text"
                   value={form.district}
                   onChange={(e) => setForm({ ...form, district: e.target.value })}
                   placeholder="District or village name"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                  className={inputCls}
                 />
               </div>
             </div>
 
             {/* GPS Coordinates Capture */}
-            <div className="p-3 rounded-lg bg-[#FAF9F6] border border-gray-200 flex items-center justify-between gap-2">
-              <div className="text-xs text-gray-700">
-                <div className="font-semibold">GPS Geo-Tag</div>
-                <div className="font-mono text-[11px] text-gray-500">
+            <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between gap-2">
+              <div className="text-xs text-white/80">
+                <div className="font-mono uppercase text-[10px] text-emerald-300 font-bold">GPS Geo-Tag</div>
+                <div className="font-mono text-[11px] text-white/60 mt-0.5">
                   {form.latitude && form.longitude
                     ? `${form.latitude}, ${form.longitude}`
                     : 'Not captured yet (optional)'}
@@ -366,7 +384,7 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
                 type="button"
                 onClick={captureGps}
                 disabled={locating}
-                className="px-3 py-1.5 rounded-lg bg-white border border-[#166534] text-[#166534] font-semibold inline-flex items-center space-x-1"
+                className="px-3.5 py-1.5 rounded-full bg-emerald-400/15 border border-emerald-400/50 text-emerald-300 hover:bg-emerald-400 hover:text-black font-mono uppercase text-[10px] font-bold inline-flex items-center space-x-1 transition-colors"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 <span>{locating ? 'Locating...' : 'Capture GPS'}</span>
@@ -374,8 +392,10 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
             </div>
 
             {/* 4-Point Ground Purity & Ethics Checklist */}
-            <div className="p-3.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] space-y-2">
-              <div className="font-bold text-[#166534]">Ground Verification Checklist</div>
+            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-400/30 space-y-2.5">
+              <div className="font-mono uppercase tracking-wider text-[10px] font-bold text-emerald-300">
+                Ground Verification Checklist
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { key: 'zero_chemical_pass' as const, label: 'Zero Synthetic Chemicals Verified' },
@@ -383,12 +403,12 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
                   { key: 'fair_wage_pass' as const, label: 'Fair Wages & Safe Working Conditions' },
                   { key: 'impact_verified' as const, label: 'Living India Ground Impact Verified' },
                 ].map((ck) => (
-                  <label key={ck.key} className="flex items-center space-x-2 text-gray-800 cursor-pointer">
+                  <label key={ck.key} className="flex items-center space-x-2 text-white/85 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form[ck.key]}
                       onChange={(e) => setForm({ ...form, [ck.key]: e.target.checked })}
-                      className="accent-[#166534]"
+                      className="accent-emerald-400"
                     />
                     <span>{ck.label}</span>
                   </label>
@@ -398,22 +418,24 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
 
             {/* Camera / Photo Capture */}
             <div>
-              <label className="block font-semibold text-gray-700 mb-1">Site / Batch Inspection Photo</label>
+              <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                Site / Batch Inspection Photo
+              </label>
               {form.photo_url ? (
-                <div className="flex items-center space-x-3 p-2 rounded-lg bg-[#FAF9F6] border border-gray-200">
-                  <img src={form.photo_url} alt="Inspection" className="w-16 h-16 rounded-lg object-cover border" />
-                  <span className="text-[#166534] font-semibold flex-1">Inspection photo captured ✓</span>
+                <div className="flex items-center space-x-3 p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+                  <img src={form.photo_url} alt="Inspection" className="w-16 h-16 rounded-lg object-cover border border-white/15" />
+                  <span className="text-emerald-300 font-semibold flex-1">Inspection photo captured ✓</span>
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, photo_url: '' })}
-                    className="text-rose-600 font-semibold"
+                    className="text-rose-300 hover:text-rose-200 font-semibold"
                   >
                     Remove
                   </button>
                 </div>
               ) : (
-                <label className="flex items-center justify-center space-x-2 p-3.5 rounded-lg border-2 border-dashed border-gray-300 bg-[#FAF9F6] cursor-pointer text-gray-700 font-semibold hover:border-[#166534]">
-                  <Camera className="w-4 h-4 text-[#166534]" />
+                <label className="flex items-center justify-center space-x-2 p-4 rounded-xl border border-dashed border-emerald-400/40 bg-white/[0.03] hover:bg-emerald-500/10 cursor-pointer text-white/85 font-semibold transition-colors">
+                  <Camera className="w-4 h-4 text-emerald-400" />
                   <span>Take Photo / Upload Inspection Evidence</span>
                   <input
                     type="file"
@@ -427,20 +449,22 @@ export const FieldAuditorPortal: React.FC<FieldAuditorPortalProps> = ({ onNaviga
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-700 mb-1">Field Auditor Findings &amp; Notes</label>
+              <label className="block font-mono uppercase tracking-wider text-[10px] text-white/60 mb-1">
+                Field Auditor Findings &amp; Notes
+              </label>
               <textarea
                 rows={3}
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Record observations on raw materials, batch purity, community impact..."
-                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2"
+                className={inputCls}
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold"
+              className="w-full py-3 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase tracking-[0.14em] font-extrabold transition-colors"
             >
               {submitting
                 ? 'Saving Report...'

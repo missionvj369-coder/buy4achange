@@ -528,6 +528,8 @@ export function App() {
             setIsTrackLedgerOpen(true);
           }}
           onOpenReferEarn={() => navigateTo('/account')}
+          onOpenSellerPortal={() => navigateTo('/seller')}
+          onOpenIndiaMap={() => setIsIndiaMapOpen(true)}
         />
 
         {/* Instant Fuzzy Search Hits Across 8 Living India Mission Dossiers */}

@@ -358,18 +358,20 @@ export const SellerPortal: React.FC<SellerPortalProps> = ({
   // --- VIEW 1: MANUFACTURER LOGIN / REGISTRATION ---
   if (!token) {
     return (
-      <div className="min-h-screen hero-architectural text-[#0A101F] py-8 px-4">
+      <div className="studio-grain min-h-screen living-india-studio text-[#0A101F] py-8 px-4">
         <div className="max-w-xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={onNavigateStore}
-              className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 inline-flex items-center space-x-1.5 hover:border-teal-400"
+              className="pill-hape-cta"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#0D9488]" />
-              <span>Back to Storefront</span>
+              <span>BACK TO STORE</span>
+              <span className="pill-hape-circle">
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </span>
             </button>
-            <span className="text-[11px] font-mono font-semibold text-emerald-300 bg-[#070D19] border border-emerald-400/35 px-3 py-1 rounded-full">
+            <span className="text-[10px] font-mono uppercase tracking-[0.14em] font-bold text-amber-200 bg-black/50 border border-amber-300/40 px-3.5 py-1.5 rounded-full">
               ZERO-CHEMICAL CERTIFIED NETWORK
             </span>
           </div>

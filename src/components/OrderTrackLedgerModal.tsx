@@ -40,7 +40,6 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
   const { t } = useLanguage();
   const [tab, setTab] = useState<'track' | 'ledger'>(initialTab);
 
-  // Track Order state
   const [orderNumber, setOrderNumber] = useState('');
   const [email, setEmail] = useState('');
   const [searching, setSearching] = useState(false);
@@ -48,16 +47,13 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
-  // Public Impact Ledger state
   const [loadingLedger, setLoadingLedger] = useState(false);
   const [ledgerEntries, setLedgerEntries] = useState<PublicLedgerEntry[]>([]);
   const [ledgerTotalRaised, setLedgerTotalRaised] = useState<number>(0);
   const [ledgerCauses, setLedgerCauses] = useState<Cause[]>(causes);
 
   useEffect(() => {
-    if (isOpen) {
-      setTab(initialTab);
-    }
+    if (isOpen) setTab(initialTab);
   }, [isOpen, initialTab]);
 
   useEffect(() => {
@@ -100,9 +96,7 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
         body: JSON.stringify({ orderNumber: orderNumber.trim(), email: email.trim() }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Order not found.');
-      }
+      if (!res.ok || !data.success) throw new Error(data.error || 'Order not found.');
       setTrackedOrder(data.order);
       if (
         data.order?.payment_status === 'paid' &&
@@ -141,47 +135,49 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl my-6"
+        className="relative w-full max-w-3xl bg-[#02140D] border border-emerald-400/30 rounded-2xl overflow-hidden shadow-2xl my-6 text-white"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="hero-horizon-bar" />
+
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 bg-[#FAF9F6] border-b border-gray-200 flex items-center justify-between gap-3">
+        <div className="px-6 py-4 bg-[#031D13] border-b border-white/10 flex items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+            <div className="w-9 h-9 rounded-full bg-emerald-400/15 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold font-display text-[#14171A]">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
+                OPEN VERIFICATION PROTOCOL
+              </div>
+              <h2 className="text-base sm:text-lg font-extrabold font-display uppercase text-white">
                 {t.trackAndLedger}
               </h2>
-              <p className="text-xs text-gray-500">
-                Real-time verified order status &amp; open Living India mission audit log
-              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900"
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Clean Tab Switcher */}
-        <div className="px-5 sm:px-6 pt-4 bg-white border-b border-gray-200 flex items-center space-x-2">
+        {/* Tabs */}
+        <div className="px-6 pt-3 bg-[#02120B] border-b border-white/10 flex items-center space-x-2">
           <button
             type="button"
             onClick={() => setTab('track')}
-            className={`px-4 py-2 text-xs font-semibold border-b-2 -mb-px flex items-center space-x-1.5 ${
+            className={`px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider font-bold border-b-2 -mb-px flex items-center space-x-1.5 ${
               tab === 'track'
-                ? 'border-[#166534] text-[#166534]'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
+                ? 'border-emerald-400 text-emerald-300'
+                : 'border-transparent text-white/55 hover:text-white'
             }`}
           >
             <Package className="w-3.5 h-3.5" />
@@ -190,10 +186,10 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
           <button
             type="button"
             onClick={() => setTab('ledger')}
-            className={`px-4 py-2 text-xs font-semibold border-b-2 -mb-px flex items-center space-x-1.5 ${
+            className={`px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider font-bold border-b-2 -mb-px flex items-center space-x-1.5 ${
               tab === 'ledger'
-                ? 'border-[#166534] text-[#166534]'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
+                ? 'border-emerald-400 text-emerald-300'
+                : 'border-transparent text-white/55 hover:text-white'
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
@@ -201,7 +197,7 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
           </button>
         </div>
 
-        <div className="p-5 sm:p-6 max-h-[75vh] overflow-y-auto space-y-5">
+        <div className="p-6 max-h-[75vh] overflow-y-auto space-y-5 scrollbar-thin">
           {tab === 'track' ? (
             <>
               <form onSubmit={handleTrackSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -211,7 +207,7 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
                   value={orderNumber}
                   onChange={(e) => setOrderNumber(e.target.value)}
                   placeholder="Order Number (B4C-2026-...)"
-                  className="bg-[#FAF9F6] border border-gray-300 rounded-lg px-3 py-2.5 text-xs font-mono text-gray-900 placeholder-gray-400 focus:border-[#166534] focus:bg-white focus:outline-none"
+                  className="bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white placeholder-white/40 focus:border-emerald-400 focus:outline-none"
                 />
                 <input
                   type="email"
@@ -219,50 +215,45 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Checkout Email Address"
-                  className="bg-[#FAF9F6] border border-gray-300 rounded-lg px-3 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:border-[#166534] focus:bg-white focus:outline-none"
+                  className="bg-white/[0.06] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/40 focus:border-emerald-400 focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={searching}
-                  className="px-4 py-2.5 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs flex items-center justify-center space-x-1.5"
+                  className="px-4 py-2.5 rounded-full bg-emerald-400 hover:bg-white text-black font-mono uppercase tracking-wider font-extrabold text-xs flex items-center justify-center space-x-1.5 transition-colors"
                 >
-                  {searching ? (
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Search className="w-3.5 h-3.5" />
-                  )}
+                  {searching ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
                   <span>{searching ? 'Checking...' : 'Check Status'}</span>
                 </button>
               </form>
 
               {trackError && (
-                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-400/40 text-rose-200 text-xs flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{trackError}</span>
                 </div>
               )}
 
               {trackedOrder ? (
                 <div className="space-y-4">
-                  {/* Order Status Card */}
-                  <div className="p-4 sm:p-5 rounded-xl bg-[#FAF9F6] border border-gray-200 space-y-4">
+                  <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <div className="font-mono font-bold text-sm text-gray-900">
+                        <div className="font-mono font-bold text-sm text-white">
                           {trackedOrder.order_number}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-white/55">
                           Placed {new Date(trackedOrder.created_at).toLocaleString('en-IN')} · Ref:{' '}
-                          <span className="font-mono text-gray-700">{trackedOrder.payment_id}</span>
+                          <span className="font-mono text-emerald-300">{trackedOrder.payment_id}</span>
                         </div>
                       </div>
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                        className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold border ${
                           trackedOrder.payment_status === 'paid'
-                            ? 'bg-[#F0FDF4] text-[#166534] border-[#BBF7D0]'
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40'
                             : trackedOrder.payment_status === 'failed'
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                            ? 'bg-rose-500/15 text-rose-300 border-rose-400/40'
+                            : 'bg-amber-400/15 text-amber-200 border-amber-300/40'
                         }`}
                       >
                         {trackedOrder.payment_status === 'paid'
@@ -273,65 +264,56 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
                       </span>
                     </div>
 
-                    {/* Clean Progress Timeline */}
                     <div className="grid grid-cols-4 gap-2 pt-2">
                       {[
                         { label: 'Order Placed', step: 1 },
-                        { label: 'Payment Verified', step: 2 },
-                        { label: 'Shipped / Digital', step: 3 },
+                        { label: 'Verified Paid', step: 2 },
+                        { label: 'Dispatched', step: 3 },
                         { label: 'Delivered', step: 4 },
                       ].map((s) => {
                         const active = getStepIndex(trackedOrder) >= s.step;
                         return (
                           <div
                             key={s.label}
-                            className={`p-2 rounded-lg border text-center ${
+                            className={`p-2.5 rounded-xl border text-center ${
                               active
-                                ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
-                                : 'bg-white border-gray-200 text-gray-400'
+                                ? 'bg-emerald-500/15 border-emerald-400/50 text-emerald-300'
+                                : 'bg-white/[0.03] border-white/10 text-white/35'
                             }`}
                           >
                             <div className="flex justify-center mb-1">
-                              {active ? (
-                                <CheckCircle2 className="w-4 h-4" />
-                              ) : (
-                                <Clock className="w-4 h-4" />
-                              )}
+                              {active ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                             </div>
-                            <div className="text-[10px] font-semibold leading-tight">{s.label}</div>
+                            <div className="text-[10px] font-mono uppercase font-bold leading-tight">{s.label}</div>
                           </div>
                         );
                       })}
                     </div>
 
-                    {/* Real Courier & AWB Tracking (Only Shown When Actually Dispatched by Admin) */}
                     {trackedOrder.tracking_number && (
-                      <div className="p-3 rounded-lg bg-white border border-[#BBF7D0] flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div className="flex items-center space-x-2 text-[#166534] font-semibold">
+                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-400/35 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center space-x-2 text-emerald-300 font-semibold">
                           <Truck className="w-4 h-4" />
                           <span>
                             {trackedOrder.courier_name || 'Courier Dispatch'} · AWB:{' '}
-                            <span className="font-mono text-gray-900">
-                              {trackedOrder.tracking_number}
-                            </span>
+                            <span className="font-mono text-white">{trackedOrder.tracking_number}</span>
                           </span>
                         </div>
                       </div>
                     )}
 
-                    {/* Mission Allocation & PDF Certificate Download */}
-                    <div className="pt-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="text-xs text-gray-700">
-                        <span className="font-semibold text-[#166534]">
+                    <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="text-xs text-white/75">
+                        <span className="font-mono font-bold text-emerald-300">
                           ₹{trackedOrder.cause_donation_amount}
                         </span>{' '}
-                        allocated to <strong>{trackedOrder.cause_title || 'Living India Mission'}</strong>
+                        allocated to <strong className="text-white">{trackedOrder.cause_title || 'Living India Mission'}</strong>
                       </div>
                       <button
                         type="button"
                         disabled={generatingPdf}
                         onClick={() => handleDownloadPdf(trackedOrder)}
-                        className="px-4 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold text-xs inline-flex items-center justify-center space-x-1.5"
+                        className="px-4 py-2 rounded-full bg-white hover:bg-emerald-400 text-black font-mono uppercase tracking-wider font-bold text-[11px] inline-flex items-center justify-center space-x-1.5 transition-colors"
                       >
                         <FileDown className="w-4 h-4" />
                         <span>{generatingPdf ? 'Generating PDF...' : t.downloadPdf}</span>
@@ -339,28 +321,25 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Unlocked Digital eBooks if Paid */}
                   {trackedOrder.payment_status === 'paid' &&
                     trackedOrder.digital_items &&
                     trackedOrder.digital_items.length > 0 && (
-                      <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] space-y-2.5">
-                        <div className="text-xs font-semibold text-[#166534] flex items-center space-x-1.5">
+                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/35 space-y-2.5">
+                        <div className="text-xs font-mono uppercase font-bold text-emerald-300 flex items-center space-x-1.5">
                           <BookOpen className="w-4 h-4" />
                           <span>Unlocked Digital eProducts Ready</span>
                         </div>
                         {trackedOrder.digital_items.map((digi) => (
                           <div
                             key={digi.product_id}
-                            className="p-3 rounded-lg bg-white border border-gray-200 flex items-center justify-between gap-2"
+                            className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between gap-2"
                           >
-                            <span className="text-xs font-semibold text-gray-900 truncate">
-                              {digi.product_name}
-                            </span>
+                            <span className="text-xs font-semibold text-white truncate">{digi.product_name}</span>
                             {onLaunchDigital && (
                               <button
                                 type="button"
                                 onClick={() => onLaunchDigital(digi)}
-                                className="px-3 py-1.5 rounded-lg bg-[#166534] text-white text-xs font-semibold shrink-0"
+                                className="px-3.5 py-1.5 rounded-full bg-emerald-400 text-black font-mono uppercase text-[10px] font-bold shrink-0"
                               >
                                 Open Now
                               </button>
@@ -371,101 +350,96 @@ export const OrderTrackLedgerModal: React.FC<OrderTrackLedgerModalProps> = ({
                     )}
                 </div>
               ) : (
-                <div className="p-6 rounded-xl bg-[#FAF9F6] border border-gray-200 text-center space-y-1.5">
-                  <Package className="w-6 h-6 mx-auto text-gray-400" />
-                  <div className="text-xs font-semibold text-gray-900">
-                    Enter your Order Number and checkout email above
+                <div className="p-8 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-2">
+                  <Package className="w-7 h-7 mx-auto text-emerald-400" />
+                  <div className="text-xs font-mono uppercase tracking-wider font-bold text-white">
+                    Enter Order Number &amp; Email Above
                   </div>
-                  <p className="text-xs text-gray-500 max-w-md mx-auto">
-                    Check live payment verification status, real courier tracking AWB once shipped, and download your official PDF Invoice &amp; Impact Certificate.
+                  <p className="text-xs text-white/55 max-w-md mx-auto">
+                    Check live bank verification status, courier AWB once dispatched, and download your official PDF Invoice &amp; Impact Certificate.
                   </p>
                 </div>
               )}
             </>
           ) : (
-            /* TAB 2: PUBLIC ANONYMIZED IMPACT TRANSPARENCY LEDGER */
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/90 to-[#031C13] border border-emerald-400/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <div className="flex items-center space-x-2 text-xs font-semibold text-[#166534]">
+                  <div className="flex items-center space-x-2 text-[11px] font-mono uppercase tracking-[0.16em] font-bold text-emerald-300">
                     <span className="live-dot" />
                     <span>LIVE VERIFIED LIVING INDIA LEDGER</span>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Only bank-verified paid orders appear in this public audit ledger.
+                  <p className="text-xs text-white/65 mt-1">
+                    Only bank-verified paid orders are recorded in this open public audit ledger.
                   </p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <div className="text-xl font-bold text-[#166534] font-mono">
+                  <div className="text-2xl font-bold text-emerald-300 font-mono">
                     ₹{ledgerTotalRaised.toLocaleString('en-IN')}
                   </div>
-                  <div className="text-[11px] text-gray-600">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-white/55">
                     Total Verified Mission Funds
                   </div>
                 </div>
               </div>
 
-              {/* 8 Mission Compact Totals */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {ledgerCauses.map((c, idx) => (
                   <div
                     key={c.id}
-                    className="p-3 rounded-lg bg-[#FAF9F6] border border-gray-200 flex items-center justify-between gap-2 text-xs"
+                    className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between gap-2 text-xs"
                   >
                     <div className="min-w-0">
-                      <span className="font-mono text-[10px] text-[#166534] font-bold mr-1.5">
-                        0{idx + 1}
+                      <span className="font-mono text-[10px] text-emerald-400 font-bold mr-1.5">
+                        0{idx + 1}/
                       </span>
-                      <span className="font-medium text-gray-900 truncate">{c.title}</span>
+                      <span className="font-medium text-white truncate">{c.title}</span>
                     </div>
-                    <span className="font-mono font-bold text-[#166534] shrink-0">
+                    <span className="font-mono font-bold text-emerald-300 shrink-0">
                       ₹{Math.round(c.raised_amount || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* Recent Verified Contributions */}
               <div className="space-y-2">
-                <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-white/55">
                   Recent Verified Contributions
                 </div>
                 {loadingLedger ? (
-                  <div className="py-8 text-center text-xs text-gray-500 flex items-center justify-center space-x-2">
-                    <RefreshCw className="w-4 h-4 animate-spin text-[#166534]" />
+                  <div className="py-8 text-center text-xs font-mono text-emerald-300 flex items-center justify-center space-x-2">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
                     <span>Loading public ledger...</span>
                   </div>
                 ) : ledgerEntries.length === 0 ? (
-                  <div className="p-6 rounded-xl bg-[#FAF9F6] border border-gray-200 text-center space-y-1">
-                    <Heart className="w-5 h-5 mx-auto text-gray-400" />
-                    <div className="text-xs font-semibold text-gray-800">
+                  <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-1.5">
+                    <Heart className="w-5 h-5 mx-auto text-emerald-400" />
+                    <div className="text-xs font-semibold text-white">
                       Fresh Live Ledger — Ready for First Verified Contribution
                     </div>
-                    <p className="text-[11px] text-gray-500">
-                      Every verified paid purchase automatically records an anonymized contribution entry here.
+                    <p className="text-[11px] text-white/50">
+                      Every verified paid purchase automatically logs an anonymized entry here.
                     </p>
                   </div>
                 ) : (
-                  <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                  <div className="border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10">
                     {ledgerEntries.map((entry) => (
                       <div
                         key={entry.order_number}
-                        className="px-4 py-2.5 bg-white flex flex-wrap items-center justify-between gap-2 text-xs"
+                        className="px-4 py-3 bg-white/[0.03] flex flex-wrap items-center justify-between gap-2 text-xs"
                       >
                         <div className="flex items-center space-x-2.5 min-w-0">
-                          <span className="w-7 h-7 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] font-bold text-[10px] flex items-center justify-center shrink-0">
+                          <span className="w-7 h-7 rounded-full bg-emerald-400/20 border border-emerald-400/40 text-emerald-300 font-mono font-bold text-[10px] flex items-center justify-center shrink-0">
                             {entry.supporter_initials}
                           </span>
                           <div className="min-w-0">
-                            <div className="font-semibold text-gray-900 truncate">
-                              {entry.cause_title}
-                            </div>
-                            <div className="text-[11px] text-gray-500 font-mono">
+                            <div className="font-semibold text-white truncate">{entry.cause_title}</div>
+                            <div className="text-[11px] text-white/50 font-mono">
                               {entry.order_number} · {new Date(entry.created_at).toLocaleDateString('en-IN')}
                             </div>
                           </div>
                         </div>
-                        <span className="font-mono font-bold text-[#166534]">
+                        <span className="font-mono font-bold text-emerald-300">
                           +₹{Math.round(entry.cause_donation_amount).toLocaleString('en-IN')}
                         </span>
                       </div>
