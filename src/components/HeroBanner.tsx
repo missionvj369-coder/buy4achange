@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BookOpen, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BookOpen, ShieldCheck, Share2 } from 'lucide-react';
 import { Cause } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
@@ -11,6 +11,7 @@ interface HeroBannerProps {
   onScrollToShop?: () => void;
   onOpenMissionDoc?: (causeId: string) => void;
   onOpenLedger?: () => void;
+  onOpenReferEarn?: () => void;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
@@ -18,12 +19,14 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onScrollToCatalog,
   onScrollToShop,
   onOpenLedger,
+  onOpenReferEarn,
 }) => {
   const { t } = useLanguage();
   const totalRaised = causes.reduce((sum, c) => sum + (c.raised_amount || 0), 0);
 
   return (
     <section className="hero-architectural border-b border-gray-200 w-full">
+      <div className="hero-horizon-bar" />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-11 sm:py-16 text-center space-y-5">
         <div className="inline-flex items-center space-x-2 text-xs sm:text-sm font-medium text-[#166534] bg-[#F0FDF4] border border-[#BBF7D0] px-3.5 py-1.5 rounded-full">
           <span className="live-dot shrink-0" />
@@ -42,7 +45,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           <button
             type="button"
             onClick={onScrollToShop || onScrollToCatalog}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#166534] hover:bg-[#14532D] text-white text-sm font-semibold flex items-center justify-center space-x-2 shadow-sm"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl btn-future-primary text-sm font-semibold flex items-center justify-center space-x-2"
           >
             <span>{t.browseProducts}</span>
             <ArrowRight className="w-4 h-4" />
@@ -69,10 +72,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           )}
         </div>
 
-        {/* Clean Precision Telemetry Strip — Minimalist, High-Trust, Mobile-Friendly */}
-        <div className="pt-4">
-          <div className="inline-grid grid-cols-3 divide-x divide-gray-200 bg-white border border-gray-200 rounded-xl overflow-hidden w-full max-w-lg text-center">
-            <div className="px-3 py-2.5">
+        {/* Clean Futuristic Bento Telemetry Bar */}
+        <div className="pt-3 space-y-3">
+          <div className="bento-surface inline-grid grid-cols-3 divide-x divide-gray-200 rounded-2xl overflow-hidden w-full max-w-lg text-center">
+            <div className="px-3 py-3">
               <div className="text-sm sm:text-base font-bold font-mono text-[#166534]">
                 ₹{Math.round(totalRaised).toLocaleString('en-IN')}
               </div>
@@ -80,7 +83,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 Verified Live Impact
               </div>
             </div>
-            <div className="px-3 py-2.5">
+            <div className="px-3 py-3">
               <div className="text-sm sm:text-base font-bold font-mono text-gray-900">
                 {causes.length || 8}
               </div>
@@ -88,7 +91,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 National Missions
               </div>
             </div>
-            <div className="px-3 py-2.5">
+            <div className="px-3 py-3">
               <div className="text-sm sm:text-base font-bold font-mono text-gray-900">
                 22+1
               </div>
@@ -97,6 +100,19 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
               </div>
             </div>
           </div>
+
+          {onOpenReferEarn && (
+            <div>
+              <button
+                type="button"
+                onClick={onOpenReferEarn}
+                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-[#166534] hover:underline underline-offset-4"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share products on socials &amp; earn referral income on every verified purchase →</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>

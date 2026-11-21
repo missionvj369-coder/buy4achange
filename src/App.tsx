@@ -17,9 +17,11 @@ import { SellerPortal } from './components/SellerPortal.tsx';
 import { IndiaImpactMapModal } from './components/IndiaImpactMapModal.tsx';
 import { NationalProgramsModal } from './components/NationalProgramsModal.tsx';
 import { FieldAuditorPortal } from './components/FieldAuditorPortal.tsx';
+import { MemberPortal } from './components/MemberPortal.tsx';
+import { ShareEarnModal } from './components/ShareEarnModal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { Footer } from './components/Footer.tsx';
-import { Cause, Product, CartItem, Order, UnlockedDigitalItem } from './types.ts';
+import { Cause, Product, CartItem, Order, UnlockedDigitalItem, MemberUser } from './types.ts';
 import { buildUnifiedSearchIndex } from './utils/fuzzySearch.ts';
 import { useLanguage } from './i18n/LanguageContext.tsx';
 import { Package, RefreshCw, BookOpen } from 'lucide-react';
@@ -98,6 +100,25 @@ export function App() {
   const [isProgramsOpen, setIsProgramsOpen] = useState<boolean>(false);
   const [programsTab, setProgramsTab] = useState<'subscription' | 'bulk'>('subscription');
 
+  // Open-Source Member Auth + 30-Day Referral Attribution + Share & Earn Modal
+  const [memberToken, setMemberToken] = useState<string | null>(() =>
+    localStorage.getItem('buy4achange_member_token')
+  );
+  const [memberUser, setMemberUser] = useState<MemberUser | null>(null);
+  const [activeRefCode, setActiveRefCode] = useState<string>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('buy4achange_ref_code_v1') || 'null');
+      if (saved && saved.code && Date.now() - saved.ts < 30 * 24 * 60 * 60 * 1000) {
+        return saved.code;
+      }
+    } catch {}
+    return '';
+  });
+  const [invitedByName, setInvitedByName] = useState<string | null>(null);
+  const [refCommissionPct, setRefCommissionPct] = useState<number>(5);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareProduct, setShareProduct] = useState<Product | null>(null);
+
   // Digital Library (strictly populated ONLY after verified paid orders)
   const [unlockedLibrary, setUnlockedLibrary] = useState<UnlockedDigitalItem[]>(() => {
     try {
@@ -119,6 +140,45 @@ export function App() {
       body: JSON.stringify({ eventType, targetId, lang }),
     }).catch(() => {});
   };
+
+  // Hydrate logged-in Member Account & capture ?ref=CODE (30-day attribution)
+  useEffect(() => {
+    const refParam = new URLSearchParams(window.location.search).get('ref');
+    const codeToCheck = (refParam || activeRefCode || '').trim().toUpperCase();
+    if (refParam && refParam.trim()) {
+      const clean = refParam.trim().toUpperCase();
+      setActiveRefCode(clean);
+      try {
+        localStorage.setItem('buy4achange_ref_code_v1', JSON.stringify({ code: clean, ts: Date.now() }));
+      } catch {}
+    }
+    if (codeToCheck) {
+      fetch(`/api/referrals/lookup/${encodeURIComponent(codeToCheck)}`, { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d?.valid) {
+            setInvitedByName(d.referrerName);
+            if (typeof d.commissionPct === 'number') setRefCommissionPct(d.commissionPct);
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (memberToken) {
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${memberToken}` }, cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d?.user) {
+            setMemberUser(d.user);
+            if (typeof d?.wallet?.commissionPct === 'number') setRefCommissionPct(d.wallet.commissionPct);
+            if (Array.isArray(d.digitalItems) && d.digitalItems.length > 0) {
+              mergeUnlockedItems(d.digitalItems);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [memberToken]);
 
   // Capture PWA Install Event
   useEffect(() => {
@@ -288,14 +348,17 @@ export function App() {
   const handlePaymentSuccess = async (paymentResult: any) => {
     setIsPaymentOpen(false);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (memberToken) headers.Authorization = `Bearer ${memberToken}`;
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           ...orderDraft,
           paymentId: paymentResult.transactionId,
           paymentMethod: paymentResult.paymentMethod || 'Direct UPI',
           paymentStatus: paymentResult.status || 'pending_verification',
+          referredByCode: activeRefCode || undefined,
         }),
       });
       const orderData = await res.json();
@@ -358,6 +421,8 @@ export function App() {
     /^\/seller(\/.*)?$/i.test(currentPath) || /^#\/?seller(\/.*)?$/i.test(currentHash);
   const isAuditorRoute =
     /^\/auditor(\/.*)?$/i.test(currentPath) || /^#\/?auditor(\/.*)?$/i.test(currentHash);
+  const isAccountRoute =
+    /^\/account(\/.*)?$/i.test(currentPath) || /^#\/?account(\/.*)?$/i.test(currentHash);
 
   if (isAdminRoute) {
     return (
@@ -384,18 +449,43 @@ export function App() {
     return <FieldAuditorPortal onNavigateStore={() => navigateTo('/')} />;
   }
 
+  if (isAccountRoute) {
+    return (
+      <>
+        <MemberPortal
+          causes={causes}
+          referredByCode={activeRefCode}
+          onNavigateStore={() => navigateTo('/')}
+          onAuthChange={(u, tok) => {
+            setMemberUser(u);
+            setMemberToken(tok);
+          }}
+          onSyncUnlockedLibrary={mergeUnlockedItems}
+          onLaunchDigital={(item) => setActiveDigitalReader(item)}
+        />
+        <DigitalReaderModal
+          item={activeDigitalReader}
+          onClose={() => setActiveDigitalReader(null)}
+        />
+      </>
+    );
+  }
+
   // PUBLIC STOREFRONT — Clean Futuristic Warm-Paper & Forest-Green Editorial UI
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#14171A] flex flex-col font-sans w-full">
       <Navbar
         cartCount={totalCartCount}
         libraryCount={unlockedLibrary.length}
+        memberUser={memberUser}
+        invitedByName={invitedByName}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenLibrary={() => setIsLibraryOpen(true)}
         onOpenTrack={() => {
           setTrackLedgerTab('track');
           setIsTrackLedgerOpen(true);
         }}
+        onOpenAccount={() => navigateTo('/account')}
         onScrollToMissions={() => {
           document.getElementById('missions-showcase')?.scrollIntoView({ behavior: 'smooth' });
         }}
@@ -437,6 +527,7 @@ export function App() {
             setTrackLedgerTab('ledger');
             setIsTrackLedgerOpen(true);
           }}
+          onOpenReferEarn={() => navigateTo('/account')}
         />
 
         {/* Instant Fuzzy Search Hits Across 8 Living India Mission Dossiers */}
@@ -548,6 +639,10 @@ export function App() {
                     setModalInitialCauseId(cId);
                     logTelemetry('product_view', p.id);
                   }}
+                  onShareProduct={(p) => {
+                    setShareProduct(p);
+                    setShareModalOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -568,6 +663,10 @@ export function App() {
           }}
           onLaunchUnlocked={(item) => setActiveDigitalReader(item)}
           onOpenLibrary={() => setIsLibraryOpen(true)}
+          onShareProduct={(p) => {
+            setShareProduct(p);
+            setShareModalOpen(true);
+          }}
         />
 
         {/* 4. The 8 Living India National Missions + Official Dossier Reader */}
@@ -615,6 +714,7 @@ export function App() {
         onClose={() => setIsCheckoutOpen(false)}
         items={cartItems}
         causes={causes}
+        memberUser={memberUser}
         onStartPayment={(draft) => {
           setOrderDraft(draft);
           setIsCheckoutOpen(false);
@@ -696,6 +796,15 @@ export function App() {
         initialTab={programsTab}
         onClose={() => setIsProgramsOpen(false)}
         causes={causes}
+      />
+
+      <ShareEarnModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        product={shareProduct}
+        memberUser={memberUser}
+        commissionPct={refCommissionPct}
+        onOpenAccount={() => navigateTo('/account')}
       />
 
       <Footer

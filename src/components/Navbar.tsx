@@ -8,15 +8,20 @@ import {
   ShieldCheck,
   Download,
   Check,
+  User,
 } from 'lucide-react';
+import { MemberUser } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
 interface NavbarProps {
   cartCount: number;
   libraryCount?: number;
+  memberUser?: MemberUser | null;
+  invitedByName?: string | null;
   onOpenCart: () => void;
   onOpenLibrary?: () => void;
   onOpenTrack?: () => void;
+  onOpenAccount?: () => void;
   onScrollToMissions?: () => void;
   onScrollToCatalog?: () => void;
   onScrollToEProducts?: () => void;
@@ -30,9 +35,12 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   cartCount,
   libraryCount = 0,
+  memberUser = null,
+  invitedByName = null,
   onOpenCart,
   onOpenLibrary,
   onOpenTrack,
+  onOpenAccount,
   onScrollToMissions,
   onScrollToCatalog,
   onScrollToEProducts,
@@ -60,6 +68,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200">
+      {invitedByName && (
+        <div className="bg-[#F0FDF4] border-b border-[#BBF7D0] px-3 py-1.5 text-center text-[11px] font-medium text-[#166534]">
+          Invited by <strong>{invitedByName}</strong> · Shop consciously &amp; support Living India national missions
+        </div>
+      )}
       <div className="max-w-6xl mx-auto px-3 sm:px-6">
         <div className="h-14 sm:h-16 flex items-center justify-between gap-2">
           {/* Brand */}
@@ -254,6 +267,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {libraryCount}
                   </span>
                 )}
+              </button>
+            )}
+
+            {/* Member Account / Refer & Earn Button */}
+            {onOpenAccount && (
+              <button
+                type="button"
+                onClick={onOpenAccount}
+                aria-label="My Account"
+                title={memberUser ? `${memberUser.name} — Refer & Earn Dashboard` : 'Sign In / Refer & Earn'}
+                className={`flex items-center space-x-1 p-2 sm:px-2.5 sm:py-2 rounded-lg border text-xs font-medium ${
+                  memberUser
+                    ? 'border-[#166534] bg-[#F0FDF4] text-[#166534]'
+                    : 'border-gray-200 bg-[#FAF9F6] hover:border-[#166534] text-gray-700'
+                }`}
+              >
+                <User className="w-4 h-4 text-[#166534] shrink-0" />
+                <span className="hidden sm:inline max-w-[72px] truncate">
+                  {memberUser ? memberUser.name.split(/\s+/)[0] : 'Account'}
+                </span>
               </button>
             )}
 

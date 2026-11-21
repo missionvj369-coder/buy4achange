@@ -5,7 +5,7 @@ import {
   CheckCircle2, AlertCircle, CreditCard, Key,
   Copy, Check, Zap, Server, Upload, Image as ImageIcon, X, RotateCcw,
   BookOpen, Code2, Eye, FileCode, Truck, FileDown, Activity, Mail, Sliders,
-  Store, Leaf, FileCheck2, Download, Globe, ClipboardCheck, Repeat, Building2
+  Store, Leaf, FileCheck2, Download, Globe, ClipboardCheck, Repeat, Building2, Share2
 } from 'lucide-react';
 import {
   Product, Order, Cause, AdminMetrics, PaymentTransaction,
@@ -39,8 +39,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Tab state
   const [activeTab, setActiveTab] = useState<
-    'orders' | 'products' | 'sellers' | 'programs' | 'missions' | 'transactions' | 'gateway' | 'integrations'
+    'orders' | 'products' | 'sellers' | 'programs' | 'referrals' | 'missions' | 'transactions' | 'gateway' | 'integrations'
   >('orders');
+
+  // Referrals & Payouts Admin state
+  const [refConfig, setRefConfig] = useState({ commissionPct: 5, minPayout: 100 });
+  const [refOverview, setRefOverview] = useState<{
+    totalUsers: number;
+    topReferrers: any[];
+    payouts: any[];
+    recentEarnings: any[];
+  }>({ totalUsers: 0, topReferrers: [], payouts: [], recentEarnings: [] });
+  const [savingRefCfg, setSavingRefCfg] = useState(false);
+  const [refNotice, setRefNotice] = useState<string | null>(null);
 
   // Stage 2 National Programs state (CSR Bulk, Subscriptions, Field Audits)
   const [bulkInquiries, setBulkInquiries] = useState<BulkInquiry[]>([]);
@@ -489,6 +500,63 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     if (res.ok) fetchNationalPrograms();
   };
 
+  const fetchAdminReferrals = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/referrals', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.config) setRefConfig(d.config);
+        setRefOverview({
+          totalUsers: d.totalUsers || 0,
+          topReferrers: d.topReferrers || [],
+          payouts: d.payouts || [],
+          recentEarnings: d.recentEarnings || [],
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveRefConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSavingRefCfg(true);
+    setRefNotice(null);
+    try {
+      const res = await fetch('/api/admin/referrals/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(refConfig),
+      });
+      if (res.ok) {
+        setRefNotice(`Referral income updated to ${refConfig.commissionPct}% (min payout ₹${refConfig.minPayout}).`);
+        fetchAdminReferrals();
+      }
+    } finally {
+      setSavingRefCfg(false);
+    }
+  };
+
+  const handleSettleReferralPayout = async (payoutId: string, status: 'paid' | 'rejected') => {
+    if (!token) return;
+    const payoutUtr =
+      status === 'paid'
+        ? prompt('Enter the real 12-digit UPI UTR / Bank Transfer Ref for this payout:') || ''
+        : '';
+    if (status === 'paid' && !payoutUtr.trim()) return;
+    const res = await fetch(`/api/admin/referrals/payouts/${payoutId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status, payoutUtr }),
+    });
+    if (res.ok) fetchAdminReferrals();
+  };
+
   useEffect(() => {
     if (token) {
       fetchMetrics();
@@ -499,6 +567,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       fetchIntegrationsAndAnalytics();
       fetchSellers();
       fetchNationalPrograms();
+      fetchAdminReferrals();
     }
   }, [token, orderDateFilter]);
 
@@ -967,6 +1036,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             >
               <Globe className="w-3.5 h-3.5" />
               <span>National Programs</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('referrals')}
+              className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap flex items-center space-x-1.5 ${
+                activeTab === 'referrals'
+                  ? 'bg-[#166534] text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Referrals</span>
+              {refOverview.payouts.filter((p) => p.status === 'requested').length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                  {refOverview.payouts.filter((p) => p.status === 'requested').length}
+                </span>
+              )}
             </button>
 
             <button
@@ -1903,6 +1990,172 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       </select>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2D: MEMBER REFERRALS & PAYOUTS CONSOLE */}
+        {activeTab === 'referrals' && (
+          <div className="space-y-6">
+            {/* Live Commission Config */}
+            <form
+              onSubmit={handleSaveRefConfig}
+              className="bg-white p-5 rounded-xl border border-gray-200 space-y-4 text-xs"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2">
+                    <Share2 className="w-4 h-4 text-[#166534]" />
+                    <span>Member Referral Income Program ({refOverview.totalUsers} Registered Members)</span>
+                  </h3>
+                  <p className="text-gray-500">
+                    Members earn a percentage on verified paid orders referred via their social share links (self-referrals auto-blocked).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchAdminReferrals}
+                  className="self-start px-3 py-1.5 rounded-lg border border-gray-300 font-semibold text-gray-700"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {refNotice && (
+                <div className="p-3 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] font-semibold">
+                  {refNotice}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Referral Commission % (0–25%)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={25}
+                    step="0.5"
+                    value={refConfig.commissionPct}
+                    onChange={(e) =>
+                      setRefConfig({ ...refConfig, commissionPct: parseFloat(e.target.value) || 0 })
+                    }
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Minimum UPI Withdrawal (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min={10}
+                    value={refConfig.minPayout}
+                    onChange={(e) =>
+                      setRefConfig({ ...refConfig, minPayout: parseFloat(e.target.value) || 100 })
+                    }
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono font-bold"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={savingRefCfg}
+                  className="py-2 px-4 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white font-semibold"
+                >
+                  {savingRefCfg ? 'Saving...' : 'Update Referral Rules'}
+                </button>
+              </div>
+            </form>
+
+            {/* Pending & Settled UPI Payout Requests */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-3 text-xs">
+              <h4 className="text-sm font-bold text-gray-900">
+                Referral Payout Requests &amp; Mission Donations ({refOverview.payouts.length})
+              </h4>
+              {refOverview.payouts.length === 0 ? (
+                <p className="text-gray-500 py-2">No referral payout requests yet.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {refOverview.payouts.map((p) => (
+                    <div
+                      key={p.id}
+                      className="p-3.5 rounded-lg bg-[#FAF9F6] border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-gray-900">
+                          {p.user_name} ({p.user_email}) · <span className="font-mono text-[#166534]">₹{p.amount}</span>
+                        </div>
+                        <div className="text-gray-600">
+                          {p.payout_type === 'donate_mission'
+                            ? `Direct Mission Donation (${p.cause_id})`
+                            : `UPI Payout to: ${p.upi_id}`}
+                          {p.payout_utr ? ` · UTR: ${p.payout_utr}` : ''}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        {p.status === 'requested' ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleSettleReferralPayout(p.id, 'paid')}
+                              className="px-3 py-1.5 rounded-lg bg-[#166534] text-white font-semibold"
+                            >
+                              Mark Paid (Enter UTR)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSettleReferralPayout(p.id, 'rejected')}
+                              className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0] font-semibold">
+                            {p.status.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Top Referrers Leaderboard */}
+            <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-3 text-xs">
+              <h4 className="text-sm font-bold text-gray-900">Registered Members &amp; Referrers</h4>
+              {refOverview.topReferrers.length === 0 ? (
+                <p className="text-gray-500 py-2">No registered members yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-gray-700">
+                    <thead className="bg-[#FAF9F6] text-[11px] uppercase text-gray-500 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 py-2">Member</th>
+                        <th className="px-3 py-2">Referral Code</th>
+                        <th className="px-3 py-2">Referred Orders</th>
+                        <th className="px-3 py-2">Total Earned</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {refOverview.topReferrers.map((r) => (
+                        <tr key={r.id}>
+                          <td className="px-3 py-2 font-semibold text-gray-900">
+                            {r.name} <span className="font-normal text-gray-500">({r.email})</span>
+                          </td>
+                          <td className="px-3 py-2 font-mono text-[#166534] font-semibold">{r.referral_code}</td>
+                          <td className="px-3 py-2 font-mono">{r.referrals_count}</td>
+                          <td className="px-3 py-2 font-mono font-bold text-[#166534]">
+                            ₹{Math.round(r.total_earned || 0)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

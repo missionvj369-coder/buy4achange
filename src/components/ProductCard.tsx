@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Plus, Check, ShieldCheck } from 'lucide-react';
+import { Heart, Plus, Check, ShieldCheck, Share2 } from 'lucide-react';
 import { Product, Cause } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
@@ -9,6 +9,7 @@ interface ProductCardProps {
   preferredCauseId?: string | null;
   onAddToCart: (product: Product, selectedCauseId: string) => void;
   onOpenDetails: (product: Product, initialCauseId?: string) => void;
+  onShareProduct?: (product: Product) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -17,6 +18,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   preferredCauseId,
   onAddToCart,
   onOpenDetails,
+  onShareProduct,
 }) => {
   const { t } = useLanguage();
   const [selectedCauseId, setSelectedCauseId] = useState<string>(
@@ -71,6 +73,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.badge}
           </div>
         ) : null}
+
+        {onShareProduct && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onShareProduct(product);
+            }}
+            aria-label="Share and earn"
+            title="Share & Earn Referral Income"
+            className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-white/95 hover:bg-[#F0FDF4] border border-gray-200 text-[#166534] shadow-sm"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 flex items-center justify-between text-[11px]">
           <span className="flex items-center space-x-1 text-[#166534] font-semibold">

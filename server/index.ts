@@ -58,6 +58,19 @@ import {
   updateBulkInquiryStatus,
   updateSubscriptionStatus,
   updateFieldAuditStatus,
+  registerMemberUser,
+  verifyMemberLogin,
+  validateMemberToken,
+  getMemberById,
+  getMemberByReferralCode,
+  updateMemberProfile,
+  getReferralConfig,
+  saveReferralConfig,
+  attachOrderReferralAndUser,
+  getMemberDashboardData,
+  createReferralPayoutOrDonation,
+  getAdminReferralsOverview,
+  updateReferralPayoutStatus,
   verifyAdminLogin,
   validateAdminToken
 } from './db.ts';
@@ -134,6 +147,24 @@ const requireSellerAuth = (req: any, res: express.Response, next: express.NextFu
     return res.status(401).json({ error: 'Seller account not found' });
   }
   req.seller = seller;
+  next();
+};
+
+// Member User Auth Middleware
+const requireMemberAuth = (req: any, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Please sign in to your account.' });
+  }
+  const session = validateMemberToken(authHeader.split(' ')[1]);
+  if (!session) {
+    return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+  }
+  const user = getMemberById(session.id);
+  if (!user) {
+    return res.status(401).json({ error: 'Account not found.' });
+  }
+  req.memberUser = user;
   next();
 };
 
@@ -562,6 +593,26 @@ app.post('/api/orders', (req, res) => {
     });
 
     const created = createOrder(orderData, orderItems);
+
+    // Attach optional logged-in user + anti-fraud referral attribution
+    let buyerUserId = '';
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const mSess = validateMemberToken(authHeader.split(' ')[1]);
+      if (mSess) buyerUserId = mSess.id;
+    }
+    attachOrderReferralAndUser({
+      orderId: created.id,
+      orderNumber,
+      buyerUserId,
+      buyerName: customerName || 'Customer',
+      buyerEmail: customerEmail || '',
+      buyerPhone: customerPhone || '',
+      subtotal,
+      paymentStatus: verifiedPaymentStatus,
+      referredByCode: req.body?.referredByCode || '',
+    });
+
     const digitalItems =
       verifiedPaymentStatus === 'paid'
         ? getUnlockedDigitalItemsByOrder(orderNumber, customerEmail)
@@ -1260,6 +1311,128 @@ app.patch('/api/admin/field-audits/:id', requireAdminAuth, (req, res) => {
       return res.status(400).json({ error: 'Invalid verificationStatus' });
     }
     res.json({ success: true, audit: updateFieldAuditStatus(req.params.id, verificationStatus) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// OPEN-SOURCE USER ACCOUNTS, MEMBER DASHBOARD & REFERRAL API
+// ============================================================
+
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.name || !b.email || !b.password) {
+      return res.status(400).json({ error: 'Name, email, and password are required.' });
+    }
+    if (String(b.password).length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+    const result = registerMemberUser(b);
+    res.status(201).json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Registration failed' });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+    const auth = verifyMemberLogin(email, password);
+    if (!auth) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+    res.json({ success: true, ...auth });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/me', requireMemberAuth, (req: any, res) => {
+  try {
+    const dash = getMemberDashboardData(req.memberUser.id);
+    if (!dash) return res.status(404).json({ error: 'Account not found' });
+    res.json(dash);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/auth/profile', requireMemberAuth, (req: any, res) => {
+  try {
+    const updated = updateMemberProfile(req.memberUser.id, req.body || {});
+    res.json({ success: true, user: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/referrals/lookup/:code', (req, res) => {
+  try {
+    const ref = getMemberByReferralCode(req.params.code);
+    const cfg = getReferralConfig();
+    if (!ref) {
+      return res.status(404).json({ valid: false, commissionPct: cfg.commissionPct });
+    }
+    const firstName = ref.name.trim().split(/\s+/)[0] || 'A Supporter';
+    res.json({
+      valid: true,
+      referralCode: ref.referral_code,
+      referrerName: firstName,
+      commissionPct: cfg.commissionPct,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/referrals/payout-request', requireMemberAuth, (req: any, res) => {
+  try {
+    const { payoutType = 'upi_withdraw', amount, upiId, causeId } = req.body || {};
+    const dash = createReferralPayoutOrDonation({
+      userId: req.memberUser.id,
+      payoutType: payoutType === 'donate_mission' ? 'donate_mission' : 'upi_withdraw',
+      amount: Number(amount),
+      upiId,
+      causeId,
+    });
+    res.status(201).json({ success: true, ...dash });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Could not process request' });
+  }
+});
+
+// Admin Referrals & Payout Management
+app.get('/api/admin/referrals', requireAdminAuth, (_req, res) => {
+  try {
+    res.json(getAdminReferralsOverview());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/referrals/config', requireAdminAuth, (req, res) => {
+  try {
+    const { commissionPct, minPayout } = req.body || {};
+    const config = saveReferralConfig(Number(commissionPct), Number(minPayout));
+    res.json({ success: true, config });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/referrals/payouts/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { status, payoutUtr = '' } = req.body || {};
+    if (!['paid', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid payout status' });
+    }
+    const payout = updateReferralPayoutStatus(req.params.id, status, payoutUtr);
+    res.json({ success: true, payout });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

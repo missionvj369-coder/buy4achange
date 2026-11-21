@@ -388,6 +388,32 @@ export default {
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS users (
+              id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
+              password_hash TEXT NOT NULL, phone TEXT DEFAULT '', shipping_address TEXT DEFAULT '',
+              city TEXT DEFAULT '', state TEXT DEFAULT '', pincode TEXT DEFAULT '',
+              upi_payout_id TEXT DEFAULT '', referral_code TEXT UNIQUE NOT NULL,
+              referred_by_code TEXT DEFAULT '', created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS referral_earnings (
+              id TEXT PRIMARY KEY, referrer_user_id TEXT NOT NULL, order_id TEXT NOT NULL,
+              order_number TEXT NOT NULL, buyer_name TEXT DEFAULT '', order_subtotal REAL DEFAULT 0,
+              commission_pct REAL DEFAULT 5, commission_amount REAL DEFAULT 0,
+              status TEXT DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+          await env.BUY4ACHANGE_DB.prepare(`
+            CREATE TABLE IF NOT EXISTS referral_payouts (
+              id TEXT PRIMARY KEY, user_id TEXT NOT NULL, user_name TEXT DEFAULT '',
+              user_email TEXT DEFAULT '', upi_id TEXT DEFAULT '', amount REAL NOT NULL,
+              payout_type TEXT DEFAULT 'upi_withdraw', cause_id TEXT DEFAULT '',
+              status TEXT DEFAULT 'requested', payout_utr TEXT DEFAULT '',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
         } catch {}
         const migrations = [
           "ALTER TABLE products ADD COLUMN seller_id TEXT DEFAULT ''",
@@ -399,6 +425,11 @@ export default {
           "ALTER TABLE products ADD COLUMN zero_chemical_cert_name TEXT DEFAULT ''",
           "ALTER TABLE products ADD COLUMN approval_notes TEXT DEFAULT ''",
           "ALTER TABLE products ADD COLUMN origin_state TEXT DEFAULT ''",
+          "ALTER TABLE orders ADD COLUMN user_id TEXT DEFAULT ''",
+          "ALTER TABLE orders ADD COLUMN referred_by_code TEXT DEFAULT ''",
+          "ALTER TABLE orders ADD COLUMN referrer_user_id TEXT DEFAULT ''",
+          "ALTER TABLE orders ADD COLUMN referral_commission_pct REAL DEFAULT 0",
+          "ALTER TABLE orders ADD COLUMN referral_commission_amount REAL DEFAULT 0",
         ];
         for (const sql of migrations) {
           try {
@@ -1465,6 +1496,186 @@ export default {
         return json({ success: true, audit }, 201);
       }
 
+      // Open-Source Member Accounts & Referral Income Engine (Cloudflare D1)
+      const signMemberEdgeToken = async (user: { id: string; email: string }) => {
+        const payload = `member:${user.id}:${user.email}:${Date.now()}`;
+        const sig = await hmacSha256Hex('UGT_MEMBER_AUTH_SECRET_2026', payload);
+        return btoa(`${payload}:${sig}`);
+      };
+      const verifyMemberEdgeToken = async (tok: string) => {
+        try {
+          const parts = atob(tok).split(':');
+          if (parts.length < 5 || parts[0] !== 'member') return null;
+          const [prefix, id, email, ts, sig] = parts;
+          const expected = await hmacSha256Hex('UGT_MEMBER_AUTH_SECRET_2026', `${prefix}:${id}:${email}:${ts}`);
+          if (!timingSafeEqualStr(sig, expected)) return null;
+          return { id, email };
+        } catch {
+          return null;
+        }
+      };
+      const getRefCfgEdge = async () => {
+        try {
+          const { results } = await env.BUY4ACHANGE_DB.prepare(
+            "SELECT key, value FROM site_integrations WHERE key IN ('referral_commission_pct', 'referral_min_payout')"
+          ).all();
+          const map: Record<string, string> = {};
+          for (const r of (results as any[]) || []) map[r.key] = r.value;
+          return {
+            commissionPct: Math.min(25, Math.max(0, parseFloat(map.referral_commission_pct || '5') || 5)),
+            minPayout: Math.max(10, parseFloat(map.referral_min_payout || '100') || 100),
+          };
+        } catch {
+          return { commissionPct: 5, minPayout: 100 };
+        }
+      };
+      const getMemberDashEdge = async (uid: string) => {
+        const user: any = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT id, name, email, phone, shipping_address, city, state, pincode, upi_payout_id, referral_code, referred_by_code, created_at FROM users WHERE id = ?'
+        ).bind(uid).first();
+        if (!user) return null;
+        const { results: orders } = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT o.*, c.title as cause_title FROM orders o LEFT JOIN causes c ON o.cause_id = c.id WHERE o.user_id = ? OR LOWER(o.customer_email) = LOWER(?) ORDER BY o.created_at DESC'
+        ).bind(user.id, user.email).all();
+        const { results: digitalItems } = await env.BUY4ACHANGE_DB.prepare(
+          `SELECT DISTINCT p.id as product_id, p.name as product_name, COALESCE(p.subcategory, '') as subcategory,
+                  p.category, p.image_url, p.digital_html_content, COALESCE(p.digital_access_note, '') as digital_access_note,
+                  o.order_number, o.customer_email, o.created_at as purchased_at
+           FROM orders o INNER JOIN order_items oi ON oi.order_id = o.id INNER JOIN products p ON p.id = oi.product_id
+           WHERE o.payment_status = 'paid' AND (o.user_id = ? OR LOWER(o.customer_email) = LOWER(?)) AND COALESCE(p.product_type, 'physical') = 'digital'`
+        ).bind(user.id, user.email).all();
+        const { results: earnings } = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT * FROM referral_earnings WHERE referrer_user_id = ? ORDER BY created_at DESC'
+        ).bind(user.id).all();
+        const { results: payouts } = await env.BUY4ACHANGE_DB.prepare(
+          'SELECT * FROM referral_payouts WHERE user_id = ? ORDER BY created_at DESC'
+        ).bind(user.id).all();
+        const cfg = await getRefCfgEdge();
+        const eList = (earnings as any[]) || [];
+        const pList = (payouts as any[]) || [];
+        const pendingEarnings = eList.filter((e) => e.status === 'pending').reduce((s, e) => s + Number(e.commission_amount || 0), 0);
+        const approvedEarnings = eList.filter((e) => ['approved', 'paid_out', 'donated'].includes(e.status)).reduce((s, e) => s + Number(e.commission_amount || 0), 0);
+        const paidOutTotal = pList.filter((p) => p.payout_type === 'upi_withdraw' && p.status === 'paid').reduce((s, p) => s + Number(p.amount || 0), 0);
+        const donatedTotal = pList.filter((p) => p.payout_type === 'donate_mission' && p.status === 'paid').reduce((s, p) => s + Number(p.amount || 0), 0);
+        const reserved = pList.filter((p) => p.status === 'requested' || p.status === 'paid').reduce((s, p) => s + Number(p.amount || 0), 0);
+        return {
+          user,
+          orders: orders || [],
+          digitalItems: digitalItems || [],
+          earnings: eList,
+          payouts: pList,
+          wallet: {
+            commissionPct: cfg.commissionPct,
+            minPayout: cfg.minPayout,
+            pendingEarnings: Math.round(pendingEarnings * 100) / 100,
+            approvedEarnings: Math.round(approvedEarnings * 100) / 100,
+            paidOutTotal: Math.round(paidOutTotal * 100) / 100,
+            donatedTotal: Math.round(donatedTotal * 100) / 100,
+            availableBalance: Math.max(0, Math.round((approvedEarnings - reserved) * 100) / 100),
+            totalReferralsCount: eList.filter((e) => e.status !== 'cancelled').length,
+            networkMissionImpact: ((orders as any[]) || []).filter((o) => o.payment_status === 'paid').reduce((s, o) => s + Number(o.cause_donation_amount || 0), 0),
+          },
+        };
+      };
+
+      if (pathname === '/api/auth/register' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        if (!b.name || !b.email || !b.password) return json({ error: 'Name, email, and password are required.' }, 400);
+        const cleanEmail = String(b.email).trim().toLowerCase();
+        const dup = await env.BUY4ACHANGE_DB.prepare('SELECT id FROM users WHERE LOWER(email) = ?').bind(cleanEmail).first();
+        if (dup) return json({ error: 'An account with this email already exists. Please sign in.' }, 400);
+        const id = `usr-${Date.now()}-${randomHex(3)}`;
+        const pwdHash = await sha256Hex(String(b.password) + 'UGT_SECRET_SALT_2026');
+        const prefix = String(b.name).replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3) || 'UGT';
+        const refCode = `B4C-${prefix}${randomHex(2).toUpperCase()}`;
+        await env.BUY4ACHANGE_DB.prepare(
+          `INSERT INTO users (id, name, email, password_hash, phone, shipping_address, city, state, pincode, upi_payout_id, referral_code, referred_by_code)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(id, String(b.name).trim(), cleanEmail, pwdHash, String(b.phone || '').trim(), String(b.shipping_address || '').trim(), String(b.city || '').trim(), String(b.state || '').trim(), String(b.pincode || '').trim(), String(b.upi_payout_id || '').trim(), refCode, String(b.referred_by_code || '').trim().toUpperCase()).run();
+        const user: any = await env.BUY4ACHANGE_DB.prepare('SELECT id, name, email, phone, shipping_address, city, state, pincode, upi_payout_id, referral_code, referred_by_code, created_at FROM users WHERE id = ?').bind(id).first();
+        const token = await signMemberEdgeToken(user);
+        return json({ success: true, user, token }, 201);
+      }
+
+      if (pathname === '/api/auth/login' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const b: any = await request.json().catch(() => ({}));
+        const cleanEmail = String(b.email || '').trim().toLowerCase();
+        const pwdHash = await sha256Hex(String(b.password || '') + 'UGT_SECRET_SALT_2026');
+        const row: any = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM users WHERE LOWER(email) = ?').bind(cleanEmail).first();
+        if (!row || !timingSafeEqualStr(row.password_hash, pwdHash)) return json({ error: 'Invalid email or password.' }, 401);
+        delete row.password_hash;
+        const token = await signMemberEdgeToken(row);
+        return json({ success: true, user: row, token });
+      }
+
+      const refLookup = pathname.match(/^\/api\/referrals\/lookup\/([^/]+)$/);
+      if (refLookup && request.method === 'GET') {
+        await ensureMarketplaceSchema();
+        const code = decodeURIComponent(refLookup[1]).trim().toUpperCase();
+        const ref: any = await env.BUY4ACHANGE_DB.prepare('SELECT name, referral_code FROM users WHERE UPPER(referral_code) = ?').bind(code).first();
+        const cfg = await getRefCfgEdge();
+        if (!ref) return json({ valid: false, commissionPct: cfg.commissionPct }, 404);
+        return json({ valid: true, referralCode: ref.referral_code, referrerName: String(ref.name).split(/\s+/)[0], commissionPct: cfg.commissionPct });
+      }
+
+      if (pathname === '/api/auth/me' && request.method === 'GET') {
+        await ensureMarketplaceSchema();
+        const ah = request.headers.get('Authorization') || '';
+        const sess = ah.startsWith('Bearer ') ? await verifyMemberEdgeToken(ah.slice(7)) : null;
+        if (!sess) return json({ error: 'Please sign in.' }, 401);
+        const dash = await getMemberDashEdge(sess.id);
+        return dash ? json(dash) : json({ error: 'Not found' }, 404);
+      }
+
+      if (pathname === '/api/auth/profile' && request.method === 'PUT') {
+        await ensureMarketplaceSchema();
+        const ah = request.headers.get('Authorization') || '';
+        const sess = ah.startsWith('Bearer ') ? await verifyMemberEdgeToken(ah.slice(7)) : null;
+        if (!sess) return json({ error: 'Please sign in.' }, 401);
+        const b: any = await request.json().catch(() => ({}));
+        await env.BUY4ACHANGE_DB.prepare(
+          'UPDATE users SET name = ?, phone = ?, shipping_address = ?, city = ?, state = ?, pincode = ?, upi_payout_id = ? WHERE id = ?'
+        ).bind(String(b.name || '').trim(), String(b.phone || '').trim(), String(b.shipping_address || '').trim(), String(b.city || '').trim(), String(b.state || '').trim(), String(b.pincode || '').trim(), String(b.upi_payout_id || '').trim(), sess.id).run();
+        const user = await env.BUY4ACHANGE_DB.prepare('SELECT id, name, email, phone, shipping_address, city, state, pincode, upi_payout_id, referral_code, referred_by_code, created_at FROM users WHERE id = ?').bind(sess.id).first();
+        return json({ success: true, user });
+      }
+
+      if (pathname === '/api/referrals/payout-request' && request.method === 'POST') {
+        await ensureMarketplaceSchema();
+        const ah = request.headers.get('Authorization') || '';
+        const sess = ah.startsWith('Bearer ') ? await verifyMemberEdgeToken(ah.slice(7)) : null;
+        if (!sess) return json({ error: 'Please sign in.' }, 401);
+        const b: any = await request.json().catch(() => ({}));
+        const dash = await getMemberDashEdge(sess.id);
+        if (!dash) return json({ error: 'Account not found' }, 404);
+        const amt = Math.round(Number(b.amount || 0) * 100) / 100;
+        if (amt <= 0 || amt > dash.wallet.availableBalance) {
+          return json({ error: `Insufficient available balance (Available: ₹${dash.wallet.availableBalance}).` }, 400);
+        }
+        const pid = `payreq_${Date.now()}_${randomHex(3)}`;
+        if (b.payoutType === 'donate_mission') {
+          if (amt < 10) return json({ error: 'Minimum mission donation is ₹10.' }, 400);
+          const cId = b.causeId || 'cause-everyday-essentials';
+          await env.BUY4ACHANGE_DB.batch([
+            env.BUY4ACHANGE_DB.prepare(
+              "INSERT INTO referral_payouts (id, user_id, user_name, user_email, upi_id, amount, payout_type, cause_id, status, payout_utr) VALUES (?, ?, ?, ?, '', ?, 'donate_mission', ?, 'paid', 'DIRECT_MISSION_CREDIT')"
+            ).bind(pid, dash.user.id, dash.user.name, dash.user.email, amt, cId),
+            env.BUY4ACHANGE_DB.prepare('UPDATE causes SET raised_amount = raised_amount + ?, impact_count = impact_count + 1 WHERE id = ?').bind(amt, cId),
+          ]);
+        } else {
+          if (amt < dash.wallet.minPayout) return json({ error: `Minimum UPI withdrawal is ₹${dash.wallet.minPayout}.` }, 400);
+          const upi = String(b.upiId || dash.user.upi_payout_id || '').trim();
+          if (!upi.includes('@')) return json({ error: 'Valid UPI ID is required.' }, 400);
+          await env.BUY4ACHANGE_DB.prepare(
+            "INSERT INTO referral_payouts (id, user_id, user_name, user_email, upi_id, amount, payout_type, cause_id, status, payout_utr) VALUES (?, ?, ?, ?, ?, ?, 'upi_withdraw', '', 'requested', '')"
+          ).bind(pid, dash.user.id, dash.user.name, dash.user.email, upi, amt).run();
+        }
+        const updated = await getMemberDashEdge(sess.id);
+        return json({ success: true, ...updated }, 201);
+      }
+
       // ============================================================
       // ADMIN AUTHENTICATION
       // ============================================================
@@ -2130,6 +2341,42 @@ export default {
           const b: any = await request.json().catch(() => ({}));
           await env.BUY4ACHANGE_DB.prepare('UPDATE field_audits SET verification_status = ? WHERE id = ?')
             .bind(b.verificationStatus || 'verified', decodeURIComponent(audPatch[1]))
+            .run();
+          return json({ success: true });
+        }
+
+        // Admin Referrals & Payouts
+        if (pathname === '/api/admin/referrals' && request.method === 'GET') {
+          await ensureMarketplaceSchema();
+          const config = await getRefCfgEdge();
+          const { results: topReferrers } = await env.BUY4ACHANGE_DB.prepare(
+            `SELECT u.id, u.name, u.email, u.referral_code, u.upi_payout_id, COUNT(re.id) as referrals_count,
+                    COALESCE(SUM(CASE WHEN re.status != 'cancelled' THEN re.commission_amount ELSE 0 END), 0) as total_earned
+             FROM users u LEFT JOIN referral_earnings re ON re.referrer_user_id = u.id
+             GROUP BY u.id ORDER BY total_earned DESC LIMIT 50`
+          ).all();
+          const { results: payouts } = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM referral_payouts ORDER BY created_at DESC').all();
+          const { results: recentEarnings } = await env.BUY4ACHANGE_DB.prepare('SELECT * FROM referral_earnings ORDER BY created_at DESC LIMIT 40').all();
+          const uCount: any = await env.BUY4ACHANGE_DB.prepare('SELECT COUNT(*) as c FROM users').first();
+          return json({ config, totalUsers: uCount?.c || 0, topReferrers: topReferrers || [], payouts: payouts || [], recentEarnings: recentEarnings || [] });
+        }
+
+        if (pathname === '/api/admin/referrals/config' && request.method === 'PUT') {
+          const b: any = await request.json().catch(() => ({}));
+          const pct = Math.min(25, Math.max(0, Number(b.commissionPct) || 5));
+          const minP = Math.max(10, Number(b.minPayout) || 100);
+          await env.BUY4ACHANGE_DB.batch([
+            env.BUY4ACHANGE_DB.prepare("INSERT OR REPLACE INTO site_integrations (key, value) VALUES ('referral_commission_pct', ?)").bind(String(pct)),
+            env.BUY4ACHANGE_DB.prepare("INSERT OR REPLACE INTO site_integrations (key, value) VALUES ('referral_min_payout', ?)").bind(String(minP)),
+          ]);
+          return json({ success: true, config: { commissionPct: pct, minPayout: minP } });
+        }
+
+        const refPayPatch = pathname.match(/^\/api\/admin\/referrals\/payouts\/([^/]+)$/);
+        if (refPayPatch && request.method === 'PATCH') {
+          const b: any = await request.json().catch(() => ({}));
+          await env.BUY4ACHANGE_DB.prepare('UPDATE referral_payouts SET status = ?, payout_utr = ? WHERE id = ?')
+            .bind(b.status || 'paid', String(b.payoutUtr || '').trim(), decodeURIComponent(refPayPatch[1]))
             .run();
           return json({ success: true });
         }

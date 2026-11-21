@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Lock, Unlock, Heart, Plus, Check } from 'lucide-react';
+import { BookOpen, Lock, Unlock, Heart, Plus, Check, Share2 } from 'lucide-react';
 import { Product, Cause, UnlockedDigitalItem } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
@@ -22,6 +22,7 @@ interface EProductsSectionProps {
   onOpenDetails: (product: Product, initialCauseId?: string) => void;
   onLaunchUnlocked: (item: UnlockedDigitalItem) => void;
   onOpenLibrary: () => void;
+  onShareProduct?: (product: Product) => void;
 }
 
 const EProductCard: React.FC<{
@@ -32,6 +33,7 @@ const EProductCard: React.FC<{
   onAddToCart: (product: Product, selectedCauseId: string) => void;
   onOpenDetails: (product: Product, initialCauseId?: string) => void;
   onLaunchUnlocked: (item: UnlockedDigitalItem) => void;
+  onShareProduct?: (product: Product) => void;
 }> = ({
   product,
   causes,
@@ -40,6 +42,7 @@ const EProductCard: React.FC<{
   onAddToCart,
   onOpenDetails,
   onLaunchUnlocked,
+  onShareProduct,
 }) => {
   const [selectedCauseId, setSelectedCauseId] = useState<string>(
     preferredCauseId || product.cause_id || causes[0]?.id || 'cause-everyday-essentials'
@@ -150,36 +153,52 @@ const EProductCard: React.FC<{
             <div className="text-[10px] text-gray-500">Interactive HTML</div>
           </div>
 
-          {unlockedItem ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onLaunchUnlocked(unlockedItem);
-              }}
-              className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
-            >
-              Open Now
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAdd}
-              className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold flex items-center space-x-1"
-            >
-              {justAdded ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Added</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Buy</span>
-                </>
-              )}
-            </button>
-          )}
+          <div className="flex items-center space-x-1.5">
+            {onShareProduct && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShareProduct(product);
+                }}
+                aria-label="Share and earn"
+                title="Share & Earn"
+                className="p-2 rounded-lg border border-gray-200 bg-[#FAF9F6] hover:border-[#166534] text-[#166534]"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {unlockedItem ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLaunchUnlocked(unlockedItem);
+                }}
+                className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
+              >
+                Open Now
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold flex items-center space-x-1"
+              >
+                {justAdded ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Added</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Buy</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -195,6 +214,7 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   onOpenDetails,
   onLaunchUnlocked,
   onOpenLibrary,
+  onShareProduct,
 }) => {
   const { t } = useLanguage();
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('All');
@@ -287,6 +307,7 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
                   onAddToCart={onAddToCart}
                   onOpenDetails={onOpenDetails}
                   onLaunchUnlocked={onLaunchUnlocked}
+                  onShareProduct={onShareProduct}
                 />
               );
             })}

@@ -147,6 +147,60 @@ export interface FieldAuditReport {
   created_at: string;
 }
 
+export interface MemberUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  shipping_address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  upi_payout_id: string;
+  referral_code: string;
+  referred_by_code?: string;
+  created_at: string;
+}
+
+export interface ReferralEarning {
+  id: string;
+  referrer_user_id: string;
+  order_id: string;
+  order_number: string;
+  buyer_name: string;
+  order_subtotal: number;
+  commission_pct: number;
+  commission_amount: number;
+  status: 'pending' | 'approved' | 'paid_out' | 'donated' | 'cancelled';
+  created_at: string;
+}
+
+export interface ReferralPayout {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  upi_id: string;
+  amount: number;
+  payout_type: 'upi_withdraw' | 'donate_mission';
+  cause_id?: string;
+  status: 'requested' | 'paid' | 'rejected';
+  payout_utr?: string;
+  created_at: string;
+}
+
+export interface ReferralWalletSummary {
+  commissionPct: number;
+  minPayout: number;
+  pendingEarnings: number;
+  approvedEarnings: number;
+  paidOutTotal: number;
+  donatedTotal: number;
+  availableBalance: number;
+  totalReferralsCount: number;
+  networkMissionImpact: number;
+}
+
 export interface UnlockedDigitalItem {
   product_id: string;
   product_name: string;

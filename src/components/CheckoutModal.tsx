@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, MapPin, Heart, ArrowRight, User } from 'lucide-react';
-import { CartItem, Cause } from '../types.ts';
+import { CartItem, Cause, MemberUser } from '../types.ts';
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
   causes: Cause[];
+  memberUser?: MemberUser | null;
   onStartPayment: (orderDraft: any) => void;
 }
 
@@ -15,21 +16,37 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onClose,
   items,
   causes,
+  memberUser = null,
   onStartPayment,
 }) => {
   const defaultCause = causes.find((c) => c.id === items[0]?.selectedCauseId) || causes[0];
 
   const [formData, setFormData] = useState({
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
-    shippingAddress: '',
-    city: '',
-    state: '',
-    pincode: '',
+    customerName: memberUser?.name || '',
+    customerEmail: memberUser?.email || '',
+    customerPhone: memberUser?.phone || '',
+    shippingAddress: memberUser?.shipping_address || '',
+    city: memberUser?.city || '',
+    state: memberUser?.state || '',
+    pincode: memberUser?.pincode || '',
     country: 'India',
     selectedCauseId: defaultCause?.id || 'cause-everyday-essentials',
   });
+
+  useEffect(() => {
+    if (isOpen && memberUser) {
+      setFormData((prev) => ({
+        ...prev,
+        customerName: prev.customerName || memberUser.name || '',
+        customerEmail: prev.customerEmail || memberUser.email || '',
+        customerPhone: prev.customerPhone || memberUser.phone || '',
+        shippingAddress: prev.shippingAddress || memberUser.shipping_address || '',
+        city: prev.city || memberUser.city || '',
+        state: prev.state || memberUser.state || '',
+        pincode: prev.pincode || memberUser.pincode || '',
+      }));
+    }
+  }, [isOpen, memberUser]);
 
   if (!isOpen) return null;
 

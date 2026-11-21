@@ -32,10 +32,20 @@ export function initDatabase() {
     db.exec("ALTER TABLE products ADD COLUMN digital_access_note TEXT DEFAULT ''");
   }
 
-  // Ensure courier_name exists on orders for real shipping dispatch tracking
+  // Ensure courier_name & referral attribution columns exist on orders
   const orderCols = (db.prepare('PRAGMA table_info(orders)').all() as any[]).map((c) => c.name);
-  if (!orderCols.includes('courier_name')) {
-    db.exec("ALTER TABLE orders ADD COLUMN courier_name TEXT DEFAULT ''");
+  const orderMigrations: [string, string][] = [
+    ['courier_name', "TEXT DEFAULT ''"],
+    ['user_id', "TEXT DEFAULT ''"],
+    ['referred_by_code', "TEXT DEFAULT ''"],
+    ['referrer_user_id', "TEXT DEFAULT ''"],
+    ['referral_commission_pct', 'REAL DEFAULT 0'],
+    ['referral_commission_amount', 'REAL DEFAULT 0'],
+  ];
+  for (const [col, def] of orderMigrations) {
+    if (!orderCols.includes(col)) {
+      db.exec(`ALTER TABLE orders ADD COLUMN ${col} ${def}`);
+    }
   }
 
   // Ensure manufacturer/seller & dual-certificate columns exist on products
@@ -156,6 +166,46 @@ export function initDatabase() {
       photo_url TEXT DEFAULT '',
       notes TEXT DEFAULT '',
       verification_status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      shipping_address TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      state TEXT DEFAULT '',
+      pincode TEXT DEFAULT '',
+      upi_payout_id TEXT DEFAULT '',
+      referral_code TEXT UNIQUE NOT NULL,
+      referred_by_code TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS referral_earnings (
+      id TEXT PRIMARY KEY,
+      referrer_user_id TEXT NOT NULL,
+      order_id TEXT NOT NULL,
+      order_number TEXT NOT NULL,
+      buyer_name TEXT DEFAULT '',
+      order_subtotal REAL DEFAULT 0,
+      commission_pct REAL DEFAULT 5,
+      commission_amount REAL DEFAULT 0,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS referral_payouts (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      user_name TEXT DEFAULT '',
+      user_email TEXT DEFAULT '',
+      upi_id TEXT DEFAULT '',
+      amount REAL NOT NULL,
+      payout_type TEXT DEFAULT 'upi_withdraw',
+      cause_id TEXT DEFAULT '',
+      status TEXT DEFAULT 'requested',
+      payout_utr TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -704,6 +754,8 @@ export function verifyOrderPayment(orderId: string, action: 'approve' | 'reject'
         updateCauseRaised(cId, item.cause_contribution, 1);
       }
     }
+    // Promote any pending referral commission for this order to APPROVED (withdrawable)
+    db.prepare("UPDATE referral_earnings SET status = 'approved' WHERE order_id = ? AND status = 'pending'").run(orderId);
     return getOrderById(orderId);
   } else {
     db.prepare("UPDATE orders SET payment_status = 'failed', order_status = 'Payment Rejected' WHERE id = ?").run(orderId);
@@ -711,6 +763,8 @@ export function verifyOrderPayment(orderId: string, action: 'approve' | 'reject'
       db.prepare("UPDATE payment_transactions SET status = 'failed', order_id = ? WHERE id = ? OR transaction_ref = ?")
         .run(order.order_number, order.payment_id, order.payment_id);
     }
+    // Cancel any pending referral commission for rejected order
+    db.prepare("UPDATE referral_earnings SET status = 'cancelled' WHERE order_id = ? AND status = 'pending'").run(orderId);
     return getOrderById(orderId);
   }
 }
@@ -1747,4 +1801,440 @@ export function updateSubscriptionStatus(id: string, status: string) {
 export function updateFieldAuditStatus(id: string, verificationStatus: string) {
   db.prepare('UPDATE field_audits SET verification_status = ? WHERE id = ?').run(verificationStatus, id);
   return db.prepare('SELECT * FROM field_audits WHERE id = ?').get(id);
+}
+
+// ============================================================
+// OPEN-SOURCE USER ACCOUNTS, MEMBER DASHBOARD & REFERRAL ENGINE
+// ============================================================
+
+export interface MemberUserRecord {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  shipping_address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  upi_payout_id: string;
+  referral_code: string;
+  referred_by_code: string;
+  created_at: string;
+}
+
+function hashMemberPassword(password: string, salt?: string): string {
+  const s = salt || crypto.randomBytes(12).toString('hex');
+  const derived = crypto.pbkdf2Sync(password, s, 60000, 32, 'sha256').toString('hex');
+  return `pbkdf2:${s}:${derived}`;
+}
+
+function verifyMemberPassword(password: string, storedHash: string): boolean {
+  if (!storedHash) return false;
+  if (storedHash.startsWith('pbkdf2:')) {
+    const [, salt, hex] = storedHash.split(':');
+    if (!salt || !hex) return false;
+    const derived = crypto.pbkdf2Sync(password, salt, 60000, 32, 'sha256').toString('hex');
+    return crypto.timingSafeEqual(Buffer.from(derived, 'hex'), Buffer.from(hex, 'hex'));
+  }
+  return hashPassword(password) === storedHash;
+}
+
+function signMemberToken(user: { id: string; email: string }): string {
+  const payload = `member:${user.id}:${user.email}:${Date.now()}`;
+  const sig = crypto.createHmac('sha256', 'UGT_MEMBER_AUTH_SECRET_2026').update(payload).digest('hex');
+  return Buffer.from(`${payload}:${sig}`).toString('base64');
+}
+
+export function validateMemberToken(token: string): { id: string; email: string } | null {
+  if (!token) return null;
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const parts = decoded.split(':');
+    if (parts.length < 5 || parts[0] !== 'member') return null;
+    const [prefix, id, email, ts, sig] = parts;
+    const expected = crypto
+      .createHmac('sha256', 'UGT_MEMBER_AUTH_SECRET_2026')
+      .update(`${prefix}:${id}:${email}:${ts}`)
+      .digest('hex');
+    if (sig !== expected) return null;
+    if (Date.now() - parseInt(ts, 10) > 30 * 24 * 60 * 60 * 1000) return null;
+    return { id, email };
+  } catch {
+    return null;
+  }
+}
+
+function generateUniqueReferralCode(name: string): string {
+  const prefix =
+    String(name || 'UGT')
+      .replace(/[^a-zA-Z]/g, '')
+      .toUpperCase()
+      .slice(0, 3) || 'UGT';
+  for (let i = 0; i < 10; i++) {
+    const code = `B4C-${prefix}${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    const dup = db.prepare('SELECT id FROM users WHERE referral_code = ?').get(code);
+    if (!dup) return code;
+  }
+  return `B4C-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+}
+
+export function getMemberById(id: string): MemberUserRecord | undefined {
+  return db
+    .prepare(
+      `SELECT id, name, email, phone, shipping_address, city, state, pincode,
+              upi_payout_id, referral_code, referred_by_code, created_at
+       FROM users WHERE id = ?`
+    )
+    .get(id) as MemberUserRecord | undefined;
+}
+
+export function getMemberByReferralCode(code: string): MemberUserRecord | undefined {
+  const clean = String(code || '').trim().toUpperCase();
+  if (!clean) return undefined;
+  return db
+    .prepare(
+      `SELECT id, name, email, phone, shipping_address, city, state, pincode,
+              upi_payout_id, referral_code, referred_by_code, created_at
+       FROM users WHERE UPPER(referral_code) = ?`
+    )
+    .get(clean) as MemberUserRecord | undefined;
+}
+
+export function registerMemberUser(input: {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  shipping_address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  upi_payout_id?: string;
+  referred_by_code?: string;
+}) {
+  const cleanEmail = input.email.trim().toLowerCase();
+  const dup = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(cleanEmail);
+  if (dup) {
+    throw new Error('An account with this email already exists. Please sign in.');
+  }
+
+  const id = `usr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+  const pwdHash = hashMemberPassword(input.password);
+  const referralCode = generateUniqueReferralCode(input.name);
+  const validRef = input.referred_by_code ? getMemberByReferralCode(input.referred_by_code) : undefined;
+
+  db.prepare(`
+    INSERT INTO users (
+      id, name, email, password_hash, phone, shipping_address, city, state, pincode,
+      upi_payout_id, referral_code, referred_by_code
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    input.name.trim(),
+    cleanEmail,
+    pwdHash,
+    (input.phone || '').trim(),
+    (input.shipping_address || '').trim(),
+    (input.city || '').trim(),
+    (input.state || '').trim(),
+    (input.pincode || '').trim(),
+    (input.upi_payout_id || '').trim(),
+    referralCode,
+    validRef ? validRef.referral_code : ''
+  );
+
+  const user = getMemberById(id)!;
+  return { user, token: signMemberToken(user) };
+}
+
+export function verifyMemberLogin(email: string, password: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  const row = db
+    .prepare('SELECT * FROM users WHERE LOWER(email) = ?')
+    .get(cleanEmail) as any;
+  if (!row || !verifyMemberPassword(password, row.password_hash)) {
+    return null;
+  }
+  const user = getMemberById(row.id)!;
+  return { user, token: signMemberToken(user) };
+}
+
+export function updateMemberProfile(userId: string, updates: Partial<MemberUserRecord>) {
+  const current = getMemberById(userId);
+  if (!current) return undefined;
+  db.prepare(`
+    UPDATE users SET
+      name = ?, phone = ?, shipping_address = ?, city = ?, state = ?, pincode = ?, upi_payout_id = ?
+    WHERE id = ?
+  `).run(
+    (updates.name ?? current.name).trim(),
+    (updates.phone ?? current.phone).trim(),
+    (updates.shipping_address ?? current.shipping_address).trim(),
+    (updates.city ?? current.city).trim(),
+    (updates.state ?? current.state).trim(),
+    (updates.pincode ?? current.pincode).trim(),
+    (updates.upi_payout_id ?? current.upi_payout_id).trim(),
+    userId
+  );
+  return getMemberById(userId);
+}
+
+export function getReferralConfig(): { commissionPct: number; minPayout: number } {
+  const rows = db
+    .prepare("SELECT key, value FROM site_integrations WHERE key IN ('referral_commission_pct', 'referral_min_payout')")
+    .all() as { key: string; value: string }[];
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.key] = r.value;
+  return {
+    commissionPct: Math.min(25, Math.max(0, parseFloat(map.referral_commission_pct || '5') || 5)),
+    minPayout: Math.max(10, parseFloat(map.referral_min_payout || '100') || 100),
+  };
+}
+
+export function saveReferralConfig(commissionPct: number, minPayout: number) {
+  const pct = Math.min(25, Math.max(0, Number(commissionPct) || 5));
+  const minP = Math.max(10, Number(minPayout) || 100);
+  const upsert = db.prepare('INSERT OR REPLACE INTO site_integrations (key, value) VALUES (?, ?)');
+  upsert.run('referral_commission_pct', String(pct));
+  upsert.run('referral_min_payout', String(minP));
+  return getReferralConfig();
+}
+
+// Record Referral Attribution on Order (Anti-Fraud: blocks self-referrals, starts 'pending' until order is 'paid')
+export function attachOrderReferralAndUser(params: {
+  orderId: string;
+  orderNumber: string;
+  buyerUserId?: string;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone: string;
+  subtotal: number;
+  paymentStatus: string;
+  referredByCode?: string;
+}) {
+  const cleanBuyerEmail = String(params.buyerEmail || '').trim().toLowerCase();
+  const cleanBuyerPhone = String(params.buyerPhone || '').replace(/\D/g, '').slice(-10);
+
+  let referrer: MemberUserRecord | undefined;
+  if (params.referredByCode) {
+    referrer = getMemberByReferralCode(params.referredByCode);
+  }
+
+  let refCode = '';
+  let refUserId = '';
+  let pct = 0;
+  let commAmount = 0;
+
+  if (referrer) {
+    const refPhone = String(referrer.phone || '').replace(/\D/g, '').slice(-10);
+    const isSelfEmail = referrer.email.toLowerCase() === cleanBuyerEmail;
+    const isSelfPhone = Boolean(cleanBuyerPhone && refPhone && cleanBuyerPhone === refPhone);
+    const isSelfId = Boolean(params.buyerUserId && params.buyerUserId === referrer.id);
+
+    // STRICT ANTI-FRAUD: Never credit self-referrals!
+    if (!isSelfEmail && !isSelfPhone && !isSelfId) {
+      const cfg = getReferralConfig();
+      if (cfg.commissionPct > 0 && params.subtotal > 0) {
+        refCode = referrer.referral_code;
+        refUserId = referrer.id;
+        pct = cfg.commissionPct;
+        commAmount = Math.round(((params.subtotal * pct) / 100) * 100) / 100;
+
+        const earnStatus = params.paymentStatus === 'paid' ? 'approved' : 'pending';
+        db.prepare(`
+          INSERT INTO referral_earnings (
+            id, referrer_user_id, order_id, order_number, buyer_name,
+            order_subtotal, commission_pct, commission_amount, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          `ref_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+          refUserId,
+          params.orderId,
+          params.orderNumber,
+          params.buyerName || 'Supporter',
+          params.subtotal,
+          pct,
+          commAmount,
+          earnStatus
+        );
+      }
+    }
+  }
+
+  db.prepare(`
+    UPDATE orders SET
+      user_id = ?, referred_by_code = ?, referrer_user_id = ?,
+      referral_commission_pct = ?, referral_commission_amount = ?
+    WHERE id = ?
+  `).run(params.buyerUserId || '', refCode, refUserId, pct, commAmount, params.orderId);
+}
+
+export function getMemberDashboardData(userId: string) {
+  const user = getMemberById(userId);
+  if (!user) return null;
+
+  // All orders by this member (linked by user_id OR matching email)
+  const orders = db
+    .prepare(
+      `SELECT o.*, c.title as cause_title
+       FROM orders o
+       LEFT JOIN causes c ON o.cause_id = c.id
+       WHERE o.user_id = ? OR LOWER(o.customer_email) = LOWER(?)
+       ORDER BY o.created_at DESC`
+    )
+    .all(user.id, user.email) as any[];
+
+  // Account-synced unlocked paid digital eBooks/eProducts
+  const digitalItems = db
+    .prepare(
+      `SELECT DISTINCT
+         p.id as product_id, p.name as product_name, COALESCE(p.subcategory, '') as subcategory,
+         p.category, p.image_url, p.digital_html_content,
+         COALESCE(p.digital_access_note, '') as digital_access_note,
+         o.order_number, o.customer_email, o.created_at as purchased_at
+       FROM orders o
+       INNER JOIN order_items oi ON oi.order_id = o.id
+       INNER JOIN products p ON p.id = oi.product_id
+       WHERE o.payment_status = 'paid'
+         AND (o.user_id = ? OR LOWER(o.customer_email) = LOWER(?))
+         AND COALESCE(p.product_type, 'physical') = 'digital'
+       ORDER BY o.created_at DESC`
+    )
+    .all(user.id, user.email);
+
+  const earnings = db
+    .prepare('SELECT * FROM referral_earnings WHERE referrer_user_id = ? ORDER BY created_at DESC')
+    .all(user.id) as any[];
+
+  const payouts = db
+    .prepare('SELECT * FROM referral_payouts WHERE user_id = ? ORDER BY created_at DESC')
+    .all(user.id) as any[];
+
+  const cfg = getReferralConfig();
+  const pendingEarnings = earnings
+    .filter((e) => e.status === 'pending')
+    .reduce((s, e) => s + Number(e.commission_amount || 0), 0);
+  const approvedEarnings = earnings
+    .filter((e) => e.status === 'approved' || e.status === 'paid_out' || e.status === 'donated')
+    .reduce((s, e) => s + Number(e.commission_amount || 0), 0);
+  const paidOutTotal = payouts
+    .filter((p) => p.payout_type === 'upi_withdraw' && p.status === 'paid')
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const donatedTotal = payouts
+    .filter((p) => p.payout_type === 'donate_mission' && p.status === 'paid')
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const reservedOrSettled = payouts
+    .filter((p) => p.status === 'requested' || p.status === 'paid')
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const availableBalance = Math.max(0, Math.round((approvedEarnings - reservedOrSettled) * 100) / 100);
+
+  const networkMissionImpactRow = db
+    .prepare(
+      `SELECT COALESCE(SUM(cause_donation_amount), 0) as total
+       FROM orders
+       WHERE payment_status = 'paid'
+         AND (referrer_user_id = ? OR user_id = ? OR LOWER(customer_email) = LOWER(?))`
+    )
+    .get(user.id, user.id, user.email) as any;
+
+  return {
+    user,
+    orders,
+    digitalItems,
+    earnings,
+    payouts,
+    wallet: {
+      commissionPct: cfg.commissionPct,
+      minPayout: cfg.minPayout,
+      pendingEarnings: Math.round(pendingEarnings * 100) / 100,
+      approvedEarnings: Math.round(approvedEarnings * 100) / 100,
+      paidOutTotal: Math.round(paidOutTotal * 100) / 100,
+      donatedTotal: Math.round(donatedTotal * 100) / 100,
+      availableBalance,
+      totalReferralsCount: earnings.filter((e) => e.status !== 'cancelled').length,
+      networkMissionImpact: Math.round(Number(networkMissionImpactRow?.total || 0)),
+    },
+  };
+}
+
+export function createReferralPayoutOrDonation(params: {
+  userId: string;
+  payoutType: 'upi_withdraw' | 'donate_mission';
+  amount: number;
+  upiId?: string;
+  causeId?: string;
+}) {
+  const dash = getMemberDashboardData(params.userId);
+  if (!dash) throw new Error('Account not found');
+  const amt = Math.round(Number(params.amount || 0) * 100) / 100;
+  if (amt <= 0) throw new Error('Amount must be greater than ₹0.');
+  if (amt > dash.wallet.availableBalance) {
+    throw new Error(`Insufficient available balance (Available: ₹${dash.wallet.availableBalance}).`);
+  }
+
+  const id = `payreq_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  if (params.payoutType === 'donate_mission') {
+    if (amt < 10) throw new Error('Minimum mission donation from wallet is ₹10.');
+    const targetCause = params.causeId || 'cause-everyday-essentials';
+    db.prepare(`
+      INSERT INTO referral_payouts (
+        id, user_id, user_name, user_email, upi_id, amount, payout_type, cause_id, status, payout_utr
+      ) VALUES (?, ?, ?, ?, '', ?, 'donate_mission', ?, 'paid', 'DIRECT_MISSION_CREDIT')
+    `).run(id, dash.user.id, dash.user.name, dash.user.email, amt, targetCause);
+    updateCauseRaised(targetCause, amt, 1);
+    return getMemberDashboardData(params.userId);
+  }
+
+  if (amt < dash.wallet.minPayout) {
+    throw new Error(`Minimum UPI withdrawal is ₹${dash.wallet.minPayout}.`);
+  }
+  const resolvedUpi = (params.upiId || dash.user.upi_payout_id || '').trim();
+  if (!resolvedUpi || !resolvedUpi.includes('@')) {
+    throw new Error('Please enter a valid UPI ID (e.g. yourname@okicici) for payout.');
+  }
+
+  db.prepare(`
+    INSERT INTO referral_payouts (
+      id, user_id, user_name, user_email, upi_id, amount, payout_type, cause_id, status, payout_utr
+    ) VALUES (?, ?, ?, ?, ?, ?, 'upi_withdraw', '', 'requested', '')
+  `).run(id, dash.user.id, dash.user.name, dash.user.email, resolvedUpi, amt);
+
+  return getMemberDashboardData(params.userId);
+}
+
+export function getAdminReferralsOverview() {
+  const config = getReferralConfig();
+  const topReferrers = db
+    .prepare(
+      `SELECT u.id, u.name, u.email, u.referral_code, u.upi_payout_id,
+              COUNT(re.id) as referrals_count,
+              COALESCE(SUM(CASE WHEN re.status != 'cancelled' THEN re.commission_amount ELSE 0 END), 0) as total_earned
+       FROM users u
+       LEFT JOIN referral_earnings re ON re.referrer_user_id = u.id
+       GROUP BY u.id
+       ORDER BY total_earned DESC, u.created_at DESC
+       LIMIT 50`
+    )
+    .all();
+  const payouts = db
+    .prepare("SELECT * FROM referral_payouts ORDER BY CASE WHEN status = 'requested' THEN 0 ELSE 1 END, created_at DESC")
+    .all();
+  const recentEarnings = db
+    .prepare('SELECT * FROM referral_earnings ORDER BY created_at DESC LIMIT 40')
+    .all();
+  const totalUsers = (db.prepare('SELECT COUNT(*) as c FROM users').get() as any)?.c || 0;
+  return { config, totalUsers, topReferrers, payouts, recentEarnings };
+}
+
+export function updateReferralPayoutStatus(
+  payoutId: string,
+  status: 'paid' | 'rejected',
+  payoutUtr = ''
+) {
+  db.prepare('UPDATE referral_payouts SET status = ?, payout_utr = ? WHERE id = ?').run(
+    status,
+    payoutUtr.trim(),
+    payoutId
+  );
+  return db.prepare('SELECT * FROM referral_payouts WHERE id = ?').get(payoutId);
 }
