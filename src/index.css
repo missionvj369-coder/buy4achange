@@ -3,19 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --bg-canvas: #F3F7FB;
-    --bg-obsidian: #070D19;
-    --ink-primary: #0A101F;
-    --accent-emerald: #059669;
-    --accent-teal: #0D9488;
-    --accent-cyan: #0284C7;
-  }
-
   html,
   body {
-    background-color: #F3F7FB;
-    color: #0A101F;
+    background-color: #05080A;
+    color: #F8FAFC;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -23,11 +14,12 @@
     padding: 0;
     width: 100%;
     max-width: 100%;
+    overflow-x: clip;
   }
 
   h1, h2, h3, .font-display {
-    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-    letter-spacing: -0.025em;
+    font-family: 'Syne', 'Space Grotesk', sans-serif;
+    letter-spacing: -0.03em;
   }
 
   * {
@@ -36,13 +28,20 @@
 }
 
 /*
- * AETHER 2030 — Futuristic Precision Clean-Tech Design System
- * Aerospace porcelain canvas + Spatial Obsidian HUD decks + Luminous Emerald-Teal-Cyan signals.
+ * HAPE-CLASS 3D STUDIO CINEMA DESIGN SYSTEM
+ * Continuous volumetric obsidian studio + real-time Three.js PBR stage + analog film grain +
+ * 3D perspective tilt cards + pill-and-circle luxury CTAs + sculpted keycap HUD.
  */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
-  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
+  70% { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); }
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes scroll-wheel {
+  0% { transform: translateY(0); opacity: 1; }
+  75% { transform: translateY(8px); opacity: 0.15; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes horizon-flow {
@@ -51,67 +50,197 @@
   100% { background-position: 0% 50%; }
 }
 
-.hero-architectural {
-  position: relative;
-  background-color: #F7FAFD;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% -18%, rgba(16, 185, 129, 0.14) 0%, transparent 65%),
-    radial-gradient(circle at 12% 28%, rgba(6, 182, 212, 0.11) 0%, transparent 45%),
-    radial-gradient(circle at 88% 22%, rgba(14, 165, 233, 0.10) 0%, transparent 45%),
-    radial-gradient(rgba(15, 23, 42, 0.085) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px;
+/* Analog Studio Film Grain Overlay (Signature Hape-style tactile texture) */
+.studio-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.futuristic-obsidian-bg {
-  background-color: #060B16;
-  background-image:
-    radial-gradient(ellipse 75% 55% at 50% -10%, rgba(16, 185, 129, 0.22) 0%, transparent 65%),
-    radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.16) 0%, transparent 45%),
-    radial-gradient(circle at 15% 80%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
-    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+.studio-hero-stage {
+  position: relative;
+  background-color: #05080A;
+  transition: background 0.7s ease;
 }
 
 .hero-horizon-bar {
   height: 2px;
-  background: linear-gradient(90deg, #059669 0%, #10B981 25%, #06B6D4 50%, #38BDF8 75%, #059669 100%);
+  background: linear-gradient(90deg, #10B981 0%, #34D399 25%, #06B6D4 50%, #F59E0B 75%, #10B981 100%);
   background-size: 200% 100%;
-  animation: horizon-flow 6s ease infinite;
+  animation: horizon-flow 7s ease infinite;
 }
 
 .gradient-text-future {
-  background: linear-gradient(105deg, #047857 0%, #0D9488 48%, #0284C7 100%);
+  background: linear-gradient(105deg, #34D399 0%, #2DD4BF 45%, #38BDF8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.obsidian-deck {
-  background: linear-gradient(145deg, #070D19 0%, #0D192D 55%, #081C26 100%);
-  border: 1px solid rgba(56, 189, 248, 0.22);
+/* Signature Hape-Style Stadium Pill + Solid White Circle Icon Badge CTA */
+.pill-hape-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.32rem 0.35rem 0.32rem 1.15rem;
+  border-radius: 9999px;
+  background: rgba(12, 18, 24, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+}
+
+.pill-hape-cta:hover {
+  transform: translateY(-2px);
+  background: rgba(18, 28, 36, 0.88);
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 18px 36px -12px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.pill-hape-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  color: #05080A;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.22s ease, background 0.22s ease;
+}
+
+.pill-hape-cta:hover .pill-hape-circle {
+  transform: scale(1.06);
+  background: #34D399;
+}
+
+/* Sculpted Beveled 3D Keycap Switcher (Inspired by HAPEBAR) */
+.keycap-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 1.05rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1E2730 0%, #0E1318 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 24px 50px -20px rgba(7, 13, 25, 0.55),
-    0 0 0 1px rgba(16, 185, 129, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 5px 0 #05080A,
+    0 8px 20px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.2s ease;
+}
+
+.keycap-3d:hover {
+  border-color: rgba(52, 211, 153, 0.65);
+}
+
+.keycap-3d:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 #05080A,
+    0 4px 10px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Real-Time Mouse-Reactive 3D Perspective Tilt Card with Specular Studio Glare */
+.tilt-3d-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.tilt-3d-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 20%),
+    rgba(255, 255, 255, 0.14),
+    rgba(52, 211, 153, 0.06) 35%,
+    transparent 70%
+  );
+}
+
+.tilt-3d-card:hover::before {
+  opacity: 1;
+}
+
+/* Dark Studio Velvet Card Materiality */
+.studio-card-3d {
+  background: linear-gradient(165deg, #111820 0%, #0A0F14 55%, #070B0F 100%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 24px 48px -24px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.studio-card-3d:hover {
+  border-color: rgba(52, 211, 153, 0.48);
+  box-shadow:
+    0 32px 60px -20px rgba(0, 0, 0, 0.95),
+    0 0 32px -12px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Kept for compatibility with modals/portals that use clean surfaces */
+.obsidian-deck {
+  background: linear-gradient(145deg, #090E14 0%, #101A24 55%, #08131A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 24px 50px -20px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.futuristic-obsidian-bg {
+  background-color: #05080A;
+  background-image:
+    radial-gradient(ellipse 75% 55% at 50% -10%, rgba(16, 185, 129, 0.24) 0%, transparent 65%),
+    radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.16) 0%, transparent 45%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+}
+
+.hero-architectural {
+  background-color: #05080A;
+  background-image:
+    radial-gradient(ellipse 75% 55% at 50% -12%, rgba(16, 185, 129, 0.22) 0%, transparent 65%),
+    radial-gradient(circle at 14% 30%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
 }
 
 .card-editorial {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
-  border: 1px solid rgba(15, 23, 42, 0.09);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -18px rgba(15, 23, 42, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: linear-gradient(165deg, #111820 0%, #0A0F14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
 }
 
 .card-editorial:hover {
-  border-color: rgba(16, 185, 129, 0.55);
-  box-shadow:
-    0 20px 38px -18px rgba(6, 182, 212, 0.22),
-    0 8px 18px -10px rgba(16, 185, 129, 0.18),
-    0 0 0 1px rgba(16, 185, 129, 0.15);
+  border-color: rgba(52, 211, 153, 0.48);
   transform: translateY(-3px);
 }
 
@@ -130,44 +259,34 @@
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.kpi-tile-future:hover {
-  transform: translateY(-2px);
-  border-color: rgba(13, 148, 136, 0.35);
-  box-shadow: 0 14px 30px -16px rgba(6, 182, 212, 0.22);
-}
-
 .btn-future-primary {
-  background: linear-gradient(135deg, #059669 0%, #0D9488 55%, #0284C7 100%);
+  background: linear-gradient(135deg, #10B981 0%, #0D9488 55%, #0284C7 100%);
   color: #FFFFFF;
   box-shadow:
-    0 8px 22px -6px rgba(13, 148, 136, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    0 10px 26px -8px rgba(16, 185, 129, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .btn-future-primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
   box-shadow:
-    0 12px 26px -6px rgba(6, 182, 212, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 14px 32px -8px rgba(52, 211, 153, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transform: translateY(-1px);
 }
 
-.btn-future-primary:active {
-  transform: translateY(0);
-}
-
 .btn-future-obsidian {
-  background: linear-gradient(135deg, #0B1221 0%, #16233B 100%);
+  background: rgba(255, 255, 255, 0.06);
   color: #F8FAFC;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  box-shadow: 0 8px 20px -8px rgba(7, 13, 25, 0.5);
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
 .btn-future-obsidian:hover {
-  border-color: rgba(16, 185, 129, 0.55);
-  box-shadow: 0 12px 24px -8px rgba(16, 185, 129, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(52, 211, 153, 0.55);
   transform: translateY(-1px);
 }
 
@@ -181,23 +300,28 @@
 }
 
 .progress-future {
-  background: linear-gradient(90deg, #059669 0%, #10B981 55%, #06B6D4 100%);
+  background: linear-gradient(90deg, #10B981 0%, #34D399 55%, #38BDF8 100%);
+}
+
+.scroll-dot-anim {
+  animation: scroll-wheel 1.8s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .live-dot,
-  .hero-horizon-bar {
+  .hero-horizon-bar,
+  .scroll-dot-anim {
     animation: none;
   }
+  .tilt-3d-card,
   .card-editorial:hover,
   .btn-future-primary:hover,
-  .btn-future-obsidian:hover,
-  .kpi-tile-future:hover {
-    transform: none;
+  .pill-hape-cta:hover {
+    transform: none !important;
   }
 }
 
-/* Clean subtle scrollbars that work smoothly on all OS & browsers */
+/* Sleek dark scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
   height: 4px;
   width: 4px;
@@ -206,7 +330,7 @@
   background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 9999px;
 }
 

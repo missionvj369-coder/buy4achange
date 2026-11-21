@@ -471,9 +471,9 @@ export function App() {
     );
   }
 
-  // PUBLIC STOREFRONT — Aether 2030 Futuristic Clean-Tech Architecture
+  // PUBLIC STOREFRONT — Hape-Class Real-Time 3D Studio Experience
   return (
-    <div className="min-h-screen bg-[#F3F7FB] text-[#0A101F] flex flex-col font-sans w-full">
+    <div className="studio-grain min-h-screen bg-[#05080A] text-white flex flex-col font-sans w-full">
       <Navbar
         cartCount={totalCartCount}
         libraryCount={unlockedLibrary.length}
@@ -532,9 +532,9 @@ export function App() {
 
         {/* Instant Fuzzy Search Hits Across 8 Living India Mission Dossiers */}
         {matchingMissions.length > 0 && (
-          <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
-            <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] space-y-2.5">
-              <div className="text-xs font-semibold text-[#166534] flex items-center space-x-1.5">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-400/30 space-y-2.5">
+              <div className="text-xs font-mono uppercase tracking-wider font-semibold text-emerald-300 flex items-center space-x-1.5">
                 <BookOpen className="w-4 h-4" />
                 <span>Matching Living India Mission Dossiers ({matchingMissions.length})</span>
               </div>
@@ -547,7 +547,7 @@ export function App() {
                       setReadingMissionCauseId(m.id);
                       logTelemetry('mission_read', m.id);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-green-50 border border-[#BBF7D0] text-xs font-semibold text-[#14171A]"
+                    className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white hover:text-[#05080A] border border-white/15 text-xs font-semibold text-white transition-all"
                   >
                     {m.title} →
                   </button>
@@ -557,18 +557,20 @@ export function App() {
           </section>
         )}
 
-        {/* 2. Shop Catalog First for Instant Visitor Clarity */}
-        <section id="catalog-grid" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-slate-200/80">
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center space-x-2 text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-[#0D9488]">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span>{t.shopEyebrow}</span>
+        {/* 2. Shop Catalog (01 / CONSCIOUS COMMERCE) */}
+        <section
+          id="catalog-grid"
+          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24"
+        >
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-white/10">
+            <div className="space-y-2">
+              <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-emerald-400 font-bold">
+                01 / {t.shopEyebrow}
               </div>
-              <h2 className="font-display text-2xl sm:text-4xl font-bold text-[#0A101F] tracking-tight">
+              <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.94] tracking-[-0.03em]">
                 {t.shopHeading}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600">
+              <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
                 {activeMission
                   ? `Supporting "${activeMission.title}" — you can change the mission on any item.`
                   : t.shopSubtext}
@@ -582,10 +584,10 @@ export function App() {
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all ${
+                    className={`px-4 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold whitespace-nowrap border transition-all ${
                       selectedCategory === cat
-                        ? 'btn-future-primary border-transparent'
-                        : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400'
+                        ? 'bg-white text-[#05080A] border-white'
+                        : 'bg-white/[0.04] text-slate-300 border-white/12 hover:border-white/35 hover:text-white'
                     }`}
                   >
                     {cat === 'All' ? t.allCategories : cat}
@@ -596,19 +598,19 @@ export function App() {
           </div>
 
           {loading ? (
-            <div className="py-16 text-center flex flex-col items-center space-y-2 text-gray-500">
-              <RefreshCw className="w-6 h-6 text-[#166534] animate-spin" />
-              <span className="text-xs">Loading products...</span>
+            <div className="py-16 text-center flex flex-col items-center space-y-2 text-slate-400">
+              <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin" />
+              <span className="text-xs font-mono uppercase tracking-wider">Loading 3D catalog...</span>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="py-14 mt-6 rounded-xl bg-white border border-gray-200 text-center space-y-2">
-              <Package className="w-8 h-8 mx-auto text-gray-400" />
-              <h3 className="text-sm font-bold text-[#14171A]">
+            <div className="py-14 mt-6 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-2.5">
+              <Package className="w-8 h-8 mx-auto text-emerald-400" />
+              <h3 className="text-sm font-display font-bold uppercase tracking-wider text-white">
                 {physicalProducts.length === 0
                   ? 'New Products Launching Soon'
                   : 'No matching products found'}
               </h3>
-              <p className="text-xs text-gray-500 max-w-sm mx-auto">
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {physicalProducts.length === 0
                   ? 'Products published from the Admin Portal appear here immediately.'
                   : 'Try clearing your search or category filter.'}
@@ -620,14 +622,14 @@ export function App() {
                     setSelectedCategory('All');
                     setSearchTerm('');
                   }}
-                  className="px-4 py-1.5 rounded-lg bg-[#166534] text-white text-xs font-semibold"
+                  className="px-5 py-2 rounded-full bg-white text-[#05080A] text-xs font-mono uppercase font-bold"
                 >
                   Reset Filters
                 </button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-8">
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}

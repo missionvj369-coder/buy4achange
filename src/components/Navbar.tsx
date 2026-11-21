@@ -9,7 +9,6 @@ import {
   Download,
   Check,
   User,
-  Layers,
 } from 'lucide-react';
 import { MemberUser } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
@@ -68,45 +67,37 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [langMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-[0_6px_24px_-18px_rgba(7,13,25,0.22)]">
-      <div className="hero-horizon-bar" />
+    <header className="sticky top-0 z-50 w-full bg-[#05080A]/80 backdrop-blur-xl border-b border-white/10">
       {invitedByName && (
-        <div className="bg-[#070D19] border-b border-emerald-500/25 px-3 py-1.5 text-center text-[11px] font-medium text-emerald-200">
+        <div className="bg-emerald-950/80 border-b border-emerald-400/25 px-3 py-1.5 text-center text-[11px] font-mono text-emerald-200">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 align-middle" />
-          Invited by <strong className="text-white">{invitedByName}</strong> · Conscious commerce powering 8 Living India missions
+          INVITED BY <strong className="text-white uppercase">{invitedByName}</strong> · CONSCIOUS COMMERCE PROTOCOL
         </div>
       )}
-      <div className="max-w-6xl mx-auto px-2.5 sm:px-6">
-        <div className="h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-2">
-          {/* Futuristic Prism Brand Mark */}
+
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3">
+          {/* Minimal Hape-Grade Brand Lockup */}
           <button
             type="button"
             onClick={onNavigateHome}
-            className="flex items-center space-x-1.5 sm:space-x-2.5 text-left shrink-0 focus:outline-none group"
+            className="flex items-center space-x-2 text-left shrink-0 focus:outline-none group"
           >
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#070D19] via-[#0F2438] to-[#059669] flex items-center justify-center shadow-sm border border-emerald-400/30 shrink-0 group-hover:scale-105 transition-transform">
-              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-sm sm:text-lg tracking-tight text-[#0A101F] leading-none flex items-center space-x-1">
-                <span>
-                  Buy<span className="gradient-text-future">4</span>AChange
-                </span>
-              </div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-slate-500 hidden sm:flex items-center space-x-1 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>UGT INDIA · PROTOCOL</span>
-              </div>
+            <div className="flex items-center space-x-1">
+              <span className="inline-block w-1.5 h-5 sm:h-6 rounded-full bg-emerald-400 group-hover:bg-white transition-colors" />
+              <span className="font-display font-extrabold text-sm sm:text-xl tracking-tight text-white leading-none">
+                Buy<span className="text-emerald-400">4</span>AChange<sup className="text-[9px] text-white/60 ml-0.5">®</sup>
+              </span>
             </div>
           </button>
 
-          {/* Desktop Floating Segmented Pill Nav Dock */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-100/90 border border-slate-200/80 p-1 rounded-full text-xs font-semibold text-slate-700">
+          {/* Desktop Wide-Tracked Studio Navigation */}
+          <nav className="hidden md:flex items-center space-x-1 bg-white/[0.04] border border-white/10 p-1 rounded-full text-[11px] font-mono uppercase tracking-[0.12em] text-slate-300">
             {onScrollToCatalog && (
               <button
                 type="button"
                 onClick={onScrollToCatalog}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white hover:text-[#059669] hover:shadow-sm transition-all whitespace-nowrap"
+                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
               >
                 {t.navShop}
               </button>
@@ -115,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onScrollToEProducts}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white hover:text-[#059669] hover:shadow-sm transition-all whitespace-nowrap"
+                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
               >
                 {t.navEProducts}
               </button>
@@ -124,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onScrollToMissions}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white hover:text-[#059669] hover:shadow-sm transition-all whitespace-nowrap"
+                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
               >
                 {t.navMissions}
               </button>
@@ -133,31 +124,31 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenTrack}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white hover:text-[#059669] hover:shadow-sm transition-all whitespace-nowrap flex items-center space-x-1"
+                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-emerald-300 transition-all whitespace-nowrap flex items-center space-x-1"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-[#0D9488]" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{t.navTrack}</span>
               </button>
             )}
           </nav>
 
-          {/* Right Action Controls — Always Visible on Any Phone */}
+          {/* Right Studio Controls */}
           <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
             {/* Desktop Inline Fuzzy Search */}
-            <div className="hidden lg:flex relative w-44">
+            <div className="hidden xl:flex relative w-44">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search network..."
+                placeholder="Search 3D catalog..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-slate-100/80 border border-slate-200 rounded-full pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0D9488] focus:ring-2 focus:ring-teal-500/15 transition-all"
+                className="w-full bg-white/[0.06] border border-white/12 rounded-full pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/[0.10] focus:border-emerald-400/60 transition-all"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
                   aria-label="Clear search"
                 >
                   ✕
@@ -172,26 +163,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setLangMenuOpen((v) => !v)}
                 aria-label="Select Indian Language"
                 title="Switch Language (English + 22 Indian Languages)"
-                className={`flex items-center space-x-1 px-1.5 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border text-xs font-semibold transition-all ${
+                className={`flex items-center space-x-1 px-1.5 py-1.5 sm:px-2.5 sm:py-2 rounded-full border text-xs font-semibold transition-all ${
                   langMenuOpen || lang !== 'en'
-                    ? 'border-teal-500/50 bg-emerald-50 text-[#047857]'
-                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-400/50 hover:bg-white'
+                    ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                    : 'border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/35 hover:text-white'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5 text-[#0D9488] shrink-0" />
-                <span className="max-w-[42px] sm:max-w-[52px] truncate text-[10px] sm:text-[11px] font-mono font-semibold">
+                <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="max-w-[38px] sm:max-w-[52px] truncate text-[10px] sm:text-[11px] font-mono">
                   {lang === 'en' ? 'EN' : meta.nativeName}
                 </span>
               </button>
 
               {langMenuOpen && (
-                <div className="fixed sm:absolute right-3 sm:right-0 top-14 sm:top-full sm:mt-2 w-[calc(100vw-24px)] sm:w-[420px] max-w-[420px] bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                  <div className="px-4 py-3 bg-[#070D19] text-white border-b border-slate-800 flex items-center justify-between">
+                <div className="fixed sm:absolute right-3 sm:right-0 top-14 sm:top-full sm:mt-2 w-[calc(100vw-24px)] sm:w-[420px] max-w-[420px] bg-[#0B1016] border border-white/15 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 bg-[#05080A] border-b border-white/10 flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-display font-bold text-white">
+                      <div className="text-xs font-display font-bold text-white uppercase tracking-wider">
                         Languages of India (22 + English)
                       </div>
-                      <div className="text-[10px] font-mono text-emerald-300/90">
+                      <div className="text-[10px] font-mono text-emerald-400">
                         EIGHTH SCHEDULE · MULTI-SCRIPT ENGINE
                       </div>
                     </div>
@@ -216,17 +207,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                           }}
                           className={`px-2.5 py-2 rounded-xl border text-left flex items-center justify-between gap-1.5 transition-all ${
                             active
-                              ? 'bg-emerald-50 border-teal-500 text-[#047857]'
-                              : 'bg-white border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-800'
+                              ? 'bg-emerald-500/15 border-emerald-400/60 text-emerald-300'
+                              : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.08] text-slate-200'
                           }`}
                         >
                           <div className="min-w-0">
                             <div className="text-xs font-semibold truncate">{item.nativeName}</div>
-                            <div className="text-[10px] text-slate-500 truncate">
+                            <div className="text-[10px] text-slate-400 truncate">
                               {item.englishName}
                             </div>
                           </div>
-                          {active && <Check className="w-3.5 h-3.5 text-[#059669] shrink-0" />}
+                          {active && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
                         </button>
                       );
                     })}
@@ -235,13 +226,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Optional 1-Tap PWA Install Button */}
             {canInstallPwa && onInstallPwa && (
               <button
                 type="button"
                 onClick={onInstallPwa}
                 title={t.installApp}
-                className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-2 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-[#0F766E] text-xs font-semibold"
+                className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-2 rounded-full border border-emerald-400/35 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>App</span>
@@ -253,10 +243,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={() => setMobileSearchOpen((v) => !v)}
               aria-label="Search"
-              className={`lg:hidden p-1.5 sm:p-2 rounded-xl border text-slate-700 ${
+              className={`xl:hidden p-1.5 sm:p-2 rounded-full border transition-all ${
                 mobileSearchOpen || searchTerm
-                  ? 'border-teal-500 bg-emerald-50 text-[#047857]'
-                  : 'border-slate-200 bg-slate-50'
+                  ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                  : 'border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/35'
               }`}
             >
               {mobileSearchOpen ? <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
@@ -269,12 +259,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={onOpenLibrary}
                 aria-label="My Library"
                 title="My Purchased eBooks & eProducts"
-                className="relative flex items-center space-x-1.5 p-1.5 sm:px-2.5 sm:py-2 rounded-xl border border-slate-200 bg-slate-50 hover:border-teal-400 hover:bg-white text-slate-700 text-xs font-semibold transition-all"
+                className="relative flex items-center space-x-1.5 p-1.5 sm:px-2.5 sm:py-2 rounded-full border border-white/15 bg-white/[0.05] hover:border-emerald-400/50 text-slate-200 hover:text-white text-xs font-semibold transition-all"
               >
-                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0D9488]" />
+                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                 <span className="hidden sm:inline">{t.navLibrary}</span>
                 {libraryCount > 0 && (
-                  <span className="bg-[#070D19] text-emerald-300 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                  <span className="bg-emerald-400 text-[#05080A] font-mono text-[10px] font-bold px-1.5 rounded-full">
                     {libraryCount}
                   </span>
                 )}
@@ -288,40 +278,41 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={onOpenAccount}
                 aria-label="My Account"
                 title={memberUser ? `${memberUser.name} — Refer & Earn Dashboard` : 'Sign In / Refer & Earn'}
-                className={`flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-2 rounded-xl border text-xs font-semibold transition-all ${
+                className={`flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-2 rounded-full border text-xs font-semibold transition-all ${
                   memberUser
-                    ? 'border-emerald-400/60 bg-emerald-50 text-[#047857]'
-                    : 'border-slate-200 bg-slate-50 hover:border-teal-400 hover:bg-white text-slate-700'
+                    ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                    : 'border-white/15 bg-white/[0.05] hover:border-emerald-400/50 text-slate-200 hover:text-white'
                 }`}
               >
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0D9488] shrink-0" />
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
                 <span className="hidden sm:inline max-w-[72px] truncate">
                   {memberUser ? memberUser.name.split(/\s+/)[0] : 'Account'}
                 </span>
               </button>
             )}
 
-            {/* Futuristic Gradient Bag Button */}
+            {/* Signature Hape-Style White Circle Badge Bag Button */}
             <button
               type="button"
               onClick={onOpenCart}
               aria-label="Shopping Bag"
-              className="flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl btn-future-primary text-xs font-semibold shrink-0"
+              className="flex items-center space-x-1.5 pl-2.5 pr-1 py-1 sm:pl-3.5 sm:pr-1 sm:py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-white text-[11px] font-mono uppercase tracking-wider font-bold shrink-0 transition-all"
             >
-              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="hidden xs:inline sm:inline">{t.navBag}</span>
-              {cartCount > 0 && (
-                <span className="bg-white text-[#047857] font-mono text-[10px] font-bold px-1.5 rounded-full">
-                  {cartCount}
-                </span>
-              )}
+              <span className="hidden sm:inline">{t.navBag}</span>
+              <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white text-[#05080A] flex items-center justify-center relative">
+                {cartCount > 0 ? (
+                  <span className="text-[11px] font-mono font-extrabold">{cartCount}</span>
+                ) : (
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                )}
+              </span>
             </button>
           </div>
         </div>
 
         {/* Expandable Search Bar on Mobile/Tablet */}
         {mobileSearchOpen && (
-          <div className="lg:hidden pb-3">
+          <div className="xl:hidden pb-3">
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
@@ -330,13 +321,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 placeholder={t.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0D9488]"
+                className="w-full bg-white/[0.08] border border-white/15 rounded-full pl-9 pr-8 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"
                 >
                   ✕
                 </button>
@@ -345,25 +336,25 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Mobile Section Links Bar */}
-        <div className="md:hidden flex items-center justify-between gap-2 border-t border-slate-200/70 py-2 text-xs font-semibold text-slate-700">
+        {/* Mobile Quick Links Row */}
+        <div className="md:hidden flex items-center justify-between gap-2 border-t border-white/10 py-2 text-[11px] font-mono uppercase tracking-wider text-slate-300">
           {onScrollToCatalog && (
-            <button type="button" onClick={onScrollToCatalog} className="whitespace-nowrap hover:text-[#059669]">
+            <button type="button" onClick={onScrollToCatalog} className="whitespace-nowrap hover:text-white">
               {t.navShop}
             </button>
           )}
           {onScrollToEProducts && (
-            <button type="button" onClick={onScrollToEProducts} className="whitespace-nowrap hover:text-[#059669]">
+            <button type="button" onClick={onScrollToEProducts} className="whitespace-nowrap hover:text-white">
               {t.navEProducts}
             </button>
           )}
           {onScrollToMissions && (
-            <button type="button" onClick={onScrollToMissions} className="whitespace-nowrap hover:text-[#059669]">
+            <button type="button" onClick={onScrollToMissions} className="whitespace-nowrap hover:text-white">
               {t.navMissions}
             </button>
           )}
           {onOpenTrack && (
-            <button type="button" onClick={onOpenTrack} className="whitespace-nowrap text-[#0D9488] font-bold">
+            <button type="button" onClick={onOpenTrack} className="whitespace-nowrap text-emerald-400 font-bold">
               {t.navTrack}
             </button>
           )}

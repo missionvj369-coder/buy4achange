@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Lock, Unlock, Heart, Plus, Check, Share2 } from 'lucide-react';
 import { Product, Cause, UnlockedDigitalItem } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
+import { Tilt3DCard } from './Tilt3DCard.tsx';
 
 export const EPRODUCT_SUBCATEGORIES = [
   'eBooks',
@@ -67,77 +68,81 @@ const EProductCard: React.FC<{
   };
 
   return (
-    <div
+    <Tilt3DCard
       onClick={() => onOpenDetails(product, selectedCauseId)}
-      className="card-editorial rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer"
+      className="studio-card-3d rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer group"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F0FDF4]">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0A131A]">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-[#166534] space-y-1.5">
+          <div className="w-full h-full flex flex-col items-center justify-center text-emerald-400 space-y-1.5">
             <BookOpen className="w-8 h-8" />
-            <span className="text-xs font-semibold">{product.subcategory || 'eBook'}</span>
+            <span className="text-xs font-mono uppercase tracking-wider font-semibold">
+              {product.subcategory || 'eBook'}
+            </span>
           </div>
         )}
 
+        <div className="absolute inset-0 bg-gradient-to-t from-[#05080A]/80 via-transparent to-black/30 pointer-events-none" />
+
         <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
-          <span className="px-2 py-0.5 rounded bg-white/95 text-[#14171A] text-[10px] font-semibold border border-gray-200">
+          <span className="px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-white text-[10px] font-mono uppercase font-semibold border border-white/20">
             {product.subcategory || 'eProduct'}
           </span>
           {unlockedItem ? (
-            <span className="px-2 py-0.5 rounded bg-[#166534] text-white text-[10px] font-semibold inline-flex items-center space-x-1">
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-400 text-[#05080A] text-[10px] font-mono uppercase font-bold inline-flex items-center space-x-1">
               <Unlock className="w-3 h-3" />
               <span>Unlocked</span>
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded bg-white/95 text-amber-800 border border-amber-200 text-[10px] font-semibold inline-flex items-center space-x-1">
+            <span className="px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/35 text-[10px] font-mono font-semibold inline-flex items-center space-x-1">
               <Lock className="w-2.5 h-2.5" />
-              <span>Unlocks After Payment</span>
+              <span>Instant Unlock</span>
             </span>
           )}
         </div>
 
-        <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 border border-gray-200 rounded-lg px-2.5 py-1 flex items-center justify-between text-[11px]">
-          <span className="flex items-center space-x-1 text-[#166534] font-semibold">
-            <Heart className="w-3 h-3 text-[#166534] fill-[#166534]" />
+        <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-black/85 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5 flex items-center justify-between text-[11px]">
+          <span className="flex items-center space-x-1.5 text-emerald-300 font-semibold">
+            <Heart className="w-3 h-3 text-emerald-400 fill-emerald-400" />
             <span>{product.cause_allocation_pct}% to Mission</span>
           </span>
-          <span className="font-mono font-bold text-[#14171A]">₹{donationAmount}</span>
+          <span className="font-mono font-bold text-white">₹{donationAmount}</span>
         </div>
       </div>
 
       <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-[11px] text-gray-500">
-            <span className="text-[#166534] font-medium">Digital Edition</span>
+          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.12em] text-slate-400">
+            <span className="text-emerald-400 font-semibold">Digital Edition</span>
             <span>₹0 Shipping</span>
           </div>
 
-          <h3 className="font-display font-bold text-[#14171A] text-base leading-snug line-clamp-2">
+          <h3 className="font-display font-bold text-white text-base leading-snug line-clamp-2">
             {product.name}
           </h3>
 
           {product.description && (
-            <p className="text-xs text-gray-600 line-clamp-2">{product.description}</p>
+            <p className="text-xs text-slate-400 line-clamp-2">{product.description}</p>
           )}
 
           <div className="pt-1 space-y-1" onClick={(e) => e.stopPropagation()}>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-              Mission to Support
+            <label className="block text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400">
+              Route Impact To
             </label>
             <select
               value={selectedCauseId}
               onChange={(e) => setSelectedCauseId(e.target.value)}
-              className="w-full bg-[#FAF9F6] border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-[#14171A] focus:outline-none focus:border-[#166534]"
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-400"
             >
               {causes.map((c) => (
-                <option key={c.id} value={c.id}>
+                <option key={c.id} value={c.id} className="bg-[#0B1016] text-white">
                   {c.title}
                 </option>
               ))}
@@ -145,12 +150,12 @@ const EProductCard: React.FC<{
           </div>
         </div>
 
-        <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
           <div>
-            <div className="text-lg font-bold text-[#14171A]">
+            <div className="text-lg font-mono font-bold text-white">
               ₹{product.price.toLocaleString('en-IN')}
             </div>
-            <div className="text-[10px] text-gray-500">Interactive HTML</div>
+            <div className="text-[10px] font-mono text-slate-400">INTERACTIVE HTML</div>
           </div>
 
           <div className="flex items-center space-x-1.5">
@@ -163,7 +168,7 @@ const EProductCard: React.FC<{
                 }}
                 aria-label="Share and earn"
                 title="Share & Earn"
-                className="p-2 rounded-lg border border-gray-200 bg-[#FAF9F6] hover:border-[#166534] text-[#166534]"
+                className="p-2 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white text-white hover:text-[#05080A] transition-all"
               >
                 <Share2 className="w-3.5 h-3.5" />
               </button>
@@ -175,15 +180,19 @@ const EProductCard: React.FC<{
                   e.stopPropagation();
                   onLaunchUnlocked(unlockedItem);
                 }}
-                className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold"
+                className="px-3.5 py-2 rounded-full bg-emerald-400 hover:bg-white text-[#05080A] text-xs font-mono uppercase font-bold"
               >
-                Open Now
+                Open
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleAdd}
-                className="px-3.5 py-2 rounded-lg bg-[#166534] hover:bg-[#14532D] text-white text-xs font-semibold flex items-center space-x-1"
+                className={`px-3.5 py-2 rounded-full text-xs font-mono uppercase font-bold flex items-center space-x-1 transition-all ${
+                  justAdded
+                    ? 'bg-emerald-400 text-[#05080A]'
+                    : 'bg-white hover:bg-emerald-400 text-[#05080A]'
+                }`}
               >
                 {justAdded ? (
                   <>
@@ -201,7 +210,7 @@ const EProductCard: React.FC<{
           </div>
         </div>
       </div>
-    </div>
+    </Tilt3DCard>
   );
 };
 
@@ -234,29 +243,34 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   return (
     <section
       id="eproducts-section"
-      className="bg-white border-t border-b border-slate-200/80 py-14 sm:py-20 w-full"
+      className="relative bg-[#070C10] border-t border-b border-white/10 py-16 sm:py-24 w-full"
+      style={{
+        backgroundImage:
+          'radial-gradient(ellipse 60% 45% at 85% 15%, rgba(6, 182, 212, 0.14) 0%, transparent 65%)',
+      }}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-[#0D9488]">
-              <span className="w-2 h-2 rounded-full bg-cyan-500" />
-              <span>{t.eproductsEyebrow} · ₹0 SHIPPING</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-6">
+          <div className="space-y-2.5 max-w-2xl">
+            <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-400 font-bold">
+              02 / {t.eproductsEyebrow} · ₹0 SHIPPING
             </div>
-            <h2 className="font-display text-2xl sm:text-4xl font-bold text-[#0A101F] tracking-tight">
+            <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.94] tracking-[-0.03em]">
               {t.eproductsHeading}
             </h2>
-            <p className="text-sm text-slate-600 max-w-2xl">{t.eproductsSubtext}</p>
+            <p className="text-sm text-slate-400 leading-relaxed">{t.eproductsSubtext}</p>
           </div>
 
           <button
             type="button"
             onClick={onOpenLibrary}
-            className="self-start sm:self-end px-4 py-2.5 rounded-xl btn-future-obsidian text-xs font-semibold flex items-center space-x-1.5 shrink-0"
+            className="self-start sm:self-end pill-hape-cta shrink-0"
           >
-            <Unlock className="w-3.5 h-3.5 text-emerald-400" />
             <span>
               My Library{unlockedLibrary.length > 0 ? ` (${unlockedLibrary.length})` : ''}
+            </span>
+            <span className="pill-hape-circle">
+              <Unlock className="w-3.5 h-3.5" />
             </span>
           </button>
         </div>
@@ -270,10 +284,10 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => setSelectedSubcategory(sub)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all ${
+                className={`px-4 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold whitespace-nowrap border transition-all ${
                   active
-                    ? 'btn-future-primary border-transparent'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-teal-400 hover:bg-white'
+                    ? 'bg-white text-[#05080A] border-white'
+                    : 'bg-white/[0.04] text-slate-300 border-white/12 hover:border-white/35 hover:text-white'
                 }`}
               >
                 {sub}
@@ -283,19 +297,19 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="py-12 px-4 rounded-2xl bg-[#F3F7FB] border border-slate-200 text-center space-y-2">
-            <BookOpen className="w-7 h-7 mx-auto text-[#0D9488]" />
-            <h3 className="text-sm font-display font-bold text-[#0A101F]">
+          <div className="py-14 px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-2.5">
+            <BookOpen className="w-8 h-8 mx-auto text-cyan-400" />
+            <h3 className="text-sm font-display font-bold uppercase tracking-wider text-white">
               {eproducts.length === 0
-                ? 'E-Products & eBooks Coming Soon'
+                ? 'Digital Vault Launching Soon'
                 : `No items in "${selectedSubcategory}" yet`}
             </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Digital eBooks and HTML editions published from Admin will appear here immediately.
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              Interactive HTML eBooks &amp; digital editions published from Admin unlock here immediately.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {filtered.map((prod) => {
               const owned = unlockedLibrary.find((u) => u.product_id === prod.id);
               return (

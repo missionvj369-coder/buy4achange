@@ -8,9 +8,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Space Grotesk', 'Plus Jakarta Sans', '-apple-system', 'sans-serif'],
-        editorial: ['Space Grotesk', 'Plus Jakarta Sans', '-apple-system', 'sans-serif'],
-        serif: ['Space Grotesk', 'Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+        display: ['Syne', 'Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
+        editorial: ['Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
+        serif: ['Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       colors: {
@@ -21,17 +21,17 @@ export default {
           300: '#D5E1EE',
         },
         obsidian: {
-          950: '#050914',
-          900: '#070D19',
-          800: '#0E172A',
-          700: '#16223A',
+          950: '#05080A',
+          900: '#090E12',
+          800: '#10171D',
+          700: '#18222B',
         },
         forest: {
           50: '#ECFDF5',
           100: '#D1FAE5',
-          600: '#059669',
-          700: '#047857',
-          800: '#065F46',
+          600: '#10B981',
+          700: '#059669',
+          800: '#047857',
           900: '#064E3B',
         },
         ink: {

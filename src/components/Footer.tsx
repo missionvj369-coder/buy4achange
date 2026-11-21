@@ -1,17 +1,5 @@
 import React from 'react';
-import {
-  ExternalLink,
-  ShieldCheck,
-  Download,
-  MessageCircle,
-  Mail,
-  Store,
-  MapPin,
-  Repeat,
-  Building2,
-  ClipboardCheck,
-  Layers,
-} from 'lucide-react';
+import { ArrowUpRight, Download } from 'lucide-react';
 import { MISSION_DOCUMENTS } from '../data/missionDocuments.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
 
@@ -44,69 +32,67 @@ export const Footer: React.FC<FooterProps> = ({
   const cleanWa = (whatsappSupportNumber || '').replace(/[^\d]/g, '');
 
   return (
-    <footer className="bg-[#070D19] text-slate-300 text-xs mt-12 no-print w-full border-t border-emerald-500/20">
-      <div className="hero-horizon-bar" />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-          {/* Universal Guard Trust & UGT India Info */}
-          <div className="md:col-span-5 space-y-4">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/25 via-teal-500/25 to-cyan-500/25 border border-emerald-400/40 flex items-center justify-center">
-                <Layers className="w-4 h-4 text-emerald-300" />
-              </div>
-              <div>
-                <div className="font-display font-bold text-xl text-white leading-none">
-                  Buy<span className="text-emerald-400">4</span>AChange
-                </div>
-                <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-300 mt-1">
-                  Universal Guard Trust · UGT India
-                </div>
-              </div>
+    <footer className="bg-[#030506] text-slate-300 text-xs no-print w-full border-t border-white/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
+        {/* Hairline Progress Accent (Hape-style horizontal studio track) */}
+        <div className="w-full h-[1px] bg-white/15 mb-12 relative">
+          <div className="absolute left-0 top-0 h-[2px] w-44 bg-emerald-400" />
+        </div>
+
+        {/* Hape-Class Editorial Quote + Connect & Portals Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pb-12">
+          {/* Left: Monumental Manifesto Quote */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="font-display font-extrabold uppercase text-2xl sm:text-3xl text-white leading-[0.98] tracking-[-0.03em] max-w-md">
+              WE BUY, WE BUILD, WE HEAL. WE RISE.
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
+            <div className="text-xs text-slate-500 font-medium">
+              Universal Guard Trust · UGT India Living India Initiative
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-sm pt-1">
               {t.footerSummary}
             </p>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <a
-                href="https://ugtglobal.space"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3.5 py-2 rounded-xl border border-white/15 bg-white/[0.05] hover:border-emerald-400/50 text-white font-semibold text-xs inline-flex items-center space-x-1.5 transition-all"
-              >
-                <span>ugtglobal.space</span>
-                <ExternalLink className="w-3 h-3 text-emerald-400" />
-              </a>
-              <a
-                href="https://ugtindia.space"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3.5 py-2 rounded-xl border border-white/15 bg-white/[0.05] hover:border-cyan-400/50 text-white font-semibold text-xs inline-flex items-center space-x-1.5 transition-all"
-              >
-                <span>ugtindia.space</span>
-                <ExternalLink className="w-3 h-3 text-cyan-400" />
-              </a>
-            </div>
 
-            {/* Platform Modules & Portals Quick Launch */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+            {canInstallPwa && onInstallPwa && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onInstallPwa}
+                  className="pill-hape-cta"
+                >
+                  <span>{t.installApp}</span>
+                  <span className="pill-hape-circle">
+                    <Download className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Middle: CONNECT WITH US / PLATFORM PORTALS */}
+          <div className="lg:col-span-3 space-y-3">
+            <div className="font-display font-extrabold uppercase text-sm tracking-tight text-white">
+              CONNECT &amp; PORTALS
+            </div>
+            <div className="flex flex-col space-y-2 text-xs text-slate-300">
               {onOpenSellerPortal && (
                 <button
                   type="button"
                   onClick={onOpenSellerPortal}
-                  className="px-3.5 py-1.5 rounded-xl btn-future-primary font-semibold text-[11px] inline-flex items-center space-x-1.5"
+                  className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                 >
-                  <Store className="w-3.5 h-3.5" />
                   <span>Sell With Us (Manufacturer)</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
                 </button>
               )}
               {onOpenIndiaMap && (
                 <button
                   type="button"
                   onClick={onOpenIndiaMap}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/35 text-emerald-200 font-semibold text-[11px] inline-flex items-center space-x-1 transition-all"
+                  className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                 >
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>India Live Map</span>
+                  <span>India Live Impact Map</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                 </button>
               )}
               {onOpenPrograms && (
@@ -114,18 +100,18 @@ export const Footer: React.FC<FooterProps> = ({
                   <button
                     type="button"
                     onClick={() => onOpenPrograms('subscription')}
-                    className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 font-semibold text-[11px] inline-flex items-center space-x-1 transition-all"
+                    className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                   >
-                    <Repeat className="w-3 h-3 text-cyan-400" />
-                    <span>Monthly Box</span>
+                    <span>Monthly Conscious Box</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                   </button>
                   <button
                     type="button"
                     onClick={() => onOpenPrograms('bulk')}
-                    className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 font-semibold text-[11px] inline-flex items-center space-x-1 transition-all"
+                    className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                   >
-                    <Building2 className="w-3 h-3 text-cyan-400" />
-                    <span>CSR / Bulk Orders</span>
+                    <span>CSR &amp; Institutional Bulk</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                   </button>
                 </>
               )}
@@ -133,10 +119,10 @@ export const Footer: React.FC<FooterProps> = ({
                 <button
                   type="button"
                   onClick={onOpenAuditorPortal}
-                  className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 font-semibold text-[11px] inline-flex items-center space-x-1 transition-all"
+                  className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                 >
-                  <ClipboardCheck className="w-3 h-3 text-emerald-400" />
-                  <span>Field Auditor</span>
+                  <span>Field Auditor PWA</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                 </button>
               )}
               {onOpenTrack && (
@@ -144,99 +130,117 @@ export const Footer: React.FC<FooterProps> = ({
                   <button
                     type="button"
                     onClick={() => onOpenTrack('track')}
-                    className="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-cyan-200 font-semibold text-[11px] inline-flex items-center space-x-1 transition-all"
+                    className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
                     <span>{t.trackOrderTitle}</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                   </button>
                   <button
                     type="button"
                     onClick={() => onOpenTrack('ledger')}
-                    className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 font-semibold text-[11px] transition-all"
+                    className="text-left hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                   >
-                    {t.publicLedgerTitle}
+                    <span>{t.publicLedgerTitle}</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                   </button>
                 </>
               )}
-              {canInstallPwa && onInstallPwa && (
-                <button
-                  type="button"
-                  onClick={onInstallPwa}
-                  className="px-3 py-1.5 rounded-xl btn-future-primary font-semibold text-[11px] inline-flex items-center space-x-1"
-                >
-                  <Download className="w-3 h-3" />
-                  <span>{t.installApp}</span>
-                </button>
-              )}
+              <a
+                href="https://ugtglobal.space"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
+              >
+                <span>ugtglobal.space</span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
+              </a>
+              <a
+                href="https://ugtindia.space"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
+              >
+                <span>ugtindia.space</span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
+              </a>
               {cleanWa && (
                 <a
                   href={`https://wa.me/${cleanWa}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-200 font-semibold text-[11px] inline-flex items-center space-x-1"
+                  className="hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" />
                   <span>WhatsApp Support</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
                 </a>
               )}
               {supportEmail && (
                 <a
                   href={`mailto:${supportEmail}`}
-                  className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/15 text-slate-300 font-medium text-[11px] inline-flex items-center space-x-1"
+                  className="hover:text-emerald-400 inline-flex items-center space-x-1 transition-colors"
                 >
-                  <Mail className="w-3 h-3 text-cyan-400" />
                   <span>{supportEmail}</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
                 </a>
               )}
             </div>
           </div>
 
-          {/* 8 Mission Dossiers Quick Links */}
-          <div className="md:col-span-7 space-y-3.5">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-emerald-300">
-              Living India // 08 Mission Nodes
+          {/* Right: 08 LIVING INDIA MISSIONS INDEX */}
+          <div className="lg:col-span-4 space-y-3">
+            <div className="font-display font-extrabold uppercase text-sm tracking-tight text-white">
+              08 MISSION DOSSIERS
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
               {MISSION_DOCUMENTS.map((doc) => (
                 <button
                   key={doc.causeId}
                   type="button"
                   onClick={() => onOpenMissionDoc?.(doc.causeId)}
-                  className="text-left text-xs text-slate-300 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-emerald-400/40 rounded-xl px-3 py-2 flex items-center space-x-2.5 transition-all"
+                  className="text-left text-xs text-slate-300 hover:text-white inline-flex items-center justify-between space-x-2 py-0.5 group"
                 >
-                  <span className="font-mono text-[10px] font-bold text-cyan-300 shrink-0">
-                    0{doc.projectNumber}
+                  <span className="truncate flex items-center space-x-2">
+                    <span className="font-mono text-[10px] text-emerald-400 font-bold">
+                      0{doc.projectNumber}/
+                    </span>
+                    <span>{doc.officialTitle}</span>
                   </span>
-                  <span className="truncate font-medium">{doc.officialTitle}</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-emerald-400 shrink-0 transition-colors" />
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Links Bar */}
-        <div className="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-          <span className="font-mono text-[11px]">
-            © {new Date().getFullYear()} BUY4ACHANGE · UNIVERSAL GUARD TRUST · OPEN-SOURCE ARCHITECTURE
+        {/* Bottom Hairline Wide-Tracked Legal Row + 5-Dot Signal */}
+        <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500">
+          <span>
+            © {new Date().getFullYear()} · BUY4ACHANGE® · UNIVERSAL GUARD TRUST · OPEN-SOURCE 3D
           </span>
-          <div className="flex items-center space-x-4 font-semibold">
+          <div className="flex items-center space-x-6 text-slate-400">
             <a
               href="https://ugtglobal.space"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-400 hover:text-emerald-300"
+              className="hover:text-white transition-colors"
             >
-              ugtglobal.space
+              UGT GLOBAL
             </a>
-            <span className="text-slate-600">|</span>
             <a
               href="https://ugtindia.space"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-cyan-400 hover:text-cyan-300"
+              className="hover:text-white transition-colors"
             >
-              ugtindia.space
+              UGT INDIA
             </a>
+            <span className="hidden sm:inline-flex items-center space-x-1" aria-hidden="true">
+              <span className="w-1 h-1 rounded-full bg-emerald-400" />
+              <span className="w-1 h-1 rounded-full bg-emerald-400" />
+              <span className="w-1 h-1 rounded-full bg-white/40" />
+              <span className="w-1 h-1 rounded-full bg-white/25" />
+              <span className="w-1 h-1 rounded-full bg-white/15" />
+            </span>
           </div>
         </div>
       </div>
