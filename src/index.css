@@ -5,7 +5,7 @@
 @layer base {
   html,
   body {
-    background-color: #05080A;
+    background-color: #02140D;
     color: #F8FAFC;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -18,7 +18,7 @@
   }
 
   h1, h2, h3, .font-display {
-    font-family: 'Syne', 'Space Grotesk', sans-serif;
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
     letter-spacing: -0.03em;
   }
 
@@ -28,60 +28,45 @@
 }
 
 /*
- * HAPE-CLASS 3D STUDIO CINEMA DESIGN SYSTEM
- * Continuous volumetric obsidian studio + real-time Three.js PBR stage + analog film grain +
- * 3D perspective tilt cards + pill-and-circle luxury CTAs + sculpted keycap HUD.
+ * HAPE-GRADE LIVING INDIA 3D STUDIO SYSTEM
+ * Continuous deep emerald velvet studio (#083B28 -> #02140D -> #000000) +
+ * analog film grain + monumental typography + pill-and-circle chrome + sculpted keycap.
  */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
-  70% { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 @keyframes scroll-wheel {
   0% { transform: translateY(0); opacity: 1; }
-  75% { transform: translateY(8px); opacity: 0.15; }
+  75% { transform: translateY(7px); opacity: 0.2; }
   100% { transform: translateY(0); opacity: 1; }
 }
 
-@keyframes horizon-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes mote-float {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.35; }
+  50% { transform: translate3d(8px, -18px, 0); opacity: 0.9; }
 }
 
-/* Analog Studio Film Grain Overlay (Signature Hape-style tactile texture) */
+/* Subtle persistent analog cinema film grain */
 .studio-grain::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 60;
-  opacity: 0.045;
+  opacity: 0.055;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.studio-hero-stage {
-  position: relative;
-  background-color: #05080A;
-  transition: background 0.7s ease;
+/* Continuous Emerald-to-Obsidian Studio Flow (exact Hape atmosphere adapted to Living India) */
+.living-india-studio {
+  background:
+    radial-gradient(ellipse 75% 55% at 50% 24%, #0C583B 0%, #063120 46%, #02140D 82%, #000000 100%);
 }
 
-.hero-horizon-bar {
-  height: 2px;
-  background: linear-gradient(90deg, #10B981 0%, #34D399 25%, #06B6D4 50%, #F59E0B 75%, #10B981 100%);
-  background-size: 200% 100%;
-  animation: horizon-flow 7s ease infinite;
-}
-
-.gradient-text-future {
-  background: linear-gradient(105deg, #34D399 0%, #2DD4BF 45%, #38BDF8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Signature Hape-Style Stadium Pill + Solid White Circle Icon Badge CTA */
+/* Signature Hape Stadium Pill + Solid White Circle Icon Badge */
 .pill-hape-cta {
   display: inline-flex;
   align-items: center;
@@ -89,36 +74,35 @@
   gap: 0.75rem;
   padding: 0.32rem 0.35rem 0.32rem 1.15rem;
   border-radius: 9999px;
-  background: rgba(12, 18, 24, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(14px);
+  background: rgba(2, 16, 11, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
   color: #FFFFFF;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.75);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .pill-hape-cta:hover {
-  transform: translateY(-2px);
-  background: rgba(18, 28, 36, 0.88);
-  border-color: rgba(52, 211, 153, 0.55);
-  box-shadow: 0 18px 36px -12px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  background: rgba(2, 20, 14, 0.82);
+  border-color: rgba(52, 211, 153, 0.45);
 }
 
 .pill-hape-circle {
-  width: 2rem;
-  height: 2rem;
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: 9999px;
   background: #FFFFFF;
-  color: #05080A;
+  color: #02140D;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.22s ease, background 0.22s ease;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .pill-hape-cta:hover .pill-hape-circle {
@@ -126,24 +110,24 @@
   background: #34D399;
 }
 
-/* Sculpted Beveled 3D Keycap Switcher (Inspired by HAPEBAR) */
+/* Sculpted Beveled Black Keycap (Exact HAPEBAR style) */
 .keycap-3d {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.42rem 1.05rem;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #1E2730 0%, #0E1318 100%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 0.5rem 1.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #0E1512 0%, #030705 100%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   box-shadow:
-    0 5px 0 #05080A,
-    0 8px 20px rgba(0, 0, 0, 0.75),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    0 4px 0 #000000,
+    0 12px 24px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
   color: #FFFFFF;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.2s ease;
 }
@@ -154,18 +138,15 @@
 
 .keycap-3d:active {
   transform: translateY(3px);
-  box-shadow:
-    0 2px 0 #05080A,
-    0 4px 10px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: 0 1px 0 #000000, 0 4px 10px rgba(0, 0, 0, 0.65);
 }
 
-/* Real-Time Mouse-Reactive 3D Perspective Tilt Card with Specular Studio Glare */
+/* Subtle 3D Tilt Cards with Specular Highlight */
 .tilt-3d-card {
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.24s ease, box-shadow 0.24s ease;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.24s ease, box-shadow 0.24s ease;
 }
 
 .tilt-3d-card::before {
@@ -178,9 +159,9 @@
   opacity: 0;
   transition: opacity 0.25s ease;
   background: radial-gradient(
-    420px circle at var(--mx, 50%) var(--my, 20%),
-    rgba(255, 255, 255, 0.14),
-    rgba(52, 211, 153, 0.06) 35%,
+    360px circle at var(--mx, 50%) var(--my, 20%),
+    rgba(255, 255, 255, 0.12),
+    rgba(16, 185, 129, 0.05) 35%,
     transparent 70%
   );
 }
@@ -189,139 +170,94 @@
   opacity: 1;
 }
 
-/* Dark Studio Velvet Card Materiality */
 .studio-card-3d {
-  background: linear-gradient(165deg, #111820 0%, #0A0F14 55%, #070B0F 100%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow:
-    0 24px 48px -24px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  background: linear-gradient(175deg, rgba(6, 36, 25, 0.72) 0%, rgba(2, 15, 10, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.85);
 }
 
 .studio-card-3d:hover {
-  border-color: rgba(52, 211, 153, 0.48);
-  box-shadow:
-    0 32px 60px -20px rgba(0, 0, 0, 0.95),
-    0 0 32px -12px rgba(16, 185, 129, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 0 28px 56px -20px rgba(0, 0, 0, 0.92), 0 0 28px -10px rgba(16, 185, 129, 0.32);
 }
 
-/* Kept for compatibility with modals/portals that use clean surfaces */
+/* Preserved utility classes for Admin/Seller/Member portals */
+.hero-horizon-bar {
+  height: 2px;
+  background: linear-gradient(90deg, #059669 0%, #34D399 50%, #059669 100%);
+}
+
 .obsidian-deck {
-  background: linear-gradient(145deg, #090E14 0%, #101A24 55%, #08131A 100%);
+  background: linear-gradient(145deg, #04150E 0%, #08271B 55%, #03110B 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 24px 50px -20px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.85);
 }
 
 .futuristic-obsidian-bg {
-  background-color: #05080A;
-  background-image:
-    radial-gradient(ellipse 75% 55% at 50% -10%, rgba(16, 185, 129, 0.24) 0%, transparent 65%),
-    radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.16) 0%, transparent 45%),
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  background: radial-gradient(ellipse 75% 55% at 50% 0%, #0C583B 0%, #041E14 55%, #010906 100%);
 }
 
 .hero-architectural {
-  background-color: #05080A;
-  background-image:
-    radial-gradient(ellipse 75% 55% at 50% -12%, rgba(16, 185, 129, 0.22) 0%, transparent 65%),
-    radial-gradient(circle at 14% 30%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
-}
-
-.card-editorial {
-  background: linear-gradient(165deg, #111820 0%, #0A0F14 100%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
-}
-
-.card-editorial:hover {
-  border-color: rgba(52, 211, 153, 0.48);
-  transform: translateY(-3px);
-}
-
-.bento-surface {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F4F8FC 100%);
-  border: 1px solid rgba(15, 23, 42, 0.09);
-  box-shadow: 0 10px 28px -16px rgba(15, 23, 42, 0.14);
+  background: radial-gradient(ellipse 75% 55% at 50% 0%, #0C583B 0%, #041E14 55%, #010906 100%);
 }
 
 .kpi-tile-future {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%);
+  background: #FFFFFF;
   border: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.16);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-future-primary {
-  background: linear-gradient(135deg, #10B981 0%, #0D9488 55%, #0284C7 100%);
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: #FFFFFF;
-  box-shadow:
-    0 10px 26px -8px rgba(16, 185, 129, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  box-shadow: 0 10px 24px -8px rgba(16, 185, 129, 0.5);
+  transition: transform 0.18s ease, filter 0.18s ease;
 }
 
 .btn-future-primary:hover {
   filter: brightness(1.08);
-  box-shadow:
-    0 14px 32px -8px rgba(52, 211, 153, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transform: translateY(-1px);
 }
 
-.btn-future-obsidian {
-  background: rgba(255, 255, 255, 0.06);
-  color: #F8FAFC;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(10px);
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-}
-
-.btn-future-obsidian:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(52, 211, 153, 0.55);
-  transform: translateY(-1px);
+.bento-surface {
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.09);
 }
 
 .live-dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 9999px;
-  background-color: #10B981;
-  animation: pulse-ring 2s infinite;
+  background-color: #34D399;
+  animation: pulse-ring 2.2s infinite;
 }
 
 .progress-future {
-  background: linear-gradient(90deg, #10B981 0%, #34D399 55%, #38BDF8 100%);
+  background: linear-gradient(90deg, #10B981 0%, #34D399 100%);
 }
 
 .scroll-dot-anim {
   animation: scroll-wheel 1.8s ease-in-out infinite;
 }
 
+.mote-dot {
+  animation: mote-float 7s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .live-dot,
-  .hero-horizon-bar,
-  .scroll-dot-anim {
+  .scroll-dot-anim,
+  .mote-dot {
     animation: none;
   }
-  .tilt-3d-card,
-  .card-editorial:hover,
-  .btn-future-primary:hover,
-  .pill-hape-cta:hover {
+  .tilt-3d-card {
     transform: none !important;
   }
 }
 
-/* Sleek dark scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
   height: 4px;
   width: 4px;
@@ -335,18 +271,8 @@
 }
 
 @media print {
-  @page {
-    margin: 10mm;
-    size: auto;
-  }
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-  .no-print, header, footer, button, nav {
-    display: none !important;
-  }
-  .print-only {
-    display: block !important;
-  }
+  @page { margin: 10mm; size: auto; }
+  body { background: #ffffff !important; color: #000000 !important; }
+  .no-print, header, footer, button, nav { display: none !important; }
+  .print-only { display: block !important; }
 }

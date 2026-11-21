@@ -471,9 +471,9 @@ export function App() {
     );
   }
 
-  // PUBLIC STOREFRONT — Hape-Class Real-Time 3D Studio Experience
+  // PUBLIC STOREFRONT — Exact Hape-Class Living India 3D Studio Experience
   return (
-    <div className="studio-grain min-h-screen bg-[#05080A] text-white flex flex-col font-sans w-full">
+    <div className="studio-grain min-h-screen bg-[#02140D] text-white flex flex-col font-sans w-full">
       <Navbar
         cartCount={totalCartCount}
         libraryCount={unlockedLibrary.length}
@@ -557,99 +557,102 @@ export function App() {
           </section>
         )}
 
-        {/* 2. Shop Catalog (01 / CONSCIOUS COMMERCE) */}
+        {/* 2. Section 01 / — Pure Products, Your Impact */}
         <section
           id="catalog-grid"
-          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24"
+          className="relative w-full py-20 sm:py-28"
+          style={{
+            background:
+              'linear-gradient(180deg, #02140D 0%, #052D1E 50%, #031B12 100%)',
+          }}
         >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-white/10">
-            <div className="space-y-2">
-              <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-emerald-400 font-bold">
-                01 / {t.shopEyebrow}
+          <div className="max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8">
+              <div className="space-y-2 max-w-xl">
+                <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/55">
+                  01 /
+                </div>
+                <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.92] tracking-[-0.03em]">
+                  PURE PRODUCTS,
+                  <br />
+                  YOUR IMPACT
+                </h2>
+                {activeMission && (
+                  <p className="text-xs font-mono text-emerald-300 pt-1">
+                    Supporting: {activeMission.title}
+                  </p>
+                )}
               </div>
-              <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.94] tracking-[-0.03em]">
-                {t.shopHeading}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
-                {activeMission
-                  ? `Supporting "${activeMission.title}" — you can change the mission on any item.`
-                  : t.shopSubtext}
-              </p>
+
+              {categories.length > 1 && (
+                <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em] font-semibold whitespace-nowrap border transition-all ${
+                        selectedCategory === cat
+                          ? 'bg-white text-black border-white'
+                          : 'bg-black/30 text-white/75 border-white/15 hover:border-white/40 hover:text-white'
+                      }`}
+                    >
+                      {cat === 'All' ? t.allCategories : cat}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {categories.length > 1 && (
-              <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
-                {categories.map((cat) => (
+            {loading ? (
+              <div className="py-16 text-center flex flex-col items-center space-y-2 text-white/60">
+                <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin" />
+                <span className="text-xs font-mono uppercase tracking-wider">Loading...</span>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="py-14 mt-4 border border-white/10 bg-black/25 text-center space-y-2.5">
+                <Package className="w-7 h-7 mx-auto text-emerald-400" />
+                <h3 className="text-sm font-display font-bold uppercase tracking-wider text-white">
+                  {physicalProducts.length === 0
+                    ? 'New Drops Launching Soon'
+                    : 'No matching products'}
+                </h3>
+                {physicalProducts.length > 0 && (
                   <button
-                    key={cat}
                     type="button"
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold whitespace-nowrap border transition-all ${
-                      selectedCategory === cat
-                        ? 'bg-white text-[#05080A] border-white'
-                        : 'bg-white/[0.04] text-slate-300 border-white/12 hover:border-white/35 hover:text-white'
-                    }`}
+                    onClick={() => {
+                      setSelectedCategory('All');
+                      setSearchTerm('');
+                    }}
+                    className="px-5 py-2 rounded-full bg-white text-black text-[10px] font-mono uppercase font-bold"
                   >
-                    {cat === 'All' ? t.allCategories : cat}
+                    Reset Filters
                   </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    causes={causes}
+                    preferredCauseId={selectedCauseId}
+                    onAddToCart={(p, cId) => handleAddToCart(p, cId, 1)}
+                    onOpenDetails={(p, cId) => {
+                      setSelectedProduct(p);
+                      setModalInitialCauseId(cId);
+                      logTelemetry('product_view', p.id);
+                    }}
+                    onShareProduct={(p) => {
+                      setShareProduct(p);
+                      setShareModalOpen(true);
+                    }}
+                  />
                 ))}
               </div>
             )}
           </div>
-
-          {loading ? (
-            <div className="py-16 text-center flex flex-col items-center space-y-2 text-slate-400">
-              <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin" />
-              <span className="text-xs font-mono uppercase tracking-wider">Loading 3D catalog...</span>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="py-14 mt-6 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-2.5">
-              <Package className="w-8 h-8 mx-auto text-emerald-400" />
-              <h3 className="text-sm font-display font-bold uppercase tracking-wider text-white">
-                {physicalProducts.length === 0
-                  ? 'New Products Launching Soon'
-                  : 'No matching products found'}
-              </h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                {physicalProducts.length === 0
-                  ? 'Products published from the Admin Portal appear here immediately.'
-                  : 'Try clearing your search or category filter.'}
-              </p>
-              {physicalProducts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory('All');
-                    setSearchTerm('');
-                  }}
-                  className="px-5 py-2 rounded-full bg-white text-[#05080A] text-xs font-mono uppercase font-bold"
-                >
-                  Reset Filters
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-8">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  causes={causes}
-                  preferredCauseId={selectedCauseId}
-                  onAddToCart={(p, cId) => handleAddToCart(p, cId, 1)}
-                  onOpenDetails={(p, cId) => {
-                    setSelectedProduct(p);
-                    setModalInitialCauseId(cId);
-                    logTelemetry('product_view', p.id);
-                  }}
-                  onShareProduct={(p) => {
-                    setShareProduct(p);
-                    setShareModalOpen(true);
-                  }}
-                />
-              ))}
-            </div>
-          )}
         </section>
 
         {/* 3. Dedicated E-Products & eBooks Section */}

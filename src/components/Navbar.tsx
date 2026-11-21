@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShoppingBag,
   Search,
@@ -9,6 +9,9 @@ import {
   Download,
   Check,
   User,
+  Menu,
+  Play,
+  ArrowUpRight,
 } from 'lucide-react';
 import { MemberUser } from '../types.ts';
 import { useLanguage } from '../i18n/LanguageContext.tsx';
@@ -50,151 +53,270 @@ export const Navbar: React.FC<NavbarProps> = ({
   canInstallPwa = false,
   onInstallPwa,
 }) => {
-  const { lang, meta, t, languages, setLang } = useLanguage();
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
-  const langMenuRef = useRef<HTMLDivElement>(null);
+  const { lang, t, languages, setLang } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showLangList, setShowLangList] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    if (!langMenuOpen) return;
-    const handleOutside = (e: MouseEvent) => {
-      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
-        setLangMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [langMenuOpen]);
+    const onScroll = () => setScrolled(window.scrollY > 120);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#05080A]/80 backdrop-blur-xl border-b border-white/10">
-      {invitedByName && (
-        <div className="bg-emerald-950/80 border-b border-emerald-400/25 px-3 py-1.5 text-center text-[11px] font-mono text-emerald-200">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 align-middle" />
-          INVITED BY <strong className="text-white uppercase">{invitedByName}</strong> · CONSCIOUS COMMERCE PROTOCOL
-        </div>
-      )}
+    <>
+      {/* EXACT HAPE.IO MINIMAL FLOATING TOP CHROME — ZERO CLUTTER */}
+      <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+        {invitedByName && (
+          <div className="pointer-events-auto bg-black/85 backdrop-blur-md border-b border-emerald-400/25 px-3 py-1 text-center text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-300">
+            Invited by <strong className="text-white">{invitedByName}</strong>
+          </div>
+        )}
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3">
-          {/* Minimal Hape-Grade Brand Lockup */}
-          <button
-            type="button"
-            onClick={onNavigateHome}
-            className="flex items-center space-x-2 text-left shrink-0 focus:outline-none group"
-          >
-            <div className="flex items-center space-x-1">
-              <span className="inline-block w-1.5 h-5 sm:h-6 rounded-full bg-emerald-400 group-hover:bg-white transition-colors" />
-              <span className="font-display font-extrabold text-sm sm:text-xl tracking-tight text-white leading-none">
-                Buy<span className="text-emerald-400">4</span>AChange<sup className="text-[9px] text-white/60 ml-0.5">®</sup>
-              </span>
-            </div>
-          </button>
-
-          {/* Desktop Wide-Tracked Studio Navigation */}
-          <nav className="hidden md:flex items-center space-x-1 bg-white/[0.04] border border-white/10 p-1 rounded-full text-[11px] font-mono uppercase tracking-[0.12em] text-slate-300">
-            {onScrollToCatalog && (
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-10 h-20 flex items-center justify-between gap-3">
+          {/* Top-Left: Pill CTA on Hero → Clean White Wordmark When Scrolled (Exact Hape Behavior) */}
+          <div className="pointer-events-auto flex items-center">
+            {scrolled ? (
               <button
                 type="button"
-                onClick={onScrollToCatalog}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
+                onClick={onNavigateHome}
+                className="font-display font-bold text-lg sm:text-xl tracking-tight text-white hover:text-emerald-300 transition-colors"
               >
-                {t.navShop}
+                Buy4AChange<sup className="text-[10px] ml-0.5">®</sup>
               </button>
-            )}
-            {onScrollToEProducts && (
-              <button
-                type="button"
-                onClick={onScrollToEProducts}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
-              >
-                {t.navEProducts}
-              </button>
-            )}
-            {onScrollToMissions && (
+            ) : (
               <button
                 type="button"
                 onClick={onScrollToMissions}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
+                className="pill-hape-cta"
               >
-                {t.navMissions}
-              </button>
-            )}
-            {onOpenTrack && (
-              <button
-                type="button"
-                onClick={onOpenTrack}
-                className="px-3.5 py-1.5 rounded-full hover:bg-white/10 hover:text-emerald-300 transition-all whitespace-nowrap flex items-center space-x-1"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{t.navTrack}</span>
-              </button>
-            )}
-          </nav>
-
-          {/* Right Studio Controls */}
-          <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
-            {/* Desktop Inline Fuzzy Search */}
-            <div className="hidden xl:flex relative w-44">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search 3D catalog..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-white/[0.06] border border-white/12 rounded-full pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/[0.10] focus:border-emerald-400/60 transition-all"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
-                  aria-label="Clear search"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* All 22 Indian Languages + English Switcher */}
-            <div className="relative" ref={langMenuRef}>
-              <button
-                type="button"
-                onClick={() => setLangMenuOpen((v) => !v)}
-                aria-label="Select Indian Language"
-                title="Switch Language (English + 22 Indian Languages)"
-                className={`flex items-center space-x-1 px-1.5 py-1.5 sm:px-2.5 sm:py-2 rounded-full border text-xs font-semibold transition-all ${
-                  langMenuOpen || lang !== 'en'
-                    ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
-                    : 'border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/35 hover:text-white'
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="max-w-[38px] sm:max-w-[52px] truncate text-[10px] sm:text-[11px] font-mono">
-                  {lang === 'en' ? 'EN' : meta.nativeName}
+                <span>{t.navMissions}</span>
+                <span className="pill-hape-circle">
+                  <Play className="w-3 h-3 fill-current ml-0.5" />
                 </span>
               </button>
+            )}
+          </div>
 
-              {langMenuOpen && (
-                <div className="fixed sm:absolute right-3 sm:right-0 top-14 sm:top-full sm:mt-2 w-[calc(100vw-24px)] sm:w-[420px] max-w-[420px] bg-[#0B1016] border border-white/15 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                  <div className="px-4 py-3 bg-[#05080A] border-b border-white/10 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-display font-bold text-white uppercase tracking-wider">
-                        Languages of India (22 + English)
-                      </div>
-                      <div className="text-[10px] font-mono text-emerald-400">
-                        EIGHTH SCHEDULE · MULTI-SCRIPT ENGINE
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setLangMenuOpen(false)}
-                      className="p-1 rounded-lg hover:bg-white/10 text-slate-300"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="p-2.5 grid grid-cols-2 gap-1.5 max-h-[65vh] overflow-y-auto scrollbar-thin">
+          {/* Top-Center: Ultra-Minimal Micro-Label (Exact Hape Center Label) */}
+          {!scrolled && (
+            <div className="hidden md:block text-[10px] font-mono uppercase tracking-[0.24em] font-bold text-black/85 select-none">
+              UNIVERSAL GUARD TRUST · INDIA
+            </div>
+          )}
+
+          {/* Top-Right: VIEW STORE Pill + Circular Black Hamburger Menu Button */}
+          <div className="pointer-events-auto flex items-center space-x-2.5 sm:space-x-3">
+            {!scrolled && (
+              <button
+                type="button"
+                onClick={onScrollToCatalog}
+                className="hidden sm:inline-flex pill-hape-cta"
+              >
+                <span>{t.navShop}</span>
+                <span className="pill-hape-circle">
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                </span>
+              </button>
+            )}
+
+            {/* Compact Bag Pill when items are in cart */}
+            {cartCount > 0 && (
+              <button
+                type="button"
+                onClick={onOpenCart}
+                aria-label="Open Shopping Bag"
+                className="relative w-11 h-11 rounded-full bg-emerald-400 hover:bg-white text-black flex items-center justify-center shadow-lg transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black text-white text-[10px] font-mono font-bold flex items-center justify-center border border-white/25">
+                  {cartCount}
+                </span>
+              </button>
+            )}
+
+            {/* Signature Solid Black Circular Hamburger Menu Button (Exact Hape Top-Right Circle) */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open Menu"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-emerald-950 text-white border border-white/15 flex items-center justify-center shadow-2xl transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* CLEAN FULL-HEIGHT STUDIO NAVIGATION DRAWER (Houses Search, 22 Languages, Library, Account, Bag, Track) */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[70] flex justify-end">
+          <div
+            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+            onClick={() => setMenuOpen(false)}
+          />
+          <aside className="relative w-full max-w-sm bg-[#03140D] border-l border-white/12 text-white h-full flex flex-col justify-between overflow-y-auto p-6 sm:p-8 shadow-2xl">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <span className="font-display font-bold text-lg tracking-tight">
+                  Buy4AChange<sup className="text-[10px] ml-0.5">®</sup>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  aria-label="Close Menu"
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white hover:text-black flex items-center justify-center transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder={t.searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-full pl-10 pr-8 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Primary Navigation */}
+              <nav className="flex flex-col space-y-2 font-display text-2xl font-bold uppercase tracking-tight">
+                {onScrollToCatalog && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onScrollToCatalog();
+                    }}
+                    className="text-left py-1.5 hover:text-emerald-400 flex items-center justify-between transition-colors"
+                  >
+                    <span>01 / {t.navShop}</span>
+                    <ArrowUpRight className="w-5 h-5 text-white/40" />
+                  </button>
+                )}
+                {onScrollToEProducts && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onScrollToEProducts();
+                    }}
+                    className="text-left py-1.5 hover:text-emerald-400 flex items-center justify-between transition-colors"
+                  >
+                    <span>02 / {t.navEProducts}</span>
+                    <ArrowUpRight className="w-5 h-5 text-white/40" />
+                  </button>
+                )}
+                {onScrollToMissions && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onScrollToMissions();
+                    }}
+                    className="text-left py-1.5 hover:text-emerald-400 flex items-center justify-between transition-colors"
+                  >
+                    <span>03 / {t.navMissions}</span>
+                    <ArrowUpRight className="w-5 h-5 text-white/40" />
+                  </button>
+                )}
+              </nav>
+
+              {/* Quick Actions */}
+              <div className="pt-4 border-t border-white/10 grid grid-cols-2 gap-2.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenCart();
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl bg-white text-black font-bold flex items-center justify-center space-x-1.5"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>
+                    {t.navBag} ({cartCount})
+                  </span>
+                </button>
+
+                {onOpenAccount && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenAccount();
+                    }}
+                    className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 font-semibold flex items-center justify-center space-x-1.5"
+                  >
+                    <User className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="truncate">
+                      {memberUser ? memberUser.name.split(/\s+/)[0] : 'Account'}
+                    </span>
+                  </button>
+                )}
+
+                {onOpenLibrary && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenLibrary();
+                    }}
+                    className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 font-semibold flex items-center justify-center space-x-1.5"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>
+                      {t.navLibrary} ({libraryCount})
+                    </span>
+                  </button>
+                )}
+
+                {onOpenTrack && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenTrack();
+                    }}
+                    className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 font-semibold flex items-center justify-center space-x-1.5"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{t.navTrack}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* All 22 Indian Languages Switcher */}
+              <div className="pt-4 border-t border-white/10 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowLangList((v) => !v)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 flex items-center justify-between text-xs font-semibold"
+                >
+                  <span className="flex items-center space-x-2">
+                    <Globe className="w-4 h-4 text-emerald-400" />
+                    <span>Indian Languages (22 + EN)</span>
+                  </span>
+                  <span className="font-mono text-[10px] uppercase text-emerald-300">
+                    {showLangList ? 'Hide' : lang.toUpperCase()}
+                  </span>
+                </button>
+
+                {showLangList && (
+                  <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-y-auto scrollbar-thin pr-1">
                     {languages.map((item) => {
                       const active = item.code === lang;
                       return (
@@ -203,163 +325,44 @@ export const Navbar: React.FC<NavbarProps> = ({
                           type="button"
                           onClick={() => {
                             setLang(item.code);
-                            setLangMenuOpen(false);
+                            setShowLangList(false);
                           }}
-                          className={`px-2.5 py-2 rounded-xl border text-left flex items-center justify-between gap-1.5 transition-all ${
+                          className={`px-2.5 py-2 rounded-lg border text-left flex items-center justify-between gap-1 text-xs ${
                             active
-                              ? 'bg-emerald-500/15 border-emerald-400/60 text-emerald-300'
-                              : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.08] text-slate-200'
+                              ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                              : 'bg-white/[0.03] border-white/10 text-slate-200 hover:bg-white/[0.08]'
                           }`}
                         >
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold truncate">{item.nativeName}</div>
-                            <div className="text-[10px] text-slate-400 truncate">
-                              {item.englishName}
-                            </div>
-                          </div>
-                          {active && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                          <span className="truncate font-medium">{item.nativeName}</span>
+                          {active && <Check className="w-3 h-3 text-emerald-400 shrink-0" />}
                         </button>
                       );
                     })}
                   </div>
-                </div>
-              )}
-            </div>
-
-            {canInstallPwa && onInstallPwa && (
-              <button
-                type="button"
-                onClick={onInstallPwa}
-                title={t.installApp}
-                className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-2 rounded-full border border-emerald-400/35 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>App</span>
-              </button>
-            )}
-
-            {/* Mobile / Tablet Search Button */}
-            <button
-              type="button"
-              onClick={() => setMobileSearchOpen((v) => !v)}
-              aria-label="Search"
-              className={`xl:hidden p-1.5 sm:p-2 rounded-full border transition-all ${
-                mobileSearchOpen || searchTerm
-                  ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
-                  : 'border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/35'
-              }`}
-            >
-              {mobileSearchOpen ? <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-            </button>
-
-            {/* Digital Library Button */}
-            {onOpenLibrary && (
-              <button
-                type="button"
-                onClick={onOpenLibrary}
-                aria-label="My Library"
-                title="My Purchased eBooks & eProducts"
-                className="relative flex items-center space-x-1.5 p-1.5 sm:px-2.5 sm:py-2 rounded-full border border-white/15 bg-white/[0.05] hover:border-emerald-400/50 text-slate-200 hover:text-white text-xs font-semibold transition-all"
-              >
-                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
-                <span className="hidden sm:inline">{t.navLibrary}</span>
-                {libraryCount > 0 && (
-                  <span className="bg-emerald-400 text-[#05080A] font-mono text-[10px] font-bold px-1.5 rounded-full">
-                    {libraryCount}
-                  </span>
                 )}
-              </button>
-            )}
+              </div>
 
-            {/* Member Account / Refer & Earn Button */}
-            {onOpenAccount && (
-              <button
-                type="button"
-                onClick={onOpenAccount}
-                aria-label="My Account"
-                title={memberUser ? `${memberUser.name} — Refer & Earn Dashboard` : 'Sign In / Refer & Earn'}
-                className={`flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-2 rounded-full border text-xs font-semibold transition-all ${
-                  memberUser
-                    ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
-                    : 'border-white/15 bg-white/[0.05] hover:border-emerald-400/50 text-slate-200 hover:text-white'
-                }`}
-              >
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
-                <span className="hidden sm:inline max-w-[72px] truncate">
-                  {memberUser ? memberUser.name.split(/\s+/)[0] : 'Account'}
-                </span>
-              </button>
-            )}
-
-            {/* Signature Hape-Style White Circle Badge Bag Button */}
-            <button
-              type="button"
-              onClick={onOpenCart}
-              aria-label="Shopping Bag"
-              className="flex items-center space-x-1.5 pl-2.5 pr-1 py-1 sm:pl-3.5 sm:pr-1 sm:py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-white text-[11px] font-mono uppercase tracking-wider font-bold shrink-0 transition-all"
-            >
-              <span className="hidden sm:inline">{t.navBag}</span>
-              <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white text-[#05080A] flex items-center justify-center relative">
-                {cartCount > 0 ? (
-                  <span className="text-[11px] font-mono font-extrabold">{cartCount}</span>
-                ) : (
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                )}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Expandable Search Bar on Mobile/Tablet */}
-        {mobileSearchOpen && (
-          <div className="xl:hidden pb-3">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                autoFocus
-                placeholder={t.searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-white/[0.08] border border-white/15 rounded-full pl-9 pr-8 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400"
-              />
-              {searchTerm && (
+              {canInstallPwa && onInstallPwa && (
                 <button
                   type="button"
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onInstallPwa();
+                  }}
+                  className="w-full py-2.5 rounded-full bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-1.5"
                 >
-                  ✕
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{t.installApp}</span>
                 </button>
               )}
             </div>
-          </div>
-        )}
 
-        {/* Mobile Quick Links Row */}
-        <div className="md:hidden flex items-center justify-between gap-2 border-t border-white/10 py-2 text-[11px] font-mono uppercase tracking-wider text-slate-300">
-          {onScrollToCatalog && (
-            <button type="button" onClick={onScrollToCatalog} className="whitespace-nowrap hover:text-white">
-              {t.navShop}
-            </button>
-          )}
-          {onScrollToEProducts && (
-            <button type="button" onClick={onScrollToEProducts} className="whitespace-nowrap hover:text-white">
-              {t.navEProducts}
-            </button>
-          )}
-          {onScrollToMissions && (
-            <button type="button" onClick={onScrollToMissions} className="whitespace-nowrap hover:text-white">
-              {t.navMissions}
-            </button>
-          )}
-          {onOpenTrack && (
-            <button type="button" onClick={onOpenTrack} className="whitespace-nowrap text-emerald-400 font-bold">
-              {t.navTrack}
-            </button>
-          )}
+            <div className="pt-6 text-[10px] font-mono uppercase tracking-[0.2em] text-white/40">
+              UNIVERSAL GUARD TRUST · UGT INDIA
+            </div>
+          </aside>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   );
 };

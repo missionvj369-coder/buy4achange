@@ -243,22 +243,23 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
   return (
     <section
       id="eproducts-section"
-      className="relative bg-[#070C10] border-t border-b border-white/10 py-16 sm:py-24 w-full"
+      className="relative py-20 sm:py-28 w-full border-t border-white/10"
       style={{
-        backgroundImage:
-          'radial-gradient(ellipse 60% 45% at 85% 15%, rgba(6, 182, 212, 0.14) 0%, transparent 65%)',
+        background:
+          'linear-gradient(180deg, #031B12 0%, #053222 50%, #031C13 100%)',
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-400 font-bold">
-              02 / {t.eproductsEyebrow} · ₹0 SHIPPING
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-10 space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-2 max-w-xl">
+            <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/55">
+              02 /
             </div>
-            <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.94] tracking-[-0.03em]">
-              {t.eproductsHeading}
+            <h2 className="font-display font-extrabold uppercase text-3xl sm:text-5xl text-white leading-[0.92] tracking-[-0.03em]">
+              DIGITAL
+              <br />
+              KNOWLEDGE
             </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">{t.eproductsSubtext}</p>
           </div>
 
           <button
@@ -284,10 +285,10 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => setSelectedSubcategory(sub)}
-                className={`px-4 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-semibold whitespace-nowrap border transition-all ${
+                className={`px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em] font-semibold whitespace-nowrap border transition-all ${
                   active
-                    ? 'bg-white text-[#05080A] border-white'
-                    : 'bg-white/[0.04] text-slate-300 border-white/12 hover:border-white/35 hover:text-white'
+                    ? 'bg-white text-black border-white'
+                    : 'bg-black/30 text-white/75 border-white/15 hover:border-white/40 hover:text-white'
                 }`}
               >
                 {sub}
@@ -297,16 +298,13 @@ export const EProductsSection: React.FC<EProductsSectionProps> = ({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="py-14 px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-2.5">
-            <BookOpen className="w-8 h-8 mx-auto text-cyan-400" />
-            <h3 className="text-sm font-display font-bold uppercase tracking-wider text-white">
+          <div className="py-12 px-6 border border-white/10 bg-black/25 text-center space-y-2">
+            <BookOpen className="w-7 h-7 mx-auto text-emerald-400" />
+            <h3 className="text-xs font-mono font-bold uppercase tracking-[0.16em] text-white/80">
               {eproducts.length === 0
-                ? 'Digital Vault Launching Soon'
-                : `No items in "${selectedSubcategory}" yet`}
+                ? 'Digital Editions Launching Soon'
+                : `No items in "${selectedSubcategory}"`}
             </h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Interactive HTML eBooks &amp; digital editions published from Admin unlock here immediately.
-            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
